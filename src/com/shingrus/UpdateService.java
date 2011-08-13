@@ -57,26 +57,24 @@ public class UpdateService extends Service {
 
 			boolean result = false;
 			HttpClient swaClient = new DefaultHttpClient();
-			((AbstractHttpClient) (swaClient))
-					.setRedirectHandler(new RedirectHandler() {
-						@Override
-						public boolean isRedirectRequested(
-								HttpResponse response, HttpContext context) {
-							return false;
-						}
+			((AbstractHttpClient) (swaClient)).setRedirectHandler(new RedirectHandler() {
+				@Override
+				public boolean isRedirectRequested(HttpResponse response, HttpContext context) {
+					return false;
+				}
 
-						@Override
-						public URI getLocationURI(HttpResponse response,
-								HttpContext context) throws ProtocolException {
-							return null;
-						}
-					});
+				@Override
+				public URI getLocationURI(HttpResponse response, HttpContext context) throws ProtocolException {
+					return null;
+				}
+			});
 
 			try {
 
-				// TODO: here we need timeout
-				HttpResponse swaResponse = swaClient.execute(new HttpGet(SWA_URL + "Login=" + email
-						+ "&Password=" + password));
+				// TODO: here we need timeout tuning on http requests
+				
+				HttpGet httpGet = new HttpGet(SWA_URL + "Login=" + email + "&Password=" + password);
+				HttpResponse swaResponse = swaClient.execute(httpGet);
 				if (null != swaResponse) {
 					for (Cookie cookie : ((AbstractHttpClient) swaClient).getCookieStore().getCookies()) {
 						if (cookie.getName().equalsIgnoreCase("Mpop")) {
@@ -88,53 +86,86 @@ public class UpdateService extends Service {
 					// if we got mpopcookie - we need to get token in future,
 					// but now it's ok to get playlist directly
 					if (this.mpopCookie != null) {
-						
-						HttpResponse musicListResponse = swaClient.execute(new HttpGet(UpdateThread.MUSIC_URL));
-						if (null != musicListResponse) {
+						httpGet.setURI(URI.create(MUSIC_URL)	);
+						HttpResponse musicListResponse = swaClient.execute(httpGet);
+						if (null != musicListResponse && musicListResponse.getStatusLine().getStatusCode() == 200) {
 							SAXParserFactory sf = SAXParserFactory.newInstance();
 							try {
 								SAXParser parser = sf.newSAXParser();
 								XMLReader xr = parser.getXMLReader();
-								MusicTrack mt = new MusicTrack();
 								xr.setContentHandler(new DefaultHandler() {
 
-									boolean insideTrackTag = false;
-
+									MusicTrack mt = new MusicTrack();
+									
+									public final String TRACK_TAG ="TRACK", NAME_TAG = "NAME", URL_TAG="FURL", PARAM_ID="ID";
+									boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName = false;
+									StringBuilder builder;
+									
 									@Override
-									public void startElement(String uri,
-											String localName, String qName,
-											Attributes attributes)
-											throws SAXException {
-										if (localName.equals("track")) {
-											insideTrackTag = false;
+									public void characters(char[] ch, int start, int length) throws SAXException {
+										if (isInsideFURL || isInsideName) {
+											builder.append(ch, start, length); 
 										}
 									}
 
+								
+
+
 									@Override
-									public void endElement(String uri,
-											String localName, String qName)
-											throws SAXException {
-										if (localName.equals("track")) {
-											insideTrackTag = false;
+									public void startElement(String uri, String localName, String qName, Attributes attributes)
+											throws SAXException {	
+										super.startElement(uri, localName, qName, attributes);
+										if (localName.equalsIgnoreCase(TRACK_TAG)) {
+											isInsideTrackTag = true;
+											mt.setId(attributes.getValue(PARAM_ID));
+										}  
+										else if (localName.equals(URL_TAG) && isInsideTrackTag) {
+											isInsideFURL=true;
 										}
+										else if (localName.equals(NAME_TAG) && isInsideTrackTag) {
+											isInsideName = true;
+										}
+											
 									}
 
+									@Override
+									public void endElement(String uri, String localName, String qName) throws SAXException {
+										super.endElement(uri, localName, qName);
+										if (localName.equalsIgnoreCase(TRACK_TAG)) {
+											isInsideTrackTag = false;
+											if (mt.isComplete()) {
+												//well, we have completed mt object with url and id
+											}
+										}
+										else if(localName.equalsIgnoreCase(URL_TAG)) {
+											isInsideFURL=false;
+											mt.setUrl(builder.toString());
+										}
+										else if(localName.equalsIgnoreCase(NAME_TAG)) {
+											isInsideName = false;
+											mt.setTitle(builder.toString());
+										}
+										
+										if (builder.length() > 0) {
+											builder.setLength(0);
+										}
+									}
 								});
-								InputSource is = new InputSource(musicListResponse
-										.getEntity().getContent());
+								InputSource is = new InputSource(musicListResponse.getEntity().getContent());
 								xr.parse(is);
 							} catch (Exception e) {
-								// TODO Something wrong and i need to return error back
+								// TODO Something wrong and i need to return
+								// error back
 								e.printStackTrace();
-							} 
-								//catch (ParserConfigurationException e) {
-//								// TODO Auto-generated catch block
-//								e.printStackTrace();
-//							} catch (SAXException e) {
-//								// TODO Auto-generated catch block
-//								e.printStackTrace();
-//							}
-								
+							}
+							// catch (ParserConfigurationException e) {
+							// // TODO Auto-generated catch block
+							// e.printStackTrace();
+							// } catch (SAXException e) {
+							// // TODO Auto-generated catch block
+							// e.printStackTrace();
+							// }
+
 						}
 					}
 
@@ -166,8 +197,7 @@ public class UpdateService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// Start our thread
 
-		UpdateThread updateThread = new UpdateThread("yermakov@mail.ru",
-				"hryn177");
+		UpdateThread updateThread = new UpdateThread("apostrofdev@mail.ru", "trololo");
 		new Thread(updateThread).start();
 
 		return super.onStartCommand(intent, flags, startId);
