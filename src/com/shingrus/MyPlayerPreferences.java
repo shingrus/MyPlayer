@@ -10,10 +10,10 @@ public class MyPlayerPreferences {
 
 	private String email, password, mpopCookie;
 
+	private final String MPOPCOOKIE_KEY = "mpop_cookie";
 	private boolean useOnlyWifi;
 	private SharedPreferences preferences;
 	private static MyPlayerPreferences playerPreferences;
-	private Context context;
 
 	public String getMpopCookie() {
 		return mpopCookie;
@@ -22,7 +22,7 @@ public class MyPlayerPreferences {
 	synchronized public void setMpopCookie(String mpopCookie) {
 		// here we need to store it inside
 		SharedPreferences.Editor editor = this.preferences.edit();
-		editor.putString(this.context.getString(R.string.mpop_cookie_key), mpopCookie);
+		editor.putString(MPOPCOOKIE_KEY, mpopCookie);
 		this.mpopCookie = mpopCookie;
 	}
 
@@ -30,7 +30,7 @@ public class MyPlayerPreferences {
 	 * 
 	 * @return {@link String} user's email
 	 */
-	public String getEmail() {
+	public synchronized String getEmail() {
 		return email;
 	}
 
@@ -38,7 +38,7 @@ public class MyPlayerPreferences {
 	 * 
 	 * @return {@link String} user's password
 	 */
-	public String getPassword() {
+	public synchronized String getPassword() {
 		return password;
 	}
 
@@ -57,7 +57,6 @@ public class MyPlayerPreferences {
 		useOnlyWifi = true;
 		preferences = null;
 		mpopCookie = new String();
-		context = null;
 		// load info here
 	}
 
@@ -66,9 +65,8 @@ public class MyPlayerPreferences {
 		this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
 		this.email = preferences.getString(context.getString(R.string.mailru_email_preference_key), "");
 		this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
-		this.mpopCookie = preferences.getString(context.getString(R.string.mpop_cookie_key), "");
+		this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 		this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
-		this.context = context;
 	}
 
 	// TODO: i don't know why i made it like singleton
