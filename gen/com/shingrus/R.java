@@ -12,6 +12,8 @@ public final class R {
     }
     public static final class drawable {
         public static final int icon=0x7f020000;
+        public static final int options=0x7f020001;
+        public static final int ringtone=0x7f020002;
     }
     public static final class id {
         public static final int MenuPreferencesItem=0x7f070007;
@@ -33,17 +35,21 @@ public final class R {
     public static final class string {
         public static final int app_name=0x7f050000;
         public static final int authorization_preferences_group=0x7f050001;
-        public static final int dialog_title_mailru_email_preference=0x7f050005;
-        public static final int dialog_title_mailru_password_preference=0x7f050008;
-        public static final int menu_preferences_item_name=0x7f05000c;
-        public static final int other_preferences_group=0x7f050009;
+        public static final int dialog_title_mailru_email_preference=0x7f050006;
+        public static final int dialog_title_mailru_password_preference=0x7f05000a;
+        public static final int mailru_email_preference_key=0x7f050003;
+        public static final int mailru_password_preference_key=0x7f050007;
+        public static final int menu_preferences_item_name=0x7f05000f;
+        public static final int mpop_cookie_key=0x7f050010;
+        public static final int other_preferences_group=0x7f05000b;
         public static final int preferences_activity_name=0x7f050002;
-        public static final int summary_mailru_email_preference=0x7f050004;
-        public static final int summary_mailru_password_preference=0x7f050007;
-        public static final int title_mailru_email_preference=0x7f050003;
-        public static final int title_mailru_password_preference=0x7f050006;
-        public static final int use_wifi_only_preferences_desc=0x7f05000b;
-        public static final int use_wifi_only_preferences_title=0x7f05000a;
+        public static final int summary_mailru_email_preference=0x7f050005;
+        public static final int summary_mailru_password_preference=0x7f050009;
+        public static final int title_mailru_email_preference=0x7f050004;
+        public static final int title_mailru_password_preference=0x7f050008;
+        public static final int useWifiOnly_key=0x7f05000c;
+        public static final int use_wifi_only_preferences_desc=0x7f05000e;
+        public static final int use_wifi_only_preferences_title=0x7f05000d;
     }
     public static final class xml {
         public static final int preferences=0x7f040000;

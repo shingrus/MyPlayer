@@ -10,6 +10,10 @@ public class MyPlayerApplication extends Application {
 
 	@Override
 	public void onCreate() {
+		
+		
+		MyPlayerPreferences.getInstance(getApplicationContext());
+		
 		this.startService(new Intent(this, UpdateService.class));
 		super.onCreate();
 	}

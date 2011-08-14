@@ -13,6 +13,7 @@ public class MyPlayerPreferencesActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.preferences);
 	}
 
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();

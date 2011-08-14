@@ -74,7 +74,7 @@ public class UpdateService extends Service {
 			try {
 
 				// TODO: here we need timeout tuning on http requests
-				
+
 				HttpGet httpGet = new HttpGet(SWA_URL + "Login=" + email + "&Password=" + password);
 				HttpResponse swaResponse = swaClient.execute(httpGet);
 				if (null != swaResponse) {
@@ -91,7 +91,7 @@ public class UpdateService extends Service {
 						httpGet.setURI(URI.create(MUSIC_URL));
 						HttpResponse musicListResponse = swaClient.execute(httpGet);
 						if (null != musicListResponse && musicListResponse.getStatusLine().getStatusCode() == 200) {
-							//Log.i("shingrus", "got music list");
+							// Log.i("shingrus", "got music list");
 							SAXParserFactory sf = SAXParserFactory.newInstance();
 							try {
 								SAXParser parser = sf.newSAXParser();
@@ -99,66 +99,63 @@ public class UpdateService extends Service {
 								xr.setContentHandler(new DefaultHandler() {
 
 									MusicTrack mt = new MusicTrack();
-									
-									public final String TRACK_TAG ="TRACK", NAME_TAG = "NAME", URL_TAG="FURL", PARAM_ID="id";
+
+									public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG = "FURL", PARAM_ID = "id";
 									boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName = false;
 									StringBuilder builder = new StringBuilder();
-									
+
 									@Override
 									public void characters(char[] ch, int start, int length) throws SAXException {
 										if (isInsideFURL || isInsideName) {
-											builder.append(ch, start, length); 
+											builder.append(ch, start, length);
 										}
 									}
-
-								
-
 
 									@Override
 									public void startElement(String uri, String localName, String qName, Attributes attributes)
 											throws SAXException {
-//										Log.i("shingrus", "XML: start element: " + localName);
+										// Log.i("shingrus",
+										// "XML: start element: " + localName);
 										super.startElement(uri, localName, qName, attributes);
 										if (localName.equalsIgnoreCase(TRACK_TAG)) {
 											isInsideTrackTag = true;
 											mt.setId(attributes.getValue(PARAM_ID));
-										}  
-										else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
-											isInsideFURL=true;
-										}
-										else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
+										} else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
+											isInsideFURL = true;
+										} else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
 											isInsideName = true;
 										}
-											
+
 									}
 
 									@Override
 									public void endElement(String uri, String localName, String qName) throws SAXException {
 
-//										Log.i("shingrus", "XML: end element: " + localName);
-										
+										// Log.i("shingrus",
+										// "XML: end element: " + localName);
+
 										if (localName.equalsIgnoreCase(TRACK_TAG)) {
 											isInsideTrackTag = false;
 											isInsideName = isInsideFURL = false;
 											if (mt.isComplete()) {
-												
+
 												Log.i("shingrus", mt.toString());
-												
-												//well, we have completed mt object with url and id
-												//TODO place mt object and clear it
-												//create new
+
+												// well, we have completed mt
+												// object with url and id
+												// TODO place mt object and
+												// clear it
+												// create new
 												mt = new MusicTrack();
 											}
-										}
-										else if(localName.equalsIgnoreCase(URL_TAG)) {
-											isInsideFURL=false;
+										} else if (localName.equalsIgnoreCase(URL_TAG)) {
+											isInsideFURL = false;
 											mt.setUrl(builder.toString());
-										}
-										else if(localName.equalsIgnoreCase(NAME_TAG)) {
+										} else if (localName.equalsIgnoreCase(NAME_TAG)) {
 											isInsideName = false;
 											mt.setTitle(builder.toString());
 										}
-										
+
 										if (builder.length() > 0) {
 											builder.setLength(0);
 										}
@@ -166,19 +163,19 @@ public class UpdateService extends Service {
 								});
 								InputSource is = new InputSource(musicListResponse.getEntity().getContent());
 								xr.parse(is);
-							} 
-								//catch (Exception e) {
-//								// TODO Something wrong and i need to return
-//								// error back
-//								e.printStackTrace();
-//							}
-							 catch (ParserConfigurationException e) {
-							 // TODO Auto-generated catch block
-							 e.printStackTrace();
-							 } catch (SAXException e) {
-							 // TODO Auto-generated catch block
-							 e.printStackTrace();
-							 }
+							}
+							// catch (Exception e) {
+							// // TODO Something wrong and i need to return
+							// // error back
+							// e.printStackTrace();
+							// }
+							catch (ParserConfigurationException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (SAXException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 
 						}
 					}
@@ -210,10 +207,11 @@ public class UpdateService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// Start our thread
-
-		UpdateThread updateThread = new UpdateThread("apostrofdev@inbox.ru", "trololo");
-		new Thread(updateThread).start();
-
+		MyPlayerPreferences mpp = MyPlayerPreferences.getInstance(null);
+		if (mpp != null) {
+			UpdateThread updateThread = new UpdateThread(mpp.getEmail(), mpp.getPassword());
+			new Thread(updateThread).start();
+		}
 		return super.onStartCommand(intent, flags, startId);
 	}
 

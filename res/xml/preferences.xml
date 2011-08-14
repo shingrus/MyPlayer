@@ -3,13 +3,13 @@
 
 	<PreferenceCategory android:title="@string/authorization_preferences_group">
 		  <EditTextPreference
-                android:key="mailru_email_preference"
+                android:key="@string/mailru_email_preference_key"
                 android:title="@string/title_mailru_email_preference"
                 android:summary="@string/summary_mailru_email_preference"
                 android:dialogTitle="@string/dialog_title_mailru_email_preference" />
 
 		  <EditTextPreference
-                android:key="mailru_password_preference"
+                android:key="@string/mailru_password_preference_key"
                 android:title="@string/title_mailru_password_preference"
                 android:summary="@string/summary_mailru_password_preference"
                 android:dialogTitle="@string/dialog_title_mailru_password_preference" 
@@ -22,7 +22,7 @@
                         android:title="@string/use_wifi_only_preferences_title"
                         android:defaultValue="true"
                         android:summary="@string/use_wifi_only_preferences_desc"
-                        android:key="useWifiOnly" />
+                        android:key="@string/useWifiOnly_key" />
 	</PreferenceCategory>
     
 	
