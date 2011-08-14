@@ -30,11 +30,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>res/drawable-mdpi/ringtone.png</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/Downloads/PNG/32/ringtone_32.png</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>
