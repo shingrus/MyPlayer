@@ -29,6 +29,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+//import android.util.Log;
+import android.util.Log;
 
 public class UpdateService extends Service {
 
@@ -86,9 +88,10 @@ public class UpdateService extends Service {
 					// if we got mpopcookie - we need to get token in future,
 					// but now it's ok to get playlist directly
 					if (this.mpopCookie != null) {
-						httpGet.setURI(URI.create(MUSIC_URL)	);
+						httpGet.setURI(URI.create(MUSIC_URL));
 						HttpResponse musicListResponse = swaClient.execute(httpGet);
 						if (null != musicListResponse && musicListResponse.getStatusLine().getStatusCode() == 200) {
+							//Log.i("shingrus", "got music list");
 							SAXParserFactory sf = SAXParserFactory.newInstance();
 							try {
 								SAXParser parser = sf.newSAXParser();
@@ -97,9 +100,9 @@ public class UpdateService extends Service {
 
 									MusicTrack mt = new MusicTrack();
 									
-									public final String TRACK_TAG ="TRACK", NAME_TAG = "NAME", URL_TAG="FURL", PARAM_ID="ID";
+									public final String TRACK_TAG ="TRACK", NAME_TAG = "NAME", URL_TAG="FURL", PARAM_ID="id";
 									boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName = false;
-									StringBuilder builder;
+									StringBuilder builder = new StringBuilder();
 									
 									@Override
 									public void characters(char[] ch, int start, int length) throws SAXException {
@@ -113,16 +116,17 @@ public class UpdateService extends Service {
 
 									@Override
 									public void startElement(String uri, String localName, String qName, Attributes attributes)
-											throws SAXException {	
+											throws SAXException {
+//										Log.i("shingrus", "XML: start element: " + localName);
 										super.startElement(uri, localName, qName, attributes);
 										if (localName.equalsIgnoreCase(TRACK_TAG)) {
 											isInsideTrackTag = true;
 											mt.setId(attributes.getValue(PARAM_ID));
 										}  
-										else if (localName.equals(URL_TAG) && isInsideTrackTag) {
+										else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
 											isInsideFURL=true;
 										}
-										else if (localName.equals(NAME_TAG) && isInsideTrackTag) {
+										else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
 											isInsideName = true;
 										}
 											
@@ -130,11 +134,20 @@ public class UpdateService extends Service {
 
 									@Override
 									public void endElement(String uri, String localName, String qName) throws SAXException {
-										super.endElement(uri, localName, qName);
+
+//										Log.i("shingrus", "XML: end element: " + localName);
+										
 										if (localName.equalsIgnoreCase(TRACK_TAG)) {
 											isInsideTrackTag = false;
+											isInsideName = isInsideFURL = false;
 											if (mt.isComplete()) {
+												
+												Log.i("shingrus", mt.toString());
+												
 												//well, we have completed mt object with url and id
+												//TODO place mt object and clear it
+												//create new
+												mt = new MusicTrack();
 											}
 										}
 										else if(localName.equalsIgnoreCase(URL_TAG)) {
@@ -153,18 +166,19 @@ public class UpdateService extends Service {
 								});
 								InputSource is = new InputSource(musicListResponse.getEntity().getContent());
 								xr.parse(is);
-							} catch (Exception e) {
-								// TODO Something wrong and i need to return
-								// error back
-								e.printStackTrace();
-							}
-							// catch (ParserConfigurationException e) {
-							// // TODO Auto-generated catch block
-							// e.printStackTrace();
-							// } catch (SAXException e) {
-							// // TODO Auto-generated catch block
-							// e.printStackTrace();
-							// }
+							} 
+								//catch (Exception e) {
+//								// TODO Something wrong and i need to return
+//								// error back
+//								e.printStackTrace();
+//							}
+							 catch (ParserConfigurationException e) {
+							 // TODO Auto-generated catch block
+							 e.printStackTrace();
+							 } catch (SAXException e) {
+							 // TODO Auto-generated catch block
+							 e.printStackTrace();
+							 }
 
 						}
 					}
@@ -197,7 +211,7 @@ public class UpdateService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// Start our thread
 
-		UpdateThread updateThread = new UpdateThread("apostrofdev@mail.ru", "trololo");
+		UpdateThread updateThread = new UpdateThread("apostrofdev@inbox.ru", "trololo");
 		new Thread(updateThread).start();
 
 		return super.onStartCommand(intent, flags, startId);

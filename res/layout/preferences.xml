@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:key="first_preferencescreen">
+
+	<PreferenceCategory android:title="@string/authorization_preferences_group">
+		  <EditTextPreference
+                android:key="mailru_email_preference"
+                android:title="@string/title_mailru_email_preference"
+                android:summary="@string/summary_mailru_email_preference"
+                android:dialogTitle="@string/dialog_title_mailru_email_preference" />
+
+		  <EditTextPreference
+                android:key="mailru_password_preference"
+                android:title="@string/title_mailru_password_preference"
+                android:summary="@string/summary_mailru_password_preference"
+                android:dialogTitle="@string/dialog_title_mailru_password_preference" 
+                android:password="true"
+                />
+	</PreferenceCategory>
+	
+	<PreferenceCategory android:title="@string/other_preferences_group">
+		<CheckBoxPreference
+                        android:title="@string/use_wifi_only_preferences_title"
+                        android:defaultValue="true"
+                        android:summary="@string/use_wifi_only_preferences_desc"
+                        android:key="useWifiOnly" />
+	</PreferenceCategory>
+    
+	
+</PreferenceScreen> 

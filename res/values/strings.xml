@@ -2,4 +2,20 @@
 <resources>
     <string name="hello">Hello World, MyPlayerActivity!</string>
     <string name="app_name">MyPlayer</string>
+    <string name="authorization_preferences_group">Mail.Ru Authorization</string>
+    
+    <string name="title_mailru_email_preference">Mail.Ru E-mail</string>
+	<string name="summary_mailru_email_preference">Ваш почтовый ящик, например yermakov@mail.ru</string>
+	<string name="dialog_title_mailru_email_preference">Mail.Ru E-mail</string>
+	
+	<string name="title_mailru_password_preference">Mail.Ru Password</string>
+	<string name="summary_mailru_password_preference">Ваш пароль к почтовому ящику</string>
+	<string name="dialog_title_mailru_password_preference">Mail.Ru Password</string>
+	
+	<string name="other_preferences_group">Другие настройки</string>
+	
+	<string name="use_wifi_only_preferences_title">Обновление только через WIFI</string>
+	<string name="use_wifi_only_preferences_desc">Новые треки будут скачиваться только через wi-fi</string>
+	
+	
 </resources>

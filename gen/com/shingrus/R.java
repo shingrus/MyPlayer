@@ -25,9 +25,20 @@ public final class R {
     public static final class layout {
         public static final int authorization=0x7f030000;
         public static final int main=0x7f030001;
+        public static final int preferences=0x7f030002;
     }
     public static final class string {
         public static final int app_name=0x7f040001;
+        public static final int authorization_preferences_group=0x7f040002;
+        public static final int dialog_title_mailru_email_preference=0x7f040005;
+        public static final int dialog_title_mailru_password_preference=0x7f040008;
         public static final int hello=0x7f040000;
+        public static final int other_preferences_group=0x7f040009;
+        public static final int summary_mailru_email_preference=0x7f040004;
+        public static final int summary_mailru_password_preference=0x7f040007;
+        public static final int title_mailru_email_preference=0x7f040003;
+        public static final int title_mailru_password_preference=0x7f040006;
+        public static final int use_wifi_only_preferences_desc=0x7f04000b;
+        public static final int use_wifi_only_preferences_title=0x7f04000a;
     }
 }
