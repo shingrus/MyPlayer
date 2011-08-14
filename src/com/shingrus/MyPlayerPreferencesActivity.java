@@ -10,12 +10,11 @@ public class MyPlayerPreferencesActivity extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.preferences);
+		addPreferencesFromResource(R.xml.preferences);
 	}
 
 	@Override
 	protected void onDestroy() {
-		// TODO Auto-generated method stub
 		super.onDestroy();
 	}
 
