@@ -9,8 +9,23 @@ import android.preference.PreferenceManager;
 public class MyPlayerPreferences {
 
 	private String email, password, mpopCookie;
+
 	private boolean useOnlyWifi;
-	
+	private SharedPreferences preferences;
+	private static MyPlayerPreferences playerPreferences;
+	private Context context;
+
+	public String getMpopCookie() {
+		return mpopCookie;
+	}
+
+	synchronized public void setMpopCookie(String mpopCookie) {
+		// here we need to store it inside
+		SharedPreferences.Editor editor = this.preferences.edit();
+		editor.putString(this.context.getString(R.string.mpop_cookie_key), mpopCookie);
+		this.mpopCookie = mpopCookie;
+	}
+
 	/**
 	 * 
 	 * @return {@link String} user's email
@@ -29,15 +44,12 @@ public class MyPlayerPreferences {
 
 	/**
 	 * 
-	 * @return {@link Boolean} user's setting for wifi or other connections usage
+	 * @return {@link Boolean} user's setting for wifi or other connections
+	 *         usage
 	 */
 	public boolean isUseOnlyWifi() {
 		return useOnlyWifi;
 	}
-
-	private SharedPreferences preferences;
-
-	private static MyPlayerPreferences playerPreferences;
 
 	private MyPlayerPreferences() {
 		email = new String();
@@ -45,6 +57,7 @@ public class MyPlayerPreferences {
 		useOnlyWifi = true;
 		preferences = null;
 		mpopCookie = new String();
+		context = null;
 		// load info here
 	}
 
@@ -55,16 +68,17 @@ public class MyPlayerPreferences {
 		this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
 		this.mpopCookie = preferences.getString(context.getString(R.string.mpop_cookie_key), "");
 		this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
+		this.context = context;
 	}
-	
 
 	// TODO: i don't know why i made it like singleton
 	/**
-	 * @param Context context - context of the application
-	 * Creates new instance fills it and return or just returns 
-	 * already created and filled instance
+	 * @param Context
+	 *            context - context of the application Creates new instance
+	 *            fills it and return or just returns already created and filled
+	 *            instance
 	 */
-	public static final MyPlayerPreferences getInstance(Context context) {
+	public synchronized static final MyPlayerPreferences getInstance(Context context) {
 
 		if (playerPreferences == null && context != null) {
 			playerPreferences = new MyPlayerPreferences();
