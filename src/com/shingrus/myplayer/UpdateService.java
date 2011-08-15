@@ -1,4 +1,4 @@
-package com.shingrus;
+package com.shingrus.myplayer;
 
 import java.io.IOException;
 import java.net.URI;
@@ -47,7 +47,7 @@ public class UpdateService extends Service {
 
 		public static final String SWA_URL = "http://swa.mail.ru/?";
 		public static final String MUSIC_URL = "http://my.mail.ru/musxml";
-		public static final int SLEEP_MS = 600*1000;
+		public static final int SLEEP_MS = 600 * 1000;
 		public static final String COOKIE_NAME = "Mpop";
 
 		private boolean reAuthorizationRequired, continueWorking;
@@ -190,15 +190,14 @@ public class UpdateService extends Service {
 
 			if (this.mpopCookie != null && reAuthorizationRequired == false) {
 				result = true;
-			} else if (reAuthorizationRequired == false && (this.mpopCookie == null || this.mpopCookie.length()==0)) {
+			} else if (reAuthorizationRequired == false && (this.mpopCookie == null || this.mpopCookie.length() == 0)) {
 				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
 				if (mpf != null) {
-					String mpopCookie = mpf.getMpopCookie(); 
+					String mpopCookie = mpf.getMpopCookie();
 					if (mpopCookie != null && mpopCookie.length() > 0) {
-						this.mpopCookie = mpopCookie; 
+						this.mpopCookie = mpopCookie;
 						result = true;
-					}
-					else
+					} else
 						reAuthorizationRequired = true;
 				} else
 					reAuthorizationRequired = true;

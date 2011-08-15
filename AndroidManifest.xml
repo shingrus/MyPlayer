@@ -3,16 +3,16 @@
 	android:versionName="1.0">
 	<uses-sdk android:minSdkVersion="9" />
 	<uses-permission android:name="android.permission.INTERNET" />
-	<application android:label="@string/app_name" android:name=".MyPlayerApplication" android:icon="@drawable/ringtone">
+	<application android:label="@string/app_name" android:name=".myplayer.MyPlayerApplication" android:icon="@drawable/ringtone">
 		<activity android:name=".MyPlayerActivity" android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity android:name=".MyPlayerPreferencesActivity" android:label="@string/preferences_activity_name">
+		<activity android:name=".myplayer.MyPlayerPreferencesActivity" android:label="@string/preferences_activity_name">
 		</activity>
-		<service android:name=".UpdateService" android:enabled="true"></service>
+		<service android:name=".myplayer.UpdateService" android:enabled="true"></service>
 
 	</application>
 </manifest>

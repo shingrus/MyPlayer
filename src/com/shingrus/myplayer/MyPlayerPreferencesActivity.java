@@ -1,4 +1,4 @@
-package com.shingrus;
+package com.shingrus.myplayer;
 
 import com.shingrus.R;
 
