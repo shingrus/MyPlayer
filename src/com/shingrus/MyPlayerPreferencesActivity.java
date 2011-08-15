@@ -16,6 +16,14 @@ public class MyPlayerPreferencesActivity extends PreferenceActivity {
 
 	@Override
 	protected void onDestroy() {
+		
+		//TODO: 
+		// update MyPlayerPreferences
+		// update our service to get new authorize info
+		//
+		MyPlayerPreferences mpp = MyPlayerPreferences.getInstance(this);
+		if (mpp != null) 
+			mpp.loadPreferences(this);
 		super.onDestroy();
 	}
 

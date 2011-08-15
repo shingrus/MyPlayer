@@ -13,7 +13,7 @@ public class MyPlayerPreferences {
 	private final String MPOPCOOKIE_KEY = "mpop_cookie";
 	private boolean useOnlyWifi;
 	private SharedPreferences preferences;
-	private static MyPlayerPreferences playerPreferences;
+	private static MyPlayerPreferences playerPreferences ;
 
 	public String getMpopCookie() {
 		return mpopCookie;
@@ -23,6 +23,7 @@ public class MyPlayerPreferences {
 		// here we need to store it inside
 		SharedPreferences.Editor editor = this.preferences.edit();
 		editor.putString(MPOPCOOKIE_KEY, mpopCookie);
+		editor.apply();
 		this.mpopCookie = mpopCookie;
 	}
 
@@ -60,13 +61,13 @@ public class MyPlayerPreferences {
 		// load info here
 	}
 
-	public void loadPreferences(Context context) {
-		PreferenceManager.setDefaultValues(context, R.xml.preferences, false);
-		this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
-		this.email = preferences.getString(context.getString(R.string.mailru_email_preference_key), "");
-		this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
-		this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
-		this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
+	public synchronized void loadPreferences(Context context) {
+			PreferenceManager.setDefaultValues(context, R.xml.preferences, false);
+			this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
+			this.email = preferences.getString(context.getString(R.string.mailru_email_preference_key), "");
+			this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
+			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
+			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
 	}
 
 	// TODO: i don't know why i made it like singleton

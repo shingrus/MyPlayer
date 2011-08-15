@@ -2,6 +2,7 @@ package com.shingrus;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -36,36 +37,43 @@ import android.util.Log;
 
 public class UpdateService extends Service {
 
-	class UpdateThread implements Runnable {
+	UpdateThread updateThread;
+
+	public UpdateService() {
+		this.updateThread = new UpdateThread();
+	}
+
+	class UpdateThread extends Thread {
 
 		public static final String SWA_URL = "http://swa.mail.ru/?";
 		public static final String MUSIC_URL = "http://my.mail.ru/musxml";
 		public static final int SLEEP_MS = 600*1000;
 		public static final String COOKIE_NAME = "Mpop";
-		
+
 		private boolean reAuthorizationRequired, continueWorking;
-		final String email, password;
 		String mpopCookie;
 
-		public UpdateThread(String email, String password) {
+		public UpdateThread() {
 			super();
-			this.email = email;
-			this.password = password;
 			this.mpopCookie = null;
 			this.reAuthorizationRequired = false;
 			this.continueWorking = true;
 		}
 
 		protected void updateTrackList() {
-			if (this.mpopCookie != null && this.mpopCookie.length()>0) {
+			if (this.mpopCookie != null && this.mpopCookie.length() > 0) {
 				AbstractHttpClient httpClient = new DefaultHttpClient();
 				HttpGet httpGet = new HttpGet(MUSIC_URL);
-				
-				httpClient.getCookieStore().addCookie(new BasicClientCookie(COOKIE_NAME, this.mpopCookie));
-				
+
+				BasicClientCookie cookie = new BasicClientCookie(COOKIE_NAME, this.mpopCookie);
+				cookie.setDomain(".mail.ru");
+				cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
+				cookie.setPath("/");
+				httpClient.getCookieStore().addCookie(cookie);
+
 				try {
 					HttpResponse musicListResponse = httpClient.execute(httpGet);
-					
+
 					if (null != musicListResponse && musicListResponse.getStatusLine().getStatusCode() == 200) {
 						// Log.i("shingrus", "got music list");
 						SAXParserFactory sf = SAXParserFactory.newInstance();
@@ -77,7 +85,8 @@ public class UpdateService extends Service {
 
 								MusicTrack mt = new MusicTrack();
 
-								public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG = "FURL", PARAM_ID = "id", MUSICLIST_TAG="MUSIC_LIST";
+								public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG = "FURL", PARAM_ID = "id",
+										MUSICLIST_TAG = "MUSIC_LIST";
 								boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName = false, isInsideMusicList = false;
 								StringBuilder builder = new StringBuilder();
 
@@ -104,7 +113,7 @@ public class UpdateService extends Service {
 										isInsideName = true;
 									} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
 										isInsideMusicList = true;
-									} 
+									}
 
 								}
 
@@ -124,7 +133,7 @@ public class UpdateService extends Service {
 											// well, we have completed mt
 											// object with url and id
 											// TODO place mt object and
-											
+
 										}
 									} else if (localName.equalsIgnoreCase(URL_TAG)) {
 										isInsideFURL = false;
@@ -132,23 +141,21 @@ public class UpdateService extends Service {
 									} else if (localName.equalsIgnoreCase(NAME_TAG)) {
 										isInsideName = false;
 										mt.setTitle(builder.toString());
-									} 
-									else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
+									} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
 										isInsideMusicList = false;
-										if (builder.equals("Error!")) {
+										if (builder.toString().equals("Error!")) {
 											UpdateThread.this.reAuthorizationRequired = true;
 										}
-											
+
 									}
 									if (builder.length() > 0) {
 										builder.setLength(0);
 									}
 								}
-								});
+							});
 							InputSource is = new InputSource(musicListResponse.getEntity().getContent());
 							xr.parse(is);
-						}
-						catch (ParserConfigurationException e) {
+						} catch (ParserConfigurationException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (SAXException e) {
@@ -167,15 +174,15 @@ public class UpdateService extends Service {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			} 
-			else reAuthorizationRequired=true;
+			} else
+				reAuthorizationRequired = true;
 		}
-		
+
 		/**
 		 * It Makes authorization on mail.ru currently in future it may be
 		 * implementation of the interface
 		 * 
-		 * @return true - in success, false in vise versa
+		 * @return true - in success, false in vice versa
 		 */
 		protected boolean authorize() {
 
@@ -183,6 +190,18 @@ public class UpdateService extends Service {
 
 			if (this.mpopCookie != null && reAuthorizationRequired == false) {
 				result = true;
+			} else if (reAuthorizationRequired == false && (this.mpopCookie == null || this.mpopCookie.length()==0)) {
+				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+				if (mpf != null) {
+					String mpopCookie = mpf.getMpopCookie(); 
+					if (mpopCookie != null && mpopCookie.length() > 0) {
+						this.mpopCookie = mpopCookie; 
+						result = true;
+					}
+					else
+						reAuthorizationRequired = true;
+				} else
+					reAuthorizationRequired = true;
 			} else {
 				HttpClient swaClient = new DefaultHttpClient();
 				((AbstractHttpClient) (swaClient)).setRedirectHandler(new RedirectHandler() {
@@ -201,28 +220,28 @@ public class UpdateService extends Service {
 
 					// TODO: here we need timeout tuning on http requests
 
-					HttpGet httpGet = new HttpGet(SWA_URL + "Login=" + email + "&Password=" + password);
-					HttpResponse swaResponse = swaClient.execute(httpGet);
-					if (null != swaResponse) {
-						for (Cookie cookie : ((AbstractHttpClient) swaClient).getCookieStore().getCookies()) {
-							if (cookie.getName().equalsIgnoreCase(COOKIE_NAME)) {
-								this.mpopCookie = cookie.getValue();
-								break;
+					MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+					if (mpf != null) {
+						HttpGet httpGet = new HttpGet(SWA_URL + "Login=" + mpf.getEmail() + "&Password=" + mpf.getPassword());
+						HttpResponse swaResponse = swaClient.execute(httpGet);
+						if (null != swaResponse) {
+							for (Cookie cookie : ((AbstractHttpClient) swaClient).getCookieStore().getCookies()) {
+								if (cookie.getName().equalsIgnoreCase(COOKIE_NAME)) {
+									this.mpopCookie = cookie.getValue();
+									break;
+								}
 							}
-						}
-						// if we got mpopcookie - we need to get token in
-						// future,
-						// but now it's ok to get playlist directly
-						if (this.mpopCookie != null) {
-							result = true;
-							reAuthorizationRequired = false;
-							// store it
-							MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
-							if (null != mpf) {
+							// if we got mpopcookie - we need to get token in
+							// future,
+							// but now it's ok to get playlist directly
+							if (this.mpopCookie != null) {
+								result = true;
+								reAuthorizationRequired = false;
+								// store it
 								mpf.setMpopCookie(this.mpopCookie);
 							}
-						}
 
+						}
 					}
 				} catch (ClientProtocolException e) {
 					// TODO Auto-generated catch block
@@ -245,13 +264,11 @@ public class UpdateService extends Service {
 				try {
 					Thread.sleep(SLEEP_MS);
 				} catch (InterruptedException e) {
-					
+
 					continueWorking = false;
 				}
 			}
-			
-			
-			
+
 		}
 
 	}
@@ -264,16 +281,13 @@ public class UpdateService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// Start our thread
-		MyPlayerPreferences mpp = MyPlayerPreferences.getInstance(null);
-		if (mpp != null) {
-			UpdateThread updateThread = new UpdateThread(mpp.getEmail(), mpp.getPassword());
-			new Thread(updateThread).start();
-		}
+		updateThread.start();
 		return super.onStartCommand(intent, flags, startId);
 	}
 
 	@Override
 	public void onDestroy() {
+		updateThread.interrupt();
 		// TODO Auto-generated method stub
 		super.onDestroy();
 	}

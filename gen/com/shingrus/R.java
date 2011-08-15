@@ -40,7 +40,6 @@ public final class R {
         public static final int mailru_email_preference_key=0x7f050003;
         public static final int mailru_password_preference_key=0x7f050007;
         public static final int menu_preferences_item_name=0x7f05000f;
-        public static final int mpop_cookie_key=0x7f050010;
         public static final int other_preferences_group=0x7f05000b;
         public static final int preferences_activity_name=0x7f050002;
         public static final int summary_mailru_email_preference=0x7f050005;
