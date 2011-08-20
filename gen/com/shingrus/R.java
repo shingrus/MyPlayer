@@ -16,7 +16,8 @@ public final class R {
         public static final int ringtone=0x7f020002;
     }
     public static final class id {
-        public static final int MenuPreferencesItem=0x7f070007;
+        public static final int MenuPreferencesItem=0x7f070008;
+        public static final int playListView=0x7f070007;
         public static final int spinner1=0x7f070003;
         public static final int tableLayout1=0x7f070000;
         public static final int tableRow1=0x7f070001;
@@ -27,7 +28,8 @@ public final class R {
     }
     public static final class layout {
         public static final int authorization=0x7f030000;
-        public static final int main=0x7f030001;
+        public static final int playlist=0x7f030001;
+        public static final int tracklist_item=0x7f030002;
     }
     public static final class menu {
         public static final int optionmenu=0x7f060000;

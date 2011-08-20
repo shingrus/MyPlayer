@@ -133,6 +133,8 @@ public class UpdateService extends Service {
 											// well, we have completed mt
 											// object with url and id
 											// TODO place mt object and
+											
+											TrackList.getInstance().AddTrack(mt);
 
 										}
 									} else if (localName.equalsIgnoreCase(URL_TAG)) {

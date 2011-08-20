@@ -8,13 +8,28 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ListView;
 
 public class MyPlayerActivity extends Activity {
+	
+	TrackList trackList;
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
+		trackList = TrackList.getInstance();
+		setContentView(R.layout.playlist);
+		ListView lv = (ListView)findViewById(R.id.playListView);
+		lv.setAdapter(trackList.getAdapter(this));
+		
+		
+	}
+
+	@Override
+	protected void onDestroy() {
+		if (trackList != null) 
+			trackList.DropAdapter();
+		super.onDestroy();
 	}
 
 	@Override

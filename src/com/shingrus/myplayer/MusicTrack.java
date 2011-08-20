@@ -50,6 +50,22 @@ public final class MusicTrack {
 		return "MT: " + this.title + " : " + this.url;	
 	}
 
+	
+	@Override
+	public int hashCode() {
+		return this.url.hashCode();
+	}
+
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof MusicTrack) {
+			
+			return this.url.equals(((MusicTrack)o).url);
+		}
+		return super.equals(o);
+	}
+
 	public boolean isComplete() {
 		boolean result = false;
 		if (url != null && id != null && url.length() > 0 && id.length() > 0)
