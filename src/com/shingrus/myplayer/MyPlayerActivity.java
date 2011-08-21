@@ -28,7 +28,7 @@ public class MyPlayerActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		if (trackList != null) 
-			trackList.DropAdapter();
+			trackList.dropAdapter();
 		super.onDestroy();
 	}
 

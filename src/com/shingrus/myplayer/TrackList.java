@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,11 +19,11 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-//TODO extends ArrayAdapter
 public class TrackList {
 
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
+	private boolean alreadyLoaded = false;
 
 	// private final Context context;
 
@@ -52,7 +53,7 @@ public class TrackList {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			LayoutInflater inflater = this.activity.getLayoutInflater();
-			TextView rowView = (TextView)inflater.inflate(R.layout.tracklist_item, null, true);
+			TextView rowView = (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			rowView.setText(trackList.get(position).getTitle());
 			return rowView;
 		}
@@ -66,23 +67,50 @@ public class TrackList {
 	private TrackList() {
 		// trackList = new LinkedHashSet<MusicTrack>();
 		trackList = new ArrayList<MusicTrack>();
+
+		// bind to UpdateService
+
 	}
 
 	/**
 	 * Loads track list from internal storage
 	 */
 	public synchronized void LoadTracks() {
-		dataChanged();
+			dataChanged();
 	}
 
 	/**
 	 * 
 	 */
 
-	public synchronized void AddTrack(MusicTrack mt) {
+	public synchronized void addTrack(MusicTrack mt) {
 		if (!trackList.contains(mt)) {
 			trackList.add(mt);
+
+			// TODO store into storage
+			dataChanged();
 		}
+	}
+
+	public synchronized void serFileName(MusicTrack mt, String filename) {
+		for (MusicTrack track : trackList) {
+			if (track.equals(mt)) {
+				track.setFilename(filename);
+			}
+		}
+
+		// TODO: store into storage
+
+		dataChanged();
+	}
+
+	public synchronized boolean contains(MusicTrack mt) {
+		return trackList.contains(mt);
+	}
+
+	public synchronized void removeAll() {
+		trackList.clear();
+		// TODO: drop table inside storage
 		dataChanged();
 	}
 
@@ -95,24 +123,30 @@ public class TrackList {
 		return trackListInstance;
 	}
 
+	public synchronized MusicTrack getNextForDownLoad() {
+		for (MusicTrack mt : trackList) {
+			if (mt.getFilename() == null || mt.getFilename().length()<1) {
+				return mt;
+			}
+		}
+		return null;
+	}
+	
 	public TrackListAdapter getAdapter(Activity actvty) {
 		adapter = new TrackListAdapter(actvty);
 		return adapter;
 	}
 
-	public void DropAdapter () {
-		if (adapter != null) 
-			adapter = null;
+	public void dropAdapter() {
+		adapter = null;
 	}
-	
-	private void dataChanged() {
+
+	private synchronized void dataChanged() {
 		if (adapter != null) {
 			this.adapter.activity.runOnUiThread(new Runnable() {
-				
 				@Override
 				public void run() {
 					adapter.notifyDataSetChanged();
-					
 				}
 			});
 		}

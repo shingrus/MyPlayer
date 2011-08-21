@@ -6,9 +6,17 @@ import android.util.Log;
 
 public final class MusicTrack {
 
-	private String title, id, url;
+	public enum MusicTrackStatus {
+		NEW,
+		DOWNLOADED,
+		QUEUED,
+		DOWNLOADING		
+	};
+	
+	private String title, id, url, filename;
 	private int Duration;
-
+	private MusicTrackStatus status = MusicTrackStatus.NEW;
+	
 	public String getTitle() {
 		return title;
 	}
@@ -44,6 +52,22 @@ public final class MusicTrack {
 //		Log.i("shingrus", "MT: Setted new url: " + this.url);
 	}
 	
+
+	public MusicTrackStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(MusicTrackStatus status) {
+		this.status = status;
+	}
+
+	public String getFilename() {
+		return filename;
+	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 
 	@Override
 	public String toString() {

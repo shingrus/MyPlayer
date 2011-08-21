@@ -3,12 +3,12 @@ package com.shingrus.myplayer;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
 import org.apache.http.client.ClientProtocolException;
@@ -16,12 +16,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.RedirectHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.cookie.CookieOrigin;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -29,8 +26,17 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+import android.app.DownloadManager;
+import android.app.DownloadManager.Query;
+import android.app.DownloadManager.Request;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Binder;
 import android.os.IBinder;
 //import android.util.Log;
 import android.util.Log;
@@ -38,11 +44,74 @@ import android.util.Log;
 public class UpdateService extends Service {
 
 	UpdateThread updateThread;
-
+	Thread downloadThread;
+	boolean continueWorking = true;
+	public static final int DOWNLOAD_SLEEP_MS = 3000;
+	
+	long downloadEnqueue;
+	DownloadManager dm;
+	MusicTrack currentDownload;
+	
+	TrackList tl;
+	
+	public static final int MAXIMUM_SIM_DOWNLOAD = 1;
+	private BroadcastReceiver receiver;
+	
+	private final IBinder mBinder = new LocalBinder();
+	
 	public UpdateService() {
+		super();
 		this.updateThread = new UpdateThread();
-	}
+		this.downloadThread = new DownloadThread();
 
+		downloadEnqueue = 0;
+		dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+		tl = TrackList.getInstance();
+	}
+	
+	public class LocalBinder extends Binder {
+		  UpdateService getService() {
+	            return UpdateService.this;
+	        }
+	}
+	
+	class DownloadThread extends Thread {
+		
+		public static final String DOWNLOAD_MANAGER_DESCRIPTION = "MyPlayer: Downloading new music from social network.";
+		
+		public DownloadThread() {
+			super();
+		}
+		
+		
+		@Override
+		public void run() {
+			
+			
+			while (UpdateService.this.continueWorking) {
+				Thread.yield();
+
+				
+				if (UpdateService.this.currentDownload == null) { // we are waiting for downloading
+					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null ) {
+						Request r = new Request(Uri.parse(currentDownload.getUrl()));
+						r.setAllowedOverRoaming(false);
+						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | (MyPlayerPreferences.getInstance(null).useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE));
+						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
+						r.addRequestHeader("Cookie", MyPlayerPreferences.getInstance(null).getMpopCookie());
+						UpdateService.this.downloadEnqueue = dm.enqueue(r);
+					}
+				} 
+				
+				try {
+					Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
+				} catch (InterruptedException e) {
+
+				}
+
+			}
+		}
+	}
 	class UpdateThread extends Thread {
 
 		public static final String SWA_URL = "http://swa.mail.ru/?";
@@ -50,14 +119,13 @@ public class UpdateService extends Service {
 		public static final int SLEEP_MS = 600 * 1000;
 		public static final String COOKIE_NAME = "Mpop";
 
-		private boolean reAuthorizationRequired, continueWorking;
+		private boolean reAuthorizationRequired;
 		String mpopCookie;
 
 		public UpdateThread() {
 			super();
 			this.mpopCookie = null;
 			this.reAuthorizationRequired = false;
-			this.continueWorking = true;
 		}
 
 		protected void updateTrackList() {
@@ -80,7 +148,7 @@ public class UpdateService extends Service {
 						try {
 							SAXParser parser = sf.newSAXParser();
 							XMLReader xr = parser.getXMLReader();
-							boolean authorizationError = false;
+//							boolean authorizationError = false;
 							xr.setContentHandler(new DefaultHandler() {
 
 								MusicTrack mt = new MusicTrack();
@@ -128,13 +196,18 @@ public class UpdateService extends Service {
 										isInsideName = isInsideFURL = false;
 										if (mt.isComplete()) {
 
+											TrackList tl = TrackList.getInstance();
 											Log.i("shingrus", mt.toString());
 
 											// well, we have completed mt
 											// object with url and id
 											// TODO place mt object and
 											
-											TrackList.getInstance().AddTrack(mt);
+											if (!tl.contains(mt)) {
+												tl.addTrack(mt);
+											}
+												
+											
 
 										}
 									} else if (localName.equalsIgnoreCase(URL_TAG)) {
@@ -258,7 +331,7 @@ public class UpdateService extends Service {
 		@Override
 		public void run() {
 			Thread.yield();
-			while (continueWorking) {
+			while (UpdateService.this.continueWorking) {
 				if (authorize()) {
 					updateTrackList();
 				}
@@ -276,27 +349,72 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onCreate() {
+		 receiver = new BroadcastReceiver() {
+	            @Override
+	            public void onReceive(Context context, Intent intent) {
+	                String action = intent.getAction();
+	                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+	                    long downloadId = intent.getLongExtra(
+	                            DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+	                    Query query = new Query();
+	                    query.setFilterById(downloadEnqueue);
+	                    Cursor c = dm.query(query);
+	                    if (c.moveToFirst()) {
+	                        int columnIndex = c
+	                                .getColumnIndex(DownloadManager.COLUMN_STATUS);
+	                        if (DownloadManager.STATUS_SUCCESSFUL == c
+	                                .getInt(columnIndex)) {	
+	 
+	                        	String filename = c.getString(c
+                                        .getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+	                        	
+	                        	//XXX: just for link test
+	                        	currentDownload.setFilename(filename);
+//	                        	try {
+//									dm.openDownloadedFile(downloadId);
+//								} catch (FileNotFoundException e) {
+//									//TODO: show warning to user
+//								}
+	                        }
+//	                        else if (DownloadManager.STATUS_FAILED== c
+//	                                .getInt(columnIndex)) {
+//	                        	downloadQueue.add(currentDownload);
+//	                        	currentDownload = null;
+//	                        }
+	                    }
+	                }
+	            }
+	        };
+	 
+	        registerReceiver(receiver, new IntentFilter(
+	                DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		
 		super.onCreate();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// Start our thread
+		
+		// Start update thread
 		updateThread.start();
+		//Start download thread
+		downloadThread.start();
 		return super.onStartCommand(intent, flags, startId);
 	}
 
 	@Override
 	public void onDestroy() {
 		updateThread.interrupt();
-		// TODO Auto-generated method stub
+		downloadThread.interrupt();
+		unregisterReceiver(receiver);
+		// TODO remove downloads
 		super.onDestroy();
 	}
 
 	@Override
-	public IBinder onBind(Intent arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	public IBinder onBind(Intent i) {
+		return mBinder;
+		
 	}
-
+	
 }

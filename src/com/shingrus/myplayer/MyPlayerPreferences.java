@@ -50,7 +50,7 @@ public class MyPlayerPreferences {
 	 * @return {@link Boolean} user's setting for wifi or other connections
 	 *         usage
 	 */
-	public boolean isUseOnlyWifi() {
+	public boolean useOnlyWifi() {
 		return useOnlyWifi;
 	}
 

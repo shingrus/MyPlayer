@@ -13,8 +13,10 @@ public class MyPlayerApplication extends Application {
 		
 		
 		MyPlayerPreferences.getInstance(getApplicationContext());
+		TrackList.getInstance();
 		
-		this.startService(new Intent(this, UpdateService.class));
+		startService(new Intent(this, UpdateService.class));
+		
 		super.onCreate();
 	}
 
