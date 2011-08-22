@@ -3,8 +3,6 @@ package com.shingrus.myplayer;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -43,10 +41,16 @@ import android.util.Log;
 
 public class UpdateService extends Service {
 
+
+	public static final int DOWNLOAD_SLEEP_MS = 3000;
+	public static final int UPDATE_SLEEP_MS = 600 * 1000;
+	public static final String SWA_URL = "http://swa.mail.ru/?";
+	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
+	public static final String MAILRU_COOKIE_NAME = "Mpop";
+	
 	UpdateThread updateThread;
 	Thread downloadThread;
 	boolean continueWorking = true;
-	public static final int DOWNLOAD_SLEEP_MS = 3000;
 	
 	long downloadEnqueue;
 	DownloadManager dm;
@@ -57,7 +61,7 @@ public class UpdateService extends Service {
 	public static final int MAXIMUM_SIM_DOWNLOAD = 1;
 	private BroadcastReceiver receiver;
 	
-	private final IBinder mBinder = new LocalBinder();
+//	private final IBinder mBinder = new LocalBinder();
 	
 	public UpdateService() {
 		super();
@@ -65,7 +69,6 @@ public class UpdateService extends Service {
 		this.downloadThread = new DownloadThread();
 
 		downloadEnqueue = 0;
-		dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 		tl = TrackList.getInstance();
 	}
 	
@@ -94,11 +97,14 @@ public class UpdateService extends Service {
 				
 				if (UpdateService.this.currentDownload == null) { // we are waiting for downloading
 					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null ) {
-						Request r = new Request(Uri.parse(currentDownload.getUrl()));
+						String urlString  = "http://" +  currentDownload.getUrl().replaceAll("[\\r\\n\\s]", "");
+						Request r = new Request(Uri.parse(urlString));
 						r.setAllowedOverRoaming(false);
-						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | (MyPlayerPreferences.getInstance(null).useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE));
+						//TODO comment below and uncomment next line
+						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+						//r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | (MyPlayerPreferences.getInstance(null).useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE));
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
-						r.addRequestHeader("Cookie", MyPlayerPreferences.getInstance(null).getMpopCookie());
+						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "="+MyPlayerPreferences.getInstance(null).getMpopCookie());
 						UpdateService.this.downloadEnqueue = dm.enqueue(r);
 					}
 				} 
@@ -114,10 +120,7 @@ public class UpdateService extends Service {
 	}
 	class UpdateThread extends Thread {
 
-		public static final String SWA_URL = "http://swa.mail.ru/?";
-		public static final String MUSIC_URL = "http://my.mail.ru/musxml";
-		public static final int SLEEP_MS = 600 * 1000;
-		public static final String COOKIE_NAME = "Mpop";
+
 
 		private boolean reAuthorizationRequired;
 		String mpopCookie;
@@ -133,7 +136,7 @@ public class UpdateService extends Service {
 				AbstractHttpClient httpClient = new DefaultHttpClient();
 				HttpGet httpGet = new HttpGet(MUSIC_URL);
 
-				BasicClientCookie cookie = new BasicClientCookie(COOKIE_NAME, this.mpopCookie);
+				BasicClientCookie cookie = new BasicClientCookie(MAILRU_COOKIE_NAME, this.mpopCookie);
 				cookie.setDomain(".mail.ru");
 				cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
 				cookie.setPath("/");
@@ -300,7 +303,7 @@ public class UpdateService extends Service {
 						HttpResponse swaResponse = swaClient.execute(httpGet);
 						if (null != swaResponse) {
 							for (Cookie cookie : ((AbstractHttpClient) swaClient).getCookieStore().getCookies()) {
-								if (cookie.getName().equalsIgnoreCase(COOKIE_NAME)) {
+								if (cookie.getName().equalsIgnoreCase(MAILRU_COOKIE_NAME)) {
 									this.mpopCookie = cookie.getValue();
 									break;
 								}
@@ -336,7 +339,7 @@ public class UpdateService extends Service {
 					updateTrackList();
 				}
 				try {
-					Thread.sleep(SLEEP_MS);
+					Thread.sleep(UPDATE_SLEEP_MS);
 				} catch (InterruptedException e) {
 
 					continueWorking = false;
@@ -349,46 +352,46 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onCreate() {
-		 receiver = new BroadcastReceiver() {
-	            @Override
-	            public void onReceive(Context context, Intent intent) {
-	                String action = intent.getAction();
-	                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-	                    long downloadId = intent.getLongExtra(
-	                            DownloadManager.EXTRA_DOWNLOAD_ID, 0);
-	                    Query query = new Query();
-	                    query.setFilterById(downloadEnqueue);
-	                    Cursor c = dm.query(query);
-	                    if (c.moveToFirst()) {
-	                        int columnIndex = c
-	                                .getColumnIndex(DownloadManager.COLUMN_STATUS);
-	                        if (DownloadManager.STATUS_SUCCESSFUL == c
-	                                .getInt(columnIndex)) {	
-	 
-	                        	String filename = c.getString(c
-                                        .getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-	                        	
-	                        	//XXX: just for link test
-	                        	currentDownload.setFilename(filename);
-//	                        	try {
-//									dm.openDownloadedFile(downloadId);
-//								} catch (FileNotFoundException e) {
-//									//TODO: show warning to user
-//								}
-	                        }
-//	                        else if (DownloadManager.STATUS_FAILED== c
-//	                                .getInt(columnIndex)) {
-//	                        	downloadQueue.add(currentDownload);
-//	                        	currentDownload = null;
-//	                        }
-	                    }
-	                }
-	            }
-	        };
-	 
-	        registerReceiver(receiver, new IntentFilter(
-	                DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-		
+		dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+
+		receiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+					long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+					Query query = new Query();
+					query.setFilterById(downloadId);
+					Cursor c = dm.query(query);
+					if (c.moveToFirst()) {
+						int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
+						if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+
+							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+
+							// XXX: just for link test
+							currentDownload.setFilename(filename);
+							tl.serFileName(currentDownload, filename);
+							// try {
+							// dm.openDownloadedFile(downloadId);
+							// } catch (FileNotFoundException e) {
+							// //TODO: show warning to user
+							// }
+						}
+						else if (DownloadManager.STATUS_FAILED== c
+						.getInt(columnIndex)) {
+							String reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
+							Log.i("shingrus", "HTTP fail: " + reason);
+						 }
+					}
+					currentDownload = null;
+					downloadEnqueue = 0;
+				}
+			}
+		};
+
+		registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
 		super.onCreate();
 	}
 
@@ -413,7 +416,7 @@ public class UpdateService extends Service {
 
 	@Override
 	public IBinder onBind(Intent i) {
-		return mBinder;
+		return null;
 		
 	}
 	

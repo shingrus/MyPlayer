@@ -142,7 +142,7 @@ public class TrackList {
 	}
 
 	private synchronized void dataChanged() {
-		if (adapter != null) {
+		if (adapter != null && this.adapter.activity != null) {
 			this.adapter.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
