@@ -12,6 +12,9 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +24,11 @@ import android.widget.TextView;
 
 public class TrackList {
 
+
+
+	public static final String DATABASE_NAME = "TrackList";
+	public static final int DATABASE_VERSION = 1;
+	public static final String TABLE_NAME = "track";
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
 	private boolean alreadyLoaded = false;
@@ -36,7 +44,7 @@ public class TrackList {
 		}
 
 		@Override
-		public int getCount() {
+		public synchronized int getCount() {
 			return trackList.size();
 		}
 
@@ -51,7 +59,7 @@ public class TrackList {
 		}
 
 		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
+		public synchronized View getView(int position, View convertView, ViewGroup parent) {
 			LayoutInflater inflater = this.activity.getLayoutInflater();
 			TextView rowView = (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			rowView.setText(trackList.get(position).getTitle());
@@ -72,10 +80,31 @@ public class TrackList {
 
 	}
 
+	class DBHelper extends SQLiteOpenHelper {
+
+		public DBHelper(Context context) {
+			super(context, DATABASE_NAME, null, DATABASE_VERSION);
+		}
+
+		@Override
+		public void onCreate(SQLiteDatabase db) {
+			db.execSQL("CREATE TABLE " + TABLE_NAME + "(id INTEGER PRIMARY KEY, name TEXT)");
+		}
+
+		@Override
+		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+			onCreate(db);
+		}
+	}
+		
 	/**
 	 * Loads track list from internal storage
 	 */
-	public synchronized void LoadTracks() {
+	public synchronized void loadTracks(Context ctx) {
+		
+		DBHelper dbHelper = new DBHelper(ctx); 
+			//SQL database
 			dataChanged();
 	}
 
@@ -117,8 +146,6 @@ public class TrackList {
 	static public synchronized TrackList getInstance() {
 		if (trackListInstance == null) {
 			trackListInstance = new TrackList();
-			// Load track list from sql DataBase
-			trackListInstance.LoadTracks();
 		}
 		return trackListInstance;
 	}
@@ -142,7 +169,7 @@ public class TrackList {
 	}
 
 	private synchronized void dataChanged() {
-		if (adapter != null && this.adapter.activity != null) {
+		if (adapter != null) {
 			this.adapter.activity.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {

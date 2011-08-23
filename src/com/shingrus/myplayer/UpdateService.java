@@ -98,9 +98,11 @@ public class UpdateService extends Service {
 				if (UpdateService.this.currentDownload == null) { // we are waiting for downloading
 					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null ) {
 						String urlString  = "http://" +  currentDownload.getUrl().replaceAll("[\\r\\n\\s]", "");
-						Request r = new Request(Uri.parse(urlString));
+						DownloadManager.Request r = new Request(Uri.parse(urlString));
 						r.setAllowedOverRoaming(false);
-						//TODO comment below and uncomment next line
+//						set proper directory
+//						r.setDestinationInExternalFilesDir(getApplicationContext(), arg1, arg2)
+//						TODO comment below and uncomment next line
 						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
 						//r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | (MyPlayerPreferences.getInstance(null).useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE));
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);

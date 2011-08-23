@@ -13,7 +13,7 @@ public class MyPlayerApplication extends Application {
 		
 		
 		MyPlayerPreferences.getInstance(getApplicationContext());
-		TrackList.getInstance();
+		TrackList.getInstance().loadTracks(getApplicationContext());
 		
 		startService(new Intent(this, UpdateService.class));
 		
