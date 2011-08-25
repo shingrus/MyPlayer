@@ -35,34 +35,35 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 //import android.util.Log;
 import android.util.Log;
 
 public class UpdateService extends Service {
 
-
 	public static final int DOWNLOAD_SLEEP_MS = 3000;
 	public static final int UPDATE_SLEEP_MS = 600 * 1000;
 	public static final String SWA_URL = "http://swa.mail.ru/?";
 	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
 	public static final String MAILRU_COOKIE_NAME = "Mpop";
-	
+
 	UpdateThread updateThread;
 	Thread downloadThread;
 	boolean continueWorking = true;
-	
+
 	long downloadEnqueue;
 	DownloadManager dm;
 	MusicTrack currentDownload;
-	
+
 	TrackList tl;
-	
+	Handler tracksHandler;
+
 	public static final int MAXIMUM_SIM_DOWNLOAD = 1;
-	private BroadcastReceiver receiver;
-	
-//	private final IBinder mBinder = new LocalBinder();
-	
+	private BroadcastReceiver downloadsReceiver;
+
+	// private final IBinder mBinder = new LocalBinder();
+
 	public UpdateService() {
 		super();
 		this.updateThread = new UpdateThread();
@@ -71,46 +72,53 @@ public class UpdateService extends Service {
 		downloadEnqueue = 0;
 		tl = TrackList.getInstance();
 	}
-	
+
 	public class LocalBinder extends Binder {
-		  UpdateService getService() {
-	            return UpdateService.this;
-	        }
+		UpdateService getService() {
+			return UpdateService.this;
+		}
 	}
-	
+
+	private class TrackListHandler extends Handler {
+	};
+
 	class DownloadThread extends Thread {
-		
+
 		public static final String DOWNLOAD_MANAGER_DESCRIPTION = "MyPlayer: Downloading new music from social network.";
-		
+
 		public DownloadThread() {
 			super();
 		}
-		
-		
+
 		@Override
 		public void run() {
-			
-			
+
 			while (UpdateService.this.continueWorking) {
 				Thread.yield();
 
-				
-				if (UpdateService.this.currentDownload == null) { // we are waiting for downloading
-					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null ) {
-						String urlString  = "http://" +  currentDownload.getUrl().replaceAll("[\\r\\n\\s]", "");
+				if (UpdateService.this.currentDownload == null) { // we are
+																	// waiting
+																	// for
+																	// downloading
+					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
+						String urlString = "http://" + currentDownload.getUrl().replaceAll("[\\r\\n\\s]", "");
 						DownloadManager.Request r = new Request(Uri.parse(urlString));
 						r.setAllowedOverRoaming(false);
-//						set proper directory
-//						r.setDestinationInExternalFilesDir(getApplicationContext(), arg1, arg2)
-//						TODO comment below and uncomment next line
+						// set proper directory
+						// r.setDestinationInExternalFilesDir(getApplicationContext(),
+						// arg1, arg2)
+						// TODO comment below and uncomment next line
 						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-						//r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | (MyPlayerPreferences.getInstance(null).useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE));
+						// r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
+						// |
+						// (MyPlayerPreferences.getInstance(null).useOnlyWifi()?
+						// 0:DownloadManager.Request.NETWORK_MOBILE));
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
-						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "="+MyPlayerPreferences.getInstance(null).getMpopCookie());
+						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "=" + MyPlayerPreferences.getInstance(null).getMpopCookie());
 						UpdateService.this.downloadEnqueue = dm.enqueue(r);
 					}
-				} 
-				
+				}
+
 				try {
 					Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
 				} catch (InterruptedException e) {
@@ -120,9 +128,8 @@ public class UpdateService extends Service {
 			}
 		}
 	}
+
 	class UpdateThread extends Thread {
-
-
 
 		private boolean reAuthorizationRequired;
 		String mpopCookie;
@@ -153,7 +160,7 @@ public class UpdateService extends Service {
 						try {
 							SAXParser parser = sf.newSAXParser();
 							XMLReader xr = parser.getXMLReader();
-//							boolean authorizationError = false;
+							// boolean authorizationError = false;
 							xr.setContentHandler(new DefaultHandler() {
 
 								MusicTrack mt = new MusicTrack();
@@ -201,19 +208,13 @@ public class UpdateService extends Service {
 										isInsideName = isInsideFURL = false;
 										if (mt.isComplete()) {
 
-											TrackList tl = TrackList.getInstance();
+											final TrackList tl = TrackList.getInstance();
 											Log.i("shingrus", mt.toString());
 
 											// well, we have completed mt
 											// object with url and id
 											// TODO place mt object and
-											
-											if (!tl.contains(mt)) {
-												tl.addTrack(mt);
-											}
-												
-											
-
+											tl.addTrack(mt);
 										}
 									} else if (localName.equalsIgnoreCase(URL_TAG)) {
 										isInsideFURL = false;
@@ -355,8 +356,8 @@ public class UpdateService extends Service {
 	@Override
 	public void onCreate() {
 		dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-
-		receiver = new BroadcastReceiver() {
+		tracksHandler = new Handler();
+		downloadsReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
@@ -379,12 +380,10 @@ public class UpdateService extends Service {
 							// } catch (FileNotFoundException e) {
 							// //TODO: show warning to user
 							// }
-						}
-						else if (DownloadManager.STATUS_FAILED== c
-						.getInt(columnIndex)) {
+						} else if (DownloadManager.STATUS_FAILED == c.getInt(columnIndex)) {
 							String reason = c.getString(c.getColumnIndex(DownloadManager.COLUMN_REASON));
 							Log.i("shingrus", "HTTP fail: " + reason);
-						 }
+						}
 					}
 					currentDownload = null;
 					downloadEnqueue = 0;
@@ -392,17 +391,17 @@ public class UpdateService extends Service {
 			}
 		};
 
-		registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		registerReceiver(downloadsReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
 		super.onCreate();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		
+
 		// Start update thread
 		updateThread.start();
-		//Start download thread
+		// Start download thread
 		downloadThread.start();
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -411,7 +410,7 @@ public class UpdateService extends Service {
 	public void onDestroy() {
 		updateThread.interrupt();
 		downloadThread.interrupt();
-		unregisterReceiver(receiver);
+		unregisterReceiver(downloadsReceiver);
 		// TODO remove downloads
 		super.onDestroy();
 	}
@@ -419,7 +418,7 @@ public class UpdateService extends Service {
 	@Override
 	public IBinder onBind(Intent i) {
 		return null;
-		
+
 	}
-	
+
 }

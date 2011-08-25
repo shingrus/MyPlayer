@@ -21,6 +21,15 @@ public final class MusicTrack {
 		return title;
 	}
 
+	public MusicTrack() {}
+	public MusicTrack(String id, String title, String url, String filename) {
+		this();
+		this.title = title;
+		this.id = id;
+		this.url = url;
+		this.filename = filename;
+	}
+
 	public void setTitle(String title) {
 		this.title = title;
 //		Log.i("shingrus", "MT: Setted new title: " + this.title);

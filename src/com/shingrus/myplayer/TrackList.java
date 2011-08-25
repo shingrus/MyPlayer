@@ -12,9 +12,12 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,14 +27,19 @@ import android.widget.TextView;
 
 public class TrackList {
 
-
-
 	public static final String DATABASE_NAME = "TrackList";
 	public static final int DATABASE_VERSION = 1;
 	public static final String TABLE_NAME = "track";
+	private static final String TRACK_TITLE = "Title";
+	private static final String TRACK_FILENAME = "Filename";
+	private static final String TRACK_ID = "Id";
+	private static final String TRACK_URL = "Url";
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "("+TRACK_ID+" INTEGER PRIMARY KEY autoincrement,"+TRACK_TITLE+" TEXT not null, "+TRACK_FILENAME+" TEXT , "+TRACK_URL+" TEXT NOT NULL)";
+	private static final String TRACK_INSERT_STMNT = "INSERT INTO "+TABLE_NAME+ " ("+TRACK_TITLE+","+TRACK_URL+","+TRACK_FILENAME+") VALUES (0, ?, ?, ?)";
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
-	private boolean alreadyLoaded = false;
+	DBHelper dbHelper;
+	private SQLiteStatement insertStmt;
 
 	// private final Context context;
 
@@ -75,7 +83,6 @@ public class TrackList {
 	private TrackList() {
 		// trackList = new LinkedHashSet<MusicTrack>();
 		trackList = new ArrayList<MusicTrack>();
-
 		// bind to UpdateService
 
 	}
@@ -88,7 +95,7 @@ public class TrackList {
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			db.execSQL("CREATE TABLE " + TABLE_NAME + "(id INTEGER PRIMARY KEY, name TEXT)");
+			db.execSQL(CREATE_DB);
 		}
 
 		@Override
@@ -97,27 +104,61 @@ public class TrackList {
 			onCreate(db);
 		}
 	}
-		
+
+	public class TrackListHandler extends Handler {
+
+	}
+
 	/**
 	 * Loads track list from internal storage
 	 */
 	public synchronized void loadTracks(Context ctx) {
+
+		dbHelper = new DBHelper(ctx);
+		//Because of ctx we have some warranty it's main thread
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		
-		DBHelper dbHelper = new DBHelper(ctx); 
-			//SQL database
-			dataChanged();
+		Cursor c = db.query(TABLE_NAME, new String[] {TRACK_ID, TRACK_TITLE, TRACK_FILENAME, TRACK_URL}, null, null, null, null, null);
+		this.insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
+		if (c.moveToFirst()) {
+			
+			do {
+				MusicTrack mt = new MusicTrack(c.getString(0),c.getString(1),c.getString(2), c.getString(3));
+				trackList.add(mt);
+			}  while (c.moveToNext());
+		}
+		c.close();
+		db.close();
+		dataChanged();
 	}
 
 	/**
 	 * 
 	 */
 
-	public synchronized void addTrack(MusicTrack mt) {
+	public synchronized void addTrack(final MusicTrack mt) {
 		if (!trackList.contains(mt)) {
-			trackList.add(mt);
-
-			// TODO store into storage
-			dataChanged();
+			Runnable r = new Runnable() {
+				@Override
+				public void run() {
+					trackList.add(mt);
+					if (dbHelper != null) {
+						 SQLiteDatabase db = dbHelper.getWritableDatabase();
+						 //private static final String TRACK_INSERT_STMNT = "INSERT INTO "+TABLE_NAME+ " ("+TRACK_NAME+","+TRACK_URL+","+TRACK_FILENAME+") VALUES (0, ?, ?, ?)";
+						 insertStmt.bindString(0, mt.getTitle());
+						 insertStmt.bindString(1, mt.getUrl());
+						 insertStmt.bindString(2, mt.getFilename());
+						 insertStmt.executeInsert();
+						 insertStmt.clearBindings();
+					}
+					dataChanged();
+					
+				}
+			};
+			if (this.adapter != null) {
+				this.adapter.activity.runOnUiThread(r);
+			} else
+				r.run();
 		}
 	}
 
@@ -127,10 +168,18 @@ public class TrackList {
 				track.setFilename(filename);
 			}
 		}
-
 		// TODO: store into storage
+		Runnable r = new Runnable() {
 
-		dataChanged();
+			@Override
+			public void run() {
+				dataChanged();
+			}
+		};
+		if (this.adapter != null) {
+			this.adapter.activity.runOnUiThread(r);
+		} else
+			r.run();
 	}
 
 	public synchronized boolean contains(MusicTrack mt) {
@@ -138,9 +187,21 @@ public class TrackList {
 	}
 
 	public synchronized void removeAll() {
-		trackList.clear();
-		// TODO: drop table inside storage
-		dataChanged();
+
+		Runnable r = new Runnable() {
+
+			@Override
+			public void run() {
+				trackList.clear();
+				// TODO store into storage
+				dataChanged();
+			}
+		};
+		if (this.adapter != null) {
+			this.adapter.activity.runOnUiThread(r);
+		} else
+			r.run();
+
 	}
 
 	static public synchronized TrackList getInstance() {
@@ -152,13 +213,13 @@ public class TrackList {
 
 	public synchronized MusicTrack getNextForDownLoad() {
 		for (MusicTrack mt : trackList) {
-			if (mt.getFilename() == null || mt.getFilename().length()<1) {
+			if (mt.getFilename() == null || mt.getFilename().length() < 1) {
 				return mt;
 			}
 		}
 		return null;
 	}
-	
+
 	public TrackListAdapter getAdapter(Activity actvty) {
 		adapter = new TrackListAdapter(actvty);
 		return adapter;
@@ -170,12 +231,7 @@ public class TrackList {
 
 	private synchronized void dataChanged() {
 		if (adapter != null) {
-			this.adapter.activity.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					adapter.notifyDataSetChanged();
-				}
-			});
+			adapter.notifyDataSetChanged();
 		}
 	}
 
