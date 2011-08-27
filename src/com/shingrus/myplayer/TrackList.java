@@ -3,6 +3,7 @@ package com.shingrus.myplayer;
 import com.shingrus.myplayer.R;
 import java.util.ArrayList;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -33,7 +34,6 @@ public class TrackList {
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
 	DBHelper dbHelper;
-	private SQLiteStatement insertStmt;
 	private boolean isLoaded = false;
 
 	// private final Context context;
@@ -144,13 +144,17 @@ public class TrackList {
 					if (dbHelper != null) {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
-							TrackList.this.insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
+							
+							SQLiteStatement insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
 							insertStmt.bindString(1, mt.getTitle());
 							insertStmt.bindString(2, mt.getUrl());
 							insertStmt.bindString(3, mt.getFilename());
 							long rowid = insertStmt.executeInsert();
 							if (rowid == -1) {
 								Log.i("shingrus", "Can't insert new value to db");
+							}
+							else{
+								mt.setId(Long.toString(rowid));
 							}
 							insertStmt.clearBindings();
 						}
@@ -166,10 +170,18 @@ public class TrackList {
 		}
 	}
 
-	public synchronized void serFileName(MusicTrack mt, String filename) {
+	public synchronized void setFileName(MusicTrack mt, String filename) {
 		for (MusicTrack track : trackList) {
 			if (track.equals(mt)) {
 				track.setFilename(filename);
+				if (dbHelper != null) {
+					SQLiteDatabase db = dbHelper.getWritableDatabase();
+					if (db != null) {
+						ContentValues values = new ContentValues();
+						values.put(this.TRACK_FILENAME, filename);
+						db.update(TABLE_NAME, values, TRACK_ID + "=?", new String[] { mt.getId() });
+					}
+				}
 			}
 		}
 		// TODO: store into storage

@@ -371,8 +371,8 @@ public class UpdateService extends Service {
 							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
 
 							// XXX: just for link test
-							currentDownload.setFilename(filename);
-							tl.serFileName(currentDownload, filename);
+							//currentDownload.setFilename(filename);
+							tl.setFileName(currentDownload, filename);
 							// try {
 							// dm.openDownloadedFile(downloadId);
 							// } catch (FileNotFoundException e) {
