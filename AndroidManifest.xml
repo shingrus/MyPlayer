@@ -13,6 +13,6 @@
 		<activity android:name="MyPlayerPreferencesActivity" android:label="@string/preferences_activity_name">
 		</activity>
 		<service android:name=".UpdateService" android:enabled="true"></service>
-
+		<service android:name=".MusicPlayerService"></service>
 	</application>
 </manifest>
