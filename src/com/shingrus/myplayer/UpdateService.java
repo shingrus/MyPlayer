@@ -79,8 +79,6 @@ public class UpdateService extends Service {
 		}
 	}
 
-	private class TrackListHandler extends Handler {
-	};
 
 	class DownloadThread extends Thread {
 
@@ -101,7 +99,7 @@ public class UpdateService extends Service {
 																	// for
 																	// downloading
 					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
-						String urlString = "http://" + currentDownload.getUrl().replaceAll("[\\r\\n\\s]", "");
+						String urlString = "http://" + currentDownload.getUrl();
 						DownloadManager.Request r = new Request(Uri.parse(urlString));
 						r.setAllowedOverRoaming(false);
 						// set proper directory
@@ -218,10 +216,10 @@ public class UpdateService extends Service {
 										}
 									} else if (localName.equalsIgnoreCase(URL_TAG)) {
 										isInsideFURL = false;
-										mt.setUrl(builder.toString());
+										mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
 									} else if (localName.equalsIgnoreCase(NAME_TAG)) {
 										isInsideName = false;
-										mt.setTitle(builder.toString());
+										mt.setTitle(builder.toString().replaceAll("[\\r\\n\\s]", ""));
 									} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
 										isInsideMusicList = false;
 										if (builder.toString().equals("Error!")) {
@@ -408,6 +406,7 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onDestroy() {
+		this.dm.remove(downloadEnqueue);
 		updateThread.interrupt();
 		downloadThread.interrupt();
 		unregisterReceiver(downloadsReceiver);

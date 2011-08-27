@@ -3,8 +3,6 @@ package com.shingrus.myplayer;
 import android.app.Application;
 import android.content.Intent;
 
-import java.lang.*;
-import java.util.*;
 
 public class MyPlayerApplication extends Application {
 

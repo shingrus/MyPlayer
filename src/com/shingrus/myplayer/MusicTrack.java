@@ -1,8 +1,5 @@
 package com.shingrus.myplayer;
 
-import java.net.URL;
-
-import android.util.Log;
 
 public final class MusicTrack {
 
@@ -14,16 +11,20 @@ public final class MusicTrack {
 	};
 	
 	private String title, id, url, filename;
-	private int Duration;
-	private MusicTrackStatus status = MusicTrackStatus.NEW;
+	private int Duration = 0;
+//	private MusicTrackStatus status = MusicTrackStatus.NEW;
 	
 	public String getTitle() {
 		return title;
 	}
 
-	public MusicTrack() {}
+	public MusicTrack() {
+		title = new String();
+		filename = new String();
+		id = new String();
+		url = new String();
+	}
 	public MusicTrack(String id, String title, String url, String filename) {
-		this();
 		this.title = title;
 		this.id = id;
 		this.url = url;
@@ -58,17 +59,9 @@ public final class MusicTrack {
 
 	public void setUrl(String url) {
 		this.url = url;
-//		Log.i("shingrus", "MT: Setted new url: " + this.url);
 	}
 	
 
-	public MusicTrackStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(MusicTrackStatus status) {
-		this.status = status;
-	}
 
 	public String getFilename() {
 		return filename;

@@ -1,6 +1,6 @@
 package com.shingrus.myplayer;
 
-import com.shingrus.R;
+import com.shingrus.myplayer.R;
 
 import android.app.Activity;
 import android.content.Intent;

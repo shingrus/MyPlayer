@@ -1,19 +1,15 @@
 package com.shingrus.myplayer;
 
-import com.shingrus.R;
+import com.shingrus.myplayer.R;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 public class MyPlayerPreferencesActivity extends PreferenceActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		ListView lv = (ListView)findViewById(R.id.playListView);
-		
+		super.onCreate(savedInstanceState);		
 		addPreferencesFromResource(R.xml.preferences);
 	}
 
