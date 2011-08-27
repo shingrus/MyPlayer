@@ -18,6 +18,7 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 
 public class TrackList {
 
+	public static final int LIMIT_TRACKS = 1024;
 	public static final String DATABASE_NAME = "TrackList";
 	public static final int DATABASE_VERSION = 1;
 	public static final String TABLE_NAME = "track";
@@ -34,8 +36,10 @@ public class TrackList {
 	private static final String TRACK_FILENAME = "Filename";
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
-	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "("+TRACK_ID+" INTEGER PRIMARY KEY autoincrement,"+TRACK_TITLE+" TEXT not null, "+TRACK_FILENAME+" TEXT , "+TRACK_URL+" TEXT NOT NULL)";
-	private static final String TRACK_INSERT_STMNT = "INSERT INTO "+TABLE_NAME+ " ("+TRACK_TITLE+","+TRACK_URL+","+TRACK_FILENAME+") VALUES (0, ?, ?, ?)";
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_TITLE
+			+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
+	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
+			+ ") VALUES (?, ?, ?)";
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
 	DBHelper dbHelper;
@@ -115,20 +119,20 @@ public class TrackList {
 	public synchronized void loadTracks(Context ctx) {
 
 		dbHelper = new DBHelper(ctx);
-		//Because of ctx we have some warranty it's main thread
+		// Because of ctx we have some warranty it's main thread
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		
-		Cursor c = db.query(TABLE_NAME, new String[] {TRACK_ID, TRACK_TITLE, TRACK_FILENAME, TRACK_URL}, null, null, null, null, null);
-		this.insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
-		if (c.moveToFirst()) {
-			
-			do {
-				MusicTrack mt = new MusicTrack(c.getString(0),c.getString(1),c.getString(2), c.getString(3));
-				trackList.add(mt);
-			}  while (c.moveToNext());
+		if (db != null) {
+			Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_FILENAME, TRACK_URL }, null, new String[] {}, null, null,
+					null);
+			if (c != null && c.moveToFirst()) {
+				do {
+					MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3));
+					trackList.add(mt);
+				} while (c.moveToNext());
+				c.close();
+			}
+			db.close();
 		}
-		c.close();
-		db.close();
 		dataChanged();
 	}
 
@@ -137,22 +141,27 @@ public class TrackList {
 	 */
 
 	public synchronized void addTrack(final MusicTrack mt) {
-		if (!trackList.contains(mt)) {
+		if (!trackList.contains(mt) && mt.getTitle().length()>0 && mt.getUrl().length()>0 && trackList.size()<LIMIT_TRACKS) {
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
 					trackList.add(mt);
 					if (dbHelper != null) {
-						 SQLiteDatabase db = dbHelper.getWritableDatabase();
-						 //private static final String TRACK_INSERT_STMNT = "INSERT INTO "+TABLE_NAME+ " ("+TRACK_NAME+","+TRACK_URL+","+TRACK_FILENAME+") VALUES (0, ?, ?, ?)";
-						 insertStmt.bindString(0, mt.getTitle());
-						 insertStmt.bindString(1, mt.getUrl());
-						 insertStmt.bindString(2, mt.getFilename());
-						 insertStmt.executeInsert();
-						 insertStmt.clearBindings();
+						SQLiteDatabase db = dbHelper.getWritableDatabase();
+						if (db != null) {
+							TrackList.this.insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
+							insertStmt.bindString(1, mt.getTitle());
+							insertStmt.bindString(2, mt.getUrl());
+							insertStmt.bindString(3, mt.getFilename());
+							long rowid = insertStmt.executeInsert();
+							if (rowid == -1) {
+								Log.i("shingrus", "Can't insert new value to db");
+							}
+							insertStmt.clearBindings();
+						}
 					}
 					dataChanged();
-					
+
 				}
 			};
 			if (this.adapter != null) {
