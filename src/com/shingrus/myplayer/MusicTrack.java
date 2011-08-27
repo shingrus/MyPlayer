@@ -24,6 +24,13 @@ public final class MusicTrack {
 		id = new String();
 		url = new String();
 	}
+	/**
+	 * 
+	 * @param id - String  Track id
+	 * @param title - String,  Track title
+	 * @param url - String Track URL
+	 * @param filename - String
+	 */
 	public MusicTrack(String id, String title, String url, String filename) {
 		this.title = title;
 		this.id = id;

@@ -34,6 +34,7 @@ public class TrackList {
 	private TrackListAdapter adapter;
 	DBHelper dbHelper;
 	private SQLiteStatement insertStmt;
+	private boolean isLoaded = false;
 
 	// private final Context context;
 
@@ -90,7 +91,7 @@ public class TrackList {
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			db.execSQL(CREATE_DB);
-		}
+		}	
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -108,22 +109,26 @@ public class TrackList {
 	 */
 	public synchronized void loadTracks(Context ctx) {
 
-		dbHelper = new DBHelper(ctx);
-		// Because of ctx we have some warranty it's main thread
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		if (db != null) {
-			Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_FILENAME, TRACK_URL }, null, new String[] {}, null, null,
-					null);
-			if (c != null && c.moveToFirst()) {
-				do {
-					MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3));
-					trackList.add(mt);
-				} while (c.moveToNext());
-				c.close();
+		
+		if (!isLoaded) {
+			dbHelper = new DBHelper(ctx);
+			// Because of ctx we have some warranty it's main thread
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			if (db != null) {
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null,
+						null);
+				if (c != null && c.moveToFirst()) {
+					do {
+						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3));
+						trackList.add(mt);
+					} while (c.moveToNext());
+					c.close();
+				}
+				db.close();
 			}
-			db.close();
+			dataChanged();
+			isLoaded = true;
 		}
-		dataChanged();
 	}
 
 	/**
