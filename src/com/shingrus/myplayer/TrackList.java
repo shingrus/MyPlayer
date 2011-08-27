@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class TrackList {
@@ -64,8 +65,13 @@ public class TrackList {
 		@Override
 		public synchronized View getView(int position, View convertView, ViewGroup parent) {
 			LayoutInflater inflater = this.activity.getLayoutInflater();
-			TextView rowView = (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
-			rowView.setText(trackList.get(position).getTitle());
+			LinearLayout rowView = (LinearLayout) inflater.inflate(R.layout.tracklist_item, null, true);
+			TextView text = (TextView) rowView.findViewById(R.id.trackrow_textid);
+				//(TextView) inflater.inflate(R.layout.tracklist_item, null, true);
+			MusicTrack mt = trackList.get(position);
+			text.setText(mt.getTitle());
+			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
+			text.setText(mt.getFilename().length()>0?"+":"-");
 			return rowView;
 		}
 

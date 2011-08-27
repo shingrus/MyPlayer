@@ -105,9 +105,13 @@ public class UpdateService extends Service {
 						// set proper directory
 						// r.setDestinationInExternalFilesDir(getApplicationContext(),
 						// arg1, arg2)
+						
 						// TODO comment below and uncomment next line
 						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+						
 						// r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
+						//TODO set download directory
+						
 						// |
 						// (MyPlayerPreferences.getInstance(null).useOnlyWifi()?
 						// 0:DownloadManager.Request.NETWORK_MOBILE));
@@ -211,7 +215,6 @@ public class UpdateService extends Service {
 
 											// well, we have completed mt
 											// object with url and id
-											// TODO place mt object and
 											tl.addTrack(mt);
 										}
 									} else if (localName.equalsIgnoreCase(URL_TAG)) {
@@ -235,22 +238,17 @@ public class UpdateService extends Service {
 							InputSource is = new InputSource(musicListResponse.getEntity().getContent());
 							xr.parse(is);
 						} catch (ParserConfigurationException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (SAXException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 
 					}
 				} catch (ClientProtocolException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalStateException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			} else
@@ -322,10 +320,8 @@ public class UpdateService extends Service {
 						}
 					}
 				} catch (ClientProtocolException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -370,7 +366,6 @@ public class UpdateService extends Service {
 
 							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
 
-							// XXX: just for link test
 							//currentDownload.setFilename(filename);
 							tl.setFileName(currentDownload, filename);
 							// try {
@@ -410,7 +405,6 @@ public class UpdateService extends Service {
 		updateThread.interrupt();
 		downloadThread.interrupt();
 		unregisterReceiver(downloadsReceiver);
-		// TODO remove downloads
 		super.onDestroy();
 	}
 
