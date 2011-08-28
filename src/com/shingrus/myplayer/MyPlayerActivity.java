@@ -12,12 +12,17 @@ import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 public class MyPlayerActivity extends Activity {
-	
+
 	TrackList trackList;
 	ServiceConnection musicPlayerConnection;
+	MusicPlayerService playerService;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -27,28 +32,43 @@ public class MyPlayerActivity extends Activity {
 
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
-
+				playerService = null;
 			}
 
 			@Override
-			public void onServiceConnected(ComponentName name, IBinder service) {
-				
+			public void onServiceConnected(ComponentName name, IBinder binder) {
+				playerService = ((MusicPlayerService.LocalBinder) binder).getService();
 			}
 		};
 
-		this.bindService(new Intent(this, MusicPlayerService.class),
-				musicPlayerConnection, Context.BIND_AUTO_CREATE);
+		this.bindService(new Intent(this, MusicPlayerService.class), musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
-		ListView lv = (ListView)findViewById(R.id.playListView);
+		ListView lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
-		
-		
+		lv.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
+				MusicTrack mt = trackList.getTrackAtPos(position);
+				if (mt != null && playerService != null) {
+					if (mt.getFilename().length() > 0)
+						playerService.playMusic(mt);
+				}
+
+			}
+
+		});
+
 	}
 
 	@Override
 	protected void onDestroy() {
-		if (trackList != null) 
+		if (trackList != null)
 			trackList.dropAdapter();
+		if (musicPlayerConnection != null) {
+			unbindService(musicPlayerConnection);
+			musicPlayerConnection = null;
+		}
 		super.onDestroy();
 	}
 

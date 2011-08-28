@@ -18,6 +18,7 @@
 	<string name="other_preferences_group">Другие настройки</string>
 	
 	<string name="useWifiOnly_key"></string>
+	
 	<string name="use_wifi_only_preferences_title">Обновление только через WIFI</string>
 	<string name="use_wifi_only_preferences_desc">Новые треки будут скачиваться только через wi-fi</string>
 	

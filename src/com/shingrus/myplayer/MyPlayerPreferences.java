@@ -11,9 +11,12 @@ public class MyPlayerPreferences {
 	private String email, password, mpopCookie;
 
 	private final String MPOPCOOKIE_KEY = "mpop_cookie";
+	private final String FILENAMECOUNTER_KEY = "filename_counter";
 	private boolean useOnlyWifi;
+	private int nextFilenameCounter;
 	private SharedPreferences preferences;
 	private static MyPlayerPreferences playerPreferences ;
+	
 
 	public String getMpopCookie() {
 		return mpopCookie;
@@ -27,6 +30,16 @@ public class MyPlayerPreferences {
 		this.mpopCookie = mpopCookie;
 	}
 
+	/**
+	 * 
+	 * @return Next incremented counter for
+	 */
+	synchronized public int getNextFilenameCounter() {
+		SharedPreferences.Editor editor = this.preferences.edit();
+		editor.putInt(FILENAMECOUNTER_KEY, ++this.nextFilenameCounter);
+		editor.apply();
+		return this.nextFilenameCounter;
+	}
 	/**
 	 * 
 	 * @return {@link String} user's email
@@ -68,6 +81,8 @@ public class MyPlayerPreferences {
 			this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
 			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
+			this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
+			
 	}
 
 	// TODO: i don't know why i made it like singleton

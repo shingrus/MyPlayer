@@ -106,9 +106,9 @@ public class TrackList {
 		}
 	}
 
-	public class TrackListHandler extends Handler {
-
-	}
+//	public class TrackListHandler extends Handler {
+//
+//	}
 
 	/**
 	 * Loads track list from internal storage
@@ -240,6 +240,10 @@ public class TrackList {
 			}
 		}
 		return null;
+	}
+	
+	public final synchronized MusicTrack getTrackAtPos(int position ){
+		return trackList.get(position);
 	}
 
 	public TrackListAdapter getAdapter(Activity actvty) {

@@ -18,4 +18,12 @@ public class MyPlayerApplication extends Application {
 		super.onCreate();
 	}
 
+	@Override
+	public void onTerminate() {
+		stopService(new Intent(this, UpdateService.class));
+		super.onTerminate();
+		
+	}
+	
+
 }

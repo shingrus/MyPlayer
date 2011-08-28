@@ -3,6 +3,8 @@ package com.shingrus.myplayer;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
+import java.util.Random;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -35,6 +37,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 //import android.util.Log;
@@ -42,7 +45,7 @@ import android.util.Log;
 
 public class UpdateService extends Service {
 
-	public static final int DOWNLOAD_SLEEP_MS = 3000;
+	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
 	public static final int UPDATE_SLEEP_MS = 600 * 1000;
 	public static final String SWA_URL = "http://swa.mail.ru/?";
 	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
@@ -101,22 +104,20 @@ public class UpdateService extends Service {
 					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
 						String urlString = "http://" + currentDownload.getUrl();
 						DownloadManager.Request r = new Request(Uri.parse(urlString));
+						//prevent downloading in roaming
 						r.setAllowedOverRoaming(false);
-						// set proper directory
-						// r.setDestinationInExternalFilesDir(getApplicationContext(),
-						// arg1, arg2)
+						MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
+
 						
-						// TODO comment below and uncomment next line
+						//TODO remove mailru prefix to profile_name prefix
+						//TODO may be it's good idea to change directoty to public Music
+						r.setDestinationInExternalFilesDir(UpdateService.this, Environment.DIRECTORY_MUSIC, "mailru"+prefs.getNextFilenameCounter()+".mp3");
+						
+						// TODO use wifi according to user settings
 						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
 						
-						// r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
-						//TODO set download directory
-						
-						// |
-						// (MyPlayerPreferences.getInstance(null).useOnlyWifi()?
-						// 0:DownloadManager.Request.NETWORK_MOBILE));
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
-						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "=" + MyPlayerPreferences.getInstance(null).getMpopCookie());
+						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "=" + prefs.getMpopCookie());
 						UpdateService.this.downloadEnqueue = dm.enqueue(r);
 					}
 				}
@@ -398,6 +399,7 @@ public class UpdateService extends Service {
 		downloadThread.start();
 		return super.onStartCommand(intent, flags, startId);
 	}
+	
 
 	@Override
 	public void onDestroy() {
