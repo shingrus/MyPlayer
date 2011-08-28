@@ -1,7 +1,14 @@
 package com.shingrus.myplayer;
 
 import com.shingrus.myplayer.R;
+
+import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
@@ -78,12 +85,14 @@ public class TrackList {
 	}
 
 	// LinkedHashSet<MusicTrack> trackList;
-	ArrayList<MusicTrack> trackList;
+	List<MusicTrack> trackList;
+	private int iteratePosition =0 ;
 
+	
 	// Create Only static
 	private TrackList() {
 		// trackList = new LinkedHashSet<MusicTrack>();
-		trackList = new ArrayList<MusicTrack>();
+		trackList = new CopyOnWriteArrayList<MusicTrack>();
 		// bind to UpdateService
 
 	}
@@ -242,10 +251,23 @@ public class TrackList {
 		return null;
 	}
 	
-	public final synchronized MusicTrack getTrackAtPos(int position ){
+	public final synchronized MusicTrack getTrackAt(int position) {
 		return trackList.get(position);
 	}
+	
+	public final synchronized MusicTrack getNextTrack() {
+		if (iteratePosition > trackList.size()-1)
+			iteratePosition = 0;
+		return trackList.get(iteratePosition);
+	}
 
+	
+	public final synchronized MusicTrack startIterateFrom(int position ) {
+		iteratePosition = (position > trackList.size()-1)? 0 : position; 
+		return trackList.get(iteratePosition++);
+	}
+
+	
 	public TrackListAdapter getAdapter(Activity actvty) {
 		adapter = new TrackListAdapter(actvty);
 		return adapter;
@@ -260,5 +282,7 @@ public class TrackList {
 			adapter.notifyDataSetChanged();
 		}
 	}
+
+	
 
 }

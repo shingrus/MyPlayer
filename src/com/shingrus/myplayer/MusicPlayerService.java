@@ -11,9 +11,12 @@ import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
 import android.media.*;
 
-public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
+		MediaPlayer.OnCompletionListener {
 
 	MediaPlayer mp;
+	TrackList trackList;
+	MusicTrack currentTrack;
 	private final IBinder mBinder = new LocalBinder();
 
 	public class LocalBinder extends Binder {
@@ -31,6 +34,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onCreate() {
 		mp = new MediaPlayer();
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+		trackList = TrackList.getInstance();
 		super.onCreate();
 	}
 
@@ -63,8 +67,25 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	 */
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
-		Log.i("shingrus", "MP error: "+ what);
+		Log.i("shingrus", "MP error: " + what);
 		return false;
+	}
+
+	private void playMusic(MusicTrack mt) {
+		if (mt != null && mt.getFilename().length() > 0) {
+			mp.reset();
+			try {
+				mp.setDataSource(mt.getFilename());
+				mp.setOnPreparedListener(this);
+				mp.prepareAsync();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -72,32 +93,20 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	 */
 	@Override
 	public void onCompletion(MediaPlayer mp) {
-		// TODO Get next item from playing
-		
+		MusicTrack mt = trackList.getNextTrack();
+		playMusic(mt);
 	}
-	//my methods
 
-	public void playMusic(MusicTrack mt) {
-		mp.reset();
-		try {
-//			String filePath = mt.getFilename().replaceAll("^content://", "");
-			mp.setDataSource(mt.getFilename());
-			mp.setOnPreparedListener(this);
-			mp.prepareAsync();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	// my methods
+
+	public void startPlayFrom(int position) {
+		trackList.startIterateFrom(position);
+		playMusic(trackList.getNextTrack());
+
 	}
 
 	public void stopMusic() {
-				mp.stop();
+		mp.stop();
 	}
 
 }

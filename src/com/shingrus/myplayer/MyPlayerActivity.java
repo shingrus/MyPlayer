@@ -49,10 +49,9 @@ public class MyPlayerActivity extends Activity {
 
 			@Override
 			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-				MusicTrack mt = trackList.getTrackAtPos(position);
-				if (mt != null && playerService != null) {
-					if (mt.getFilename().length() > 0)
-						playerService.playMusic(mt);
+				MusicTrack mt = trackList.getTrackAt(position);
+				if (playerService != null) {
+						playerService.startPlayFrom(position);
 				}
 
 			}
