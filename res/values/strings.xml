@@ -23,6 +23,10 @@
 	<string name="use_wifi_only_preferences_desc">Новые треки будут скачиваться только через wi-fi</string>
 	
 	<string name="menu_preferences_item_name">Settings</string>
-			
+	
+	
+	<string name="forwardButtonText">F.F</string>
+	<string name="rewindButtonText">Rew</string>
+	<string name="playButtonText">Play</string>
 	
 </resources>

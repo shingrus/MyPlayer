@@ -46,13 +46,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				mp.stop();
 			mp.release();
 		}
-//		super.onDestroy();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// TODO Auto-generated method stub
-		return super.onStartCommand(intent, flags, startId);
+		return Service.START_NOT_STICKY;
 	}
 
 	/**
