@@ -152,6 +152,7 @@ public class TrackList {
 
 	public synchronized void addTrack(final MusicTrack mt) {
 		if (!trackList.contains(mt) && mt.getTitle().length()>0 && mt.getUrl().length()>0 && trackList.size()<LIMIT_TRACKS) {
+			Log.d("shingrus", "Adding new track: " + mt + ", trackList size: " + trackList.size());
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
@@ -256,6 +257,7 @@ public class TrackList {
 	}
 	
 	public final synchronized MusicTrack getNextTrack() {
+		//TODO check size and check that we got mt with filename
 		if (iteratePosition > trackList.size()-1)
 			iteratePosition = 0;
 		return trackList.get(iteratePosition);
@@ -263,6 +265,7 @@ public class TrackList {
 
 	
 	public final synchronized MusicTrack startIterateFrom(int position ) {
+		//TODO check size and check that we got mt with filename
 		iteratePosition = (position > trackList.size()-1)? 0 : position; 
 		return trackList.get(iteratePosition++);
 	}

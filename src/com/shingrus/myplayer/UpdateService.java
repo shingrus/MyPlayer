@@ -34,6 +34,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Binder;
@@ -82,7 +83,6 @@ public class UpdateService extends Service {
 		}
 	}
 
-
 	class DownloadThread extends Thread {
 
 		public static final String DOWNLOAD_MANAGER_DESCRIPTION = "MyPlayer: Downloading new music from social network.";
@@ -104,17 +104,21 @@ public class UpdateService extends Service {
 					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
 						String urlString = "http://" + currentDownload.getUrl();
 						DownloadManager.Request r = new Request(Uri.parse(urlString));
-						//prevent downloading in roaming
+						// prevent downloading in roaming
 						r.setAllowedOverRoaming(false);
 						MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
 
-						
-						//TODO remove mailru prefix to profile_name prefix
-						//TODO may be it's good idea to change directoty to public Music
-						r.setDestinationInExternalFilesDir(UpdateService.this, Environment.DIRECTORY_MUSIC, "mailru"+prefs.getNextFilenameCounter()+".mp3");
-						
+						// TODO remove mailru prefix to profile_name prefix
+						// TODO may be it's good idea to change directoty to
+						// public Music
+						r.setDestinationInExternalFilesDir(UpdateService.this, Environment.DIRECTORY_MUSIC, "mailru" + prefs.getNextFilenameCounter()
+								+ ".mp3");
+
 						// TODO use wifi according to user settings
-						r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+						//r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+
+						int flags = DownloadManager.Request.NETWORK_WIFI | (prefs.useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE);
+						r.setAllowedNetworkTypes(flags);
 						
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
 						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "=" + prefs.getMpopCookie());
@@ -181,8 +185,7 @@ public class UpdateService extends Service {
 								}
 
 								@Override
-								public void startElement(String uri, String localName, String qName, Attributes attributes)
-										throws SAXException {
+								public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 									// Log.i("shingrus",
 									// "XML: start element: " + localName);
 									super.startElement(uri, localName, qName, attributes);
@@ -349,7 +352,26 @@ public class UpdateService extends Service {
 	}
 
 	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		Log.i("shingrus", "OnconfigurationChanged in  updateService:" + newConfig);
+		//super.onConfigurationChanged(newConfig);
+	}
+
+	@Override
+	public boolean onUnbind(Intent intent) {
+		Log.i("shingrus", "OnUnbind in  updateService:" + intent);
+		return super.onUnbind(intent);
+	}
+
+	@Override
+	public void onLowMemory() {
+		Log.i("shingrus", "OnLowMemory in  updateService");
+		super.onLowMemory();
+	}
+
+	@Override
 	public void onCreate() {
+		Log.i("shingrus", "Create updateService");
 		dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 		tracksHandler = new Handler();
 		downloadsReceiver = new BroadcastReceiver() {
@@ -367,7 +389,7 @@ public class UpdateService extends Service {
 
 							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
 
-							//currentDownload.setFilename(filename);
+							// currentDownload.setFilename(filename);
 							tl.setFileName(currentDownload, filename);
 							// try {
 							// dm.openDownloadedFile(downloadId);
@@ -387,19 +409,19 @@ public class UpdateService extends Service {
 
 		registerReceiver(downloadsReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
-		super.onCreate();
+		//super.onCreate();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-
+		Log.i("shingrus", "Strart updateService");
 		// Start update thread
 		updateThread.start();
 		// Start download thread
 		downloadThread.start();
-		return super.onStartCommand(intent, flags, startId);
+//		return super.onStartCommand(intent, flags, startId);
+		return START_NOT_STICKY;
 	}
-	
 
 	@Override
 	public void onDestroy() {
@@ -407,7 +429,7 @@ public class UpdateService extends Service {
 		updateThread.interrupt();
 		downloadThread.interrupt();
 		unregisterReceiver(downloadsReceiver);
-		super.onDestroy();
+		//super.onDestroy();
 	}
 
 	@Override

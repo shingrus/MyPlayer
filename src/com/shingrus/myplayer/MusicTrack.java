@@ -94,7 +94,7 @@ public final class MusicTrack {
 	public boolean equals(Object o) {
 		if (o instanceof MusicTrack) {
 			
-			return this.url.equals(((MusicTrack)o).url);
+			return this.title.equals(((MusicTrack)o).title);
 		}
 		return super.equals(o);
 	}

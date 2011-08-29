@@ -40,12 +40,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	@Override
 	public void onDestroy() {
+		Log.d("shingrus", "Destroy: MusicPlayerService");
 		if (mp != null) {
 			if (mp.isPlaying())
 				mp.stop();
 			mp.release();
 		}
-		super.onDestroy();
+//		super.onDestroy();
 	}
 
 	@Override
@@ -77,6 +78,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			try {
 				mp.setDataSource(mt.getFilename());
 				mp.setOnPreparedListener(this);
+				mp.setOnCompletionListener(this);
 				mp.prepareAsync();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
@@ -100,8 +102,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	// my methods
 
 	public void startPlayFrom(int position) {
-		trackList.startIterateFrom(position);
-		playMusic(trackList.getNextTrack());
+		playMusic(trackList.startIterateFrom(position));
 
 	}
 
