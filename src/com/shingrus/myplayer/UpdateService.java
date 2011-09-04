@@ -1,5 +1,6 @@
 package com.shingrus.myplayer;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
@@ -260,8 +261,8 @@ public class UpdateService extends Service {
 		}
 
 		/**
-		 * It Makes authorization on mail.ru currently in future it may be
-		 * implementation of the interface
+		 * It Makes authorization on mail.ru currently, in future it may be
+		 * the implementation of the interface
 		 * 
 		 * @return true - in success, false in vice versa
 		 */
@@ -388,9 +389,16 @@ public class UpdateService extends Service {
 						if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
 
 							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-
-							// currentDownload.setFilename(filename);
-							tl.setFileName(currentDownload, filename);
+							
+							File f = new File(URI.create(filename));
+							
+							//i don't know why, but sometimes i'm getting 
+							//broken files. i can't find when DM removes files.
+							if (f.exists()) {
+								// i could use currentDownload link, but i 
+								tl.setFileName(currentDownload, filename);
+									
+							}
 							// try {
 							// dm.openDownloadedFile(downloadId);
 							// } catch (FileNotFoundException e) {

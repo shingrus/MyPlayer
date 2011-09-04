@@ -50,9 +50,8 @@ public class MyPlayerActivity extends Activity {
 
 			@Override
 			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
-				MusicTrack mt = trackList.getTrackAt(position);
 				if (playerService != null) {
-						playerService.startPlayFrom(position);
+					playerService.startPlayFrom(position);
 				}
 
 			}
@@ -90,6 +89,24 @@ public class MyPlayerActivity extends Activity {
 		}
 		}
 		return true;
+	}
+
+	// Click Listeners
+	public void onClickPlayPause(View v) {
+		
+		//TODO do something
+	}
+
+	public void onClickForward(View v) {
+		playerService.playNext();
+
+	}
+	public void onClickRewind(View v) {
+		playerService.playNext();
+
+	}
+	public void onClickStop(View v) {
+		playerService.stopMusic();
 	}
 
 }

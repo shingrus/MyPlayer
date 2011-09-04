@@ -35,8 +35,8 @@ public class TrackList {
 	private static final String TRACK_FILENAME = "Filename";
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
-	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_TITLE
-			+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0,"
+			+ TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
 	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
 			+ ") VALUES (?, ?, ?)";
 	private static TrackList trackListInstance;
@@ -74,11 +74,11 @@ public class TrackList {
 			LayoutInflater inflater = this.activity.getLayoutInflater();
 			LinearLayout rowView = (LinearLayout) inflater.inflate(R.layout.tracklist_item, null, true);
 			TextView text = (TextView) rowView.findViewById(R.id.trackrow_textid);
-				//(TextView) inflater.inflate(R.layout.tracklist_item, null, true);
+			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			MusicTrack mt = trackList.get(position);
 			text.setText(mt.getTitle());
 			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
-			text.setText(mt.getFilename().length()>0?"+":"-");
+			text.setText(mt.getFilename().length() > 0 ? "+" : "-");
 			return rowView;
 		}
 
@@ -86,9 +86,8 @@ public class TrackList {
 
 	// LinkedHashSet<MusicTrack> trackList;
 	List<MusicTrack> trackList;
-	private int iteratePosition =0 ;
+	private int iteratePosition = 0;
 
-	
 	// Create Only static
 	private TrackList() {
 		// trackList = new LinkedHashSet<MusicTrack>();
@@ -106,7 +105,7 @@ public class TrackList {
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			db.execSQL(CREATE_DB);
-		}	
+		}
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -115,23 +114,22 @@ public class TrackList {
 		}
 	}
 
-//	public class TrackListHandler extends Handler {
-//
-//	}
+	// public class TrackListHandler extends Handler {
+	//
+	// }
 
 	/**
 	 * Loads track list from internal storage
 	 */
 	public synchronized void loadTracks(Context ctx) {
 
-		
 		if (!isLoaded) {
 			dbHelper = new DBHelper(ctx);
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null,
-						null);
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null,
+						null, null);
 				if (c != null && c.moveToFirst()) {
 					do {
 						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3));
@@ -151,7 +149,7 @@ public class TrackList {
 	 */
 
 	public synchronized void addTrack(final MusicTrack mt) {
-		if (!trackList.contains(mt) && mt.getTitle().length()>0 && mt.getUrl().length()>0 && trackList.size()<LIMIT_TRACKS) {
+		if (!trackList.contains(mt) && mt.getTitle().length() > 0 && mt.getUrl().length() > 0 && trackList.size() < LIMIT_TRACKS) {
 			Log.d("shingrus", "Adding new track: " + mt + ", trackList size: " + trackList.size());
 			Runnable r = new Runnable() {
 				@Override
@@ -160,7 +158,7 @@ public class TrackList {
 					if (dbHelper != null) {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
-							
+
 							SQLiteStatement insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
 							insertStmt.bindString(1, mt.getTitle());
 							insertStmt.bindString(2, mt.getUrl());
@@ -168,8 +166,7 @@ public class TrackList {
 							long rowid = insertStmt.executeInsert();
 							if (rowid == -1) {
 								Log.i("shingrus", "Can't insert new value to db");
-							}
-							else{
+							} else {
 								mt.setId(Long.toString(rowid));
 							}
 							insertStmt.clearBindings();
@@ -251,26 +248,31 @@ public class TrackList {
 		}
 		return null;
 	}
-	
+
 	public final synchronized MusicTrack getTrackAt(int position) {
 		return trackList.get(position);
 	}
-	
+
 	public final synchronized MusicTrack getNextTrack() {
-		//TODO check size and check that we got mt with filename
-		if (iteratePosition > trackList.size()-1)
-			iteratePosition = 0;
-		return trackList.get(iteratePosition);
+		int counter = trackList.size();
+		MusicTrack mt = null;
+		for (; counter > 0; counter--) {
+			if (iteratePosition >= trackList.size()) 
+				iteratePosition = 0;
+			if (trackList.get(iteratePosition).filename.length()>0) { 
+				 mt = trackList.get(iteratePosition++);
+				 break;
+			}
+		}
+		return mt;
 	}
 
-	
-	public final synchronized MusicTrack startIterateFrom(int position ) {
-		//TODO check size and check that we got mt with filename
-		iteratePosition = (position > trackList.size()-1)? 0 : position; 
+	public final synchronized MusicTrack startIterateFrom(int position) {
+		// TODO check size and check that we got mt with filename
+		iteratePosition = (position > trackList.size() - 1) ? 0 : position;
 		return trackList.get(iteratePosition++);
 	}
 
-	
 	public TrackListAdapter getAdapter(Activity actvty) {
 		adapter = new TrackListAdapter(actvty);
 		return adapter;
@@ -285,7 +287,5 @@ public class TrackList {
 			adapter.notifyDataSetChanged();
 		}
 	}
-
-	
 
 }

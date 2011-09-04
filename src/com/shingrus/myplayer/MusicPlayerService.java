@@ -71,10 +71,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private void playMusic(MusicTrack mt) {
-		if (mt != null && mt.getFilename().length() > 0) {
+		if (mt != null && mt.filename.length() > 0) {
 			mp.reset();
 			try {
-				mp.setDataSource(mt.getFilename());
+				mp.setDataSource(mt.filename);
 				mp.setOnPreparedListener(this);
 				mp.setOnCompletionListener(this);
 				mp.prepareAsync();
@@ -86,6 +86,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				e.printStackTrace();
 			}
 		}
+		else if (mt == null)
+			Log.d("shingrus", "MusicPlayerService: mt is null" );
 	}
 
 	/**
@@ -93,14 +95,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	 */
 	@Override
 	public void onCompletion(MediaPlayer mp) {
-		MusicTrack mt = trackList.getNextTrack();
-		playMusic(mt);
+		playNext();
 	}
 
 	// my methods
 
 	public void startPlayFrom(int position) {
 		playMusic(trackList.startIterateFrom(position));
+
+	}
+	
+	public void playNext() {
+		MusicTrack mt = trackList.getNextTrack();
+		playMusic(mt);
 
 	}
 
