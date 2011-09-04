@@ -4,6 +4,8 @@
     <string name="authorization_preferences_group">Mail.Ru Authorization</string>
     
     <string name="preferences_activity_name">MyPlayerPreferences</string>
+    <string name="authorize_activity_name">MyPlayerAuthorize</string>
+    
     
     <string name="mailru_email_preference_key">mailru_email_preference</string>
 	<string name="title_mailru_email_preference">Mail.Ru E-mail</string>
@@ -29,5 +31,9 @@
 	<string name="rewindButtonText">Rew</string>
 	<string name="playButtonText">Play</string>
 	<string name="stopButtonText">Stop</string>
+	<string name="LoginPassword_LoginTitle">Login:</string>
+	<string name="LoginPassword_PasswordTitle">Password:</string>
+	<string name="LoginPassword_ServiceSelectTitle">Service provider:</string>
+	<string name="LoginPassword_LoginButton">Login</string>
 	
 </resources>

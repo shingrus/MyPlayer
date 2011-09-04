@@ -18,7 +18,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	TrackList trackList;
 	MusicTrack currentTrack;
 	private final IBinder mBinder = new LocalBinder();
-
+	boolean isPaused = false;
+	
 	public class LocalBinder extends Binder {
 		MusicPlayerService getService() {
 			return MusicPlayerService.this;
@@ -73,6 +74,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	private void playMusic(MusicTrack mt) {
 		if (mt != null && mt.filename.length() > 0) {
 			mp.reset();
+			isPaused = false;
 			try {
 				mp.setDataSource(mt.filename);
 				mp.setOnPreparedListener(this);
@@ -85,9 +87,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
-		else if (mt == null)
-			Log.d("shingrus", "MusicPlayerService: mt is null" );
+		} else if (mt == null)
+			Log.d("shingrus", "MusicPlayerService: mt is null");
 	}
 
 	/**
@@ -104,15 +105,27 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		playMusic(trackList.startIterateFrom(position));
 
 	}
-	
+
 	public void playNext() {
 		MusicTrack mt = trackList.getNextTrack();
 		playMusic(mt);
 
 	}
 
+	public void playPause() {
+		if(mp.isPlaying()){
+			mp.pause();
+			isPaused = true;
+		}
+		else if (isPaused){
+			mp.start();
+			isPaused=false;
+		}
+	}
+	
 	public void stopMusic() {
 		mp.stop();
+		isPaused = false;
 	}
 
 }

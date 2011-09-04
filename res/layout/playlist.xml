@@ -32,6 +32,7 @@
 		<Button
 			android:text="@string/stopButtonText"
 			android:id="@+id/button1"
+			android:onClick="onClickStop"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"></Button>
 		<Button

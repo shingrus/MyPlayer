@@ -93,8 +93,7 @@ public class MyPlayerActivity extends Activity {
 
 	// Click Listeners
 	public void onClickPlayPause(View v) {
-		
-		//TODO do something
+		playerService.playPause();
 	}
 
 	public void onClickForward(View v) {
