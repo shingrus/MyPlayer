@@ -49,9 +49,6 @@ public class UpdateService extends Service {
 
 	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
 	public static final int UPDATE_SLEEP_MS = 600 * 1000;
-	public static final String SWA_URL = "http://swa.mail.ru/?";
-	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
-	public static final String MAILRU_COOKIE_NAME = "Mpop";
 
 	UpdateThread updateThread;
 	Thread downloadThread;
@@ -122,7 +119,7 @@ public class UpdateService extends Service {
 						r.setAllowedNetworkTypes(flags);
 						
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
-						r.addRequestHeader("Cookie", MAILRU_COOKIE_NAME + "=" + prefs.getMpopCookie());
+						r.addRequestHeader("Cookie", MailRuSpecific.MAILRU_COOKIE_NAME + "=" + prefs.getMpopCookie());
 						UpdateService.this.downloadEnqueue = dm.enqueue(r);
 					}
 				}
@@ -151,9 +148,9 @@ public class UpdateService extends Service {
 		protected void updateTrackList() {
 			if (this.mpopCookie != null && this.mpopCookie.length() > 0) {
 				AbstractHttpClient httpClient = new DefaultHttpClient();
-				HttpGet httpGet = new HttpGet(MUSIC_URL);
+				HttpGet httpGet = new HttpGet(MailRuSpecific.MUSIC_URL);
 
-				BasicClientCookie cookie = new BasicClientCookie(MAILRU_COOKIE_NAME, this.mpopCookie);
+				BasicClientCookie cookie = new BasicClientCookie(MailRuSpecific.MAILRU_COOKIE_NAME, this.mpopCookie);
 				cookie.setDomain(".mail.ru");
 				cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
 				cookie.setPath("/");
@@ -284,50 +281,13 @@ public class UpdateService extends Service {
 				} else
 					reAuthorizationRequired = true;
 			} else {
-				HttpClient swaClient = new DefaultHttpClient();
-				((AbstractHttpClient) (swaClient)).setRedirectHandler(new RedirectHandler() {
-					@Override
-					public boolean isRedirectRequested(HttpResponse response, HttpContext context) {
-						return false;
-					}
-
-					@Override
-					public URI getLocationURI(HttpResponse response, HttpContext context) throws ProtocolException {
-						return null;
-					}
-				});
-
-				try {
-
-					// TODO: here we need timeout tuning on http requests
-
-					MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
-					if (mpf != null) {
-						HttpGet httpGet = new HttpGet(SWA_URL + "Login=" + mpf.getEmail() + "&Password=" + mpf.getPassword());
-						HttpResponse swaResponse = swaClient.execute(httpGet);
-						if (null != swaResponse) {
-							for (Cookie cookie : ((AbstractHttpClient) swaClient).getCookieStore().getCookies()) {
-								if (cookie.getName().equalsIgnoreCase(MAILRU_COOKIE_NAME)) {
-									this.mpopCookie = cookie.getValue();
-									break;
-								}
-							}
-							// if we got mpopcookie - we need to get token in
-							// future,
-							// but now it's ok to get playlist directly
-							if (this.mpopCookie != null) {
-								result = true;
-								reAuthorizationRequired = false;
-								// store it
-								mpf.setMpopCookie(this.mpopCookie);
-							}
-
-						}
-					}
-				} catch (ClientProtocolException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
+				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+				this.mpopCookie = MailRuSpecific.authorizeOnMailRu(mpf.getEmail(), mpf.getPassword());
+				if (this.mpopCookie != null) {
+					result = true;
+					reAuthorizationRequired = false;
+					// store it
+					mpf.setMpopCookie(this.mpopCookie);
 				}
 			}
 			return result;
