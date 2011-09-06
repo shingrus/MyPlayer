@@ -15,7 +15,7 @@ public class MyAuthorizeActivity extends Activity {
 	public static final int AUTHORIZE_RESULT_INVALID_PASS = 105;
 	public static final int AUTHORIZE_RESULT_NETWORK_ERROR = 106;
 	public static final int AUTHORIZE_RESULT_NETWORK_CANCELED = 107;
-
+	
 	private MailRuAuthorization mailAuthorize;
 	private boolean authorizationInProgress = false;
 
@@ -30,7 +30,7 @@ public class MyAuthorizeActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			this.progressDialog = new ProgressDialog(MyAuthorizeActivity.this);
-			this.progressDialog.setMessage("Lalala");
+			this.progressDialog.setMessage(getResources().getString(R.string.LoginPassword_SpinnerDialogText)); 
 			this.progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
 				@Override
 				public void onCancel(DialogInterface dialog) {
@@ -57,6 +57,8 @@ public class MyAuthorizeActivity extends Activity {
 		protected void onPostExecute(Integer result) {
 			this.progressDialog.dismiss();
 			if (result == AUTHORIZE_RESULT_SUCCESS) {
+				//TODO set login and password
+				//Start service
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);
 				finish();

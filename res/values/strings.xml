@@ -35,5 +35,6 @@
 	<string name="LoginPassword_PasswordTitle">Password:</string>
 	<string name="LoginPassword_ServiceSelectTitle">Service provider:</string>
 	<string name="LoginPassword_LoginButton">Login</string>
+	<string name="LoginPassword_SpinnerDialogText">Authorization in progress...</string>
 	
 </resources>
