@@ -22,6 +22,7 @@ public class MyAuthorizeActivity extends Activity {
 	class MailRuAuthorization extends AsyncTask<String, Void, Integer> {
 
 		ProgressDialog progressDialog;
+		String login, password, mpopCookie;
 
 		public MailRuAuthorization() {
 			super();
@@ -43,10 +44,10 @@ public class MyAuthorizeActivity extends Activity {
 		@Override
 		protected Integer doInBackground(String... params) {
 			int result = AUTHORIZE_RESULT_NETWORK_ERROR;
-			String login = params[0];
-			String password = params[1];
+			login = params[0];
+			password = params[1];
 
-			String mpopCookie = MailRuSpecific.authorizeOnMailRu(login, password);
+			 mpopCookie = MailRuSpecific.authorizeOnMailRu(login, password);
 			if (mpopCookie != null && mpopCookie.length() > 0) {
 				result = AUTHORIZE_RESULT_SUCCESS;
 			}
@@ -56,8 +57,12 @@ public class MyAuthorizeActivity extends Activity {
 		@Override
 		protected void onPostExecute(Integer result) {
 			this.progressDialog.dismiss();
-			if (result == AUTHORIZE_RESULT_SUCCESS) {
+			if (result == AUTHORIZE_RESULT_SUCCESS && mpopCookie!= null) {
 				//TODO set login and password
+				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(MyAuthorizeActivity.this);
+				mpf.setMpopCookie(mpopCookie);
+				mpf.setEmail(login);
+				mpf.setPassword(password);
 				//Start service
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);

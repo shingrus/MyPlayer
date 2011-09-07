@@ -18,7 +18,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 
 public class MailRuSpecific {
-	public static final String SWA_URL = "http://swa.mail.ru/?";
+	public static final String SWA_URL = "http://192.168.1.16:80/?";
 	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
 	public static final String MAILRU_COOKIE_NAME = "Mpop";
 
@@ -31,7 +31,7 @@ public class MailRuSpecific {
 		httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, CONNECTION_TIMEOUT);
 		httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, CONNECTION_TIMEOUT);
 		
-		HttpClient swaClient = new DefaultHttpClient();
+		HttpClient swaClient = new DefaultHttpClient(httpParams);
 		((AbstractHttpClient) (swaClient)).setRedirectHandler(new RedirectHandler() {
 			@Override
 			public boolean isRedirectRequested(HttpResponse response, HttpContext context) {

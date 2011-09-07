@@ -22,17 +22,32 @@ public class MyPlayerPreferences {
 		return mpopCookie;
 	}
 
+	/**
+	 * This method stores mpopCookie inside preferences
+	 * it makes it asynchronously
+	 * 
+	 * @param mpopCookie
+	 */
 	synchronized public void setMpopCookie(String mpopCookie) {
-		// here we need to store it inside
 		SharedPreferences.Editor editor = this.preferences.edit();
 		editor.putString(MPOPCOOKIE_KEY, mpopCookie);
 		editor.apply();
 		this.mpopCookie = mpopCookie;
 	}
 
+	public void setEmail(String login) {
+		
+	}
+
+	public void setPassword(String password2) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	/**
 	 * 
-	 * @return Next incremented counter for
+	 * @return Next incremented value for
+	 * filenames
 	 */
 	synchronized public int getNextFilenameCounter() {
 		SharedPreferences.Editor editor = this.preferences.edit();
@@ -102,4 +117,6 @@ public class MyPlayerPreferences {
 		}
 		return playerPreferences;
 	}
+
+
 }
