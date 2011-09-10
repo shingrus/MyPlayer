@@ -87,6 +87,10 @@ public class MyPlayerActivity extends Activity {
 			startActivity(i);
 			break;
 		}
+		case R.id.MenuUpdateItem: {
+			//TODO start AsyncTask for update
+			break;
+		}
 		}
 		return true;
 	}

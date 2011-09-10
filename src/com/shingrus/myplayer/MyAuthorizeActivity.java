@@ -23,9 +23,11 @@ public class MyAuthorizeActivity extends Activity {
 
 		ProgressDialog progressDialog;
 		String login, password, mpopCookie;
+		MyPlayerPreferences mpf;
 
 		public MailRuAuthorization() {
 			super();
+			mpf= MyPlayerPreferences.getInstance(null);
 		}
 
 		@Override
@@ -47,7 +49,7 @@ public class MyAuthorizeActivity extends Activity {
 			login = params[0];
 			password = params[1];
 
-			 mpopCookie = MailRuSpecific.authorizeOnMailRu(login, password);
+			 mpopCookie = mpf.getProfile().authorize(login, password);
 			if (mpopCookie != null && mpopCookie.length() > 0) {
 				result = AUTHORIZE_RESULT_SUCCESS;
 			}
@@ -58,12 +60,9 @@ public class MyAuthorizeActivity extends Activity {
 		protected void onPostExecute(Integer result) {
 			this.progressDialog.dismiss();
 			if (result == AUTHORIZE_RESULT_SUCCESS && mpopCookie!= null) {
-				//TODO set login and password
-				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(MyAuthorizeActivity.this);
 				mpf.setMpopCookie(mpopCookie);
 				mpf.setEmail(login);
 				mpf.setPassword(password);
-				//Start service
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);
 				finish();

@@ -17,6 +17,9 @@ public class MyPlayerPreferences {
 	private SharedPreferences preferences;
 	private static MyPlayerPreferences playerPreferences ;
 	
+	//TODO in next version it should be an array
+	private MyPlayerAccountProfile profile; 
+	
 
 	public String getMpopCookie() {
 		return mpopCookie;
@@ -71,6 +74,10 @@ public class MyPlayerPreferences {
 		return password;
 	}
 
+	public MyPlayerAccountProfile getProfile() {
+		return profile;
+	}
+
 	/**
 	 * 
 	 * @return {@link Boolean} user's setting for wifi or other connections
@@ -86,7 +93,7 @@ public class MyPlayerPreferences {
 		useOnlyWifi = true;
 		preferences = null;
 		mpopCookie = new String();
-		// load info here
+		profile = new MailRuProfile();
 	}
 
 	public synchronized void loadPreferences(Context context) {
