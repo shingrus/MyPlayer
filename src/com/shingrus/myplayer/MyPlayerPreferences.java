@@ -8,14 +8,20 @@ import android.preference.PreferenceManager;
 
 public class MyPlayerPreferences {
 
-	private String email, password, mpopCookie;
-
+	private String login, password, mpopCookie;
+	//yeah! it should be map or vector.
+	private boolean isLoginChanged = false, isPasswordChanged = false;
+	
+	
 	private final String MPOPCOOKIE_KEY = "mpop_cookie";
 	private final String FILENAMECOUNTER_KEY = "filename_counter";
 	private boolean useOnlyWifi;
 	private int nextFilenameCounter;
 	private SharedPreferences preferences;
 	private static MyPlayerPreferences playerPreferences ;
+	
+	
+	
 	
 	//TODO in next version it should be an array
 	private MyPlayerAccountProfile profile; 
@@ -38,13 +44,28 @@ public class MyPlayerPreferences {
 		this.mpopCookie = mpopCookie;
 	}
 
-	public void setEmail(String login) {
-		
+	public void setLogin(String login) {
+		this.login = login;
+		isLoginChanged = true;
 	}
 
-	public void setPassword(String password2) {
-		// TODO Auto-generated method stub
-		
+	public void setPassword(String password) {
+		this.password = password;
+		isPasswordChanged = true;
+	}
+	
+	public void store(Context ctx) {
+		if (ctx != null) {
+			SharedPreferences.Editor editor = this.preferences.edit();
+			if (isLoginChanged ) {
+				editor.putString(ctx.getString(R.string.mailru_login_preference_key), this.login);
+			}
+			if (isPasswordChanged) {
+				editor.putString(ctx.getString(R.string.mailru_password_preference_key), this.password);
+			}
+			editor.apply();
+			isLoginChanged = isPasswordChanged = true;
+		}
 	}
 	
 	/**
@@ -63,7 +84,7 @@ public class MyPlayerPreferences {
 	 * @return {@link String} user's email
 	 */
 	public synchronized String getEmail() {
-		return email;
+		return login;
 	}
 
 	/**
@@ -88,7 +109,7 @@ public class MyPlayerPreferences {
 	}
 
 	private MyPlayerPreferences() {
-		email = new String();
+		login = new String();
 		password = new String();
 		useOnlyWifi = true;
 		preferences = null;
@@ -99,7 +120,7 @@ public class MyPlayerPreferences {
 	public synchronized void loadPreferences(Context context) {
 			PreferenceManager.setDefaultValues(context, R.xml.preferences, false);
 			this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
-			this.email = preferences.getString(context.getString(R.string.mailru_email_preference_key), "");
+			this.login = preferences.getString(context.getString(R.string.mailru_login_preference_key), "");
 			this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
 			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);

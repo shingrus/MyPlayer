@@ -3,7 +3,7 @@
 
 	<PreferenceCategory android:title="@string/authorization_preferences_group">
 		  <EditTextPreference
-                android:key="@string/mailru_email_preference_key"
+                android:key="@string/mailru_login_preference_key"
                 android:title="@string/title_mailru_email_preference"
                 android:summary="@string/summary_mailru_email_preference"
                 android:dialogTitle="@string/dialog_title_mailru_email_preference" />

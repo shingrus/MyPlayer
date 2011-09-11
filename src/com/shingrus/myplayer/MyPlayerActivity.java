@@ -1,5 +1,6 @@
 package com.shingrus.myplayer;
 
+import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 import com.shingrus.myplayer.R;
 
 import android.app.Activity;
@@ -7,7 +8,9 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
@@ -23,14 +26,25 @@ public class MyPlayerActivity extends Activity {
 	TrackList trackList;
 	ServiceConnection musicPlayerConnection;
 	MusicPlayerService playerService;
-
-	/** Called when the activity is first created. */
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	final Handler handleUpdate = new Handler();
+	MyPlayerPreferences mpf;
+	TrackListFetchingStatus updateStatus;
+	
+	boolean updateInProgress = false;
+	Thread updateThread;
+	
+	final Runnable resultUpdate = new Runnable() {
+		
+		@Override
+		public void run() {
+			updateInProgress = false;
+			updateThread = null;
+		}
+	};
+	
+	public MyPlayerActivity() {
 		trackList = TrackList.getInstance();
 		musicPlayerConnection = new ServiceConnection() {
-
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
 				playerService = null;
@@ -41,13 +55,20 @@ public class MyPlayerActivity extends Activity {
 				playerService = ((MusicPlayerService.LocalBinder) binder).getService();
 			}
 		};
+		mpf = MyPlayerPreferences.getInstance(null);
+
+	}
+
+	/** Called when the activity is first created. */
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
 		this.bindService(new Intent(this, MusicPlayerService.class), musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
 		ListView lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
 		lv.setOnItemClickListener(new OnItemClickListener() {
-
 			@Override
 			public void onItemClick(AdapterView<?> adapter, View view, int position, long id) {
 				if (playerService != null) {
@@ -69,6 +90,11 @@ public class MyPlayerActivity extends Activity {
 			unbindService(musicPlayerConnection);
 			musicPlayerConnection = null;
 		}
+		if (updateThread != null) {
+			updateThread.interrupt();
+		}
+		updateInProgress = false;
+		
 		super.onDestroy();
 	}
 
@@ -88,7 +114,18 @@ public class MyPlayerActivity extends Activity {
 			break;
 		}
 		case R.id.MenuUpdateItem: {
-			//TODO start AsyncTask for update
+			// TODO start AsyncTask for update
+			// i decided to use handler for learning purpose
+			if (!updateInProgress) {
+				updateInProgress = true;
+				updateThread = new Thread() {
+					public void run() {
+						MyPlayerActivity.this.updateStatus = mpf.getProfile().getTrackListFromInternet(TrackList.getInstance(), mpf.getMpopCookie());
+						handleUpdate.post(resultUpdate);
+					}
+				};
+				updateThread.start();
+			}
 			break;
 		}
 		}
@@ -104,10 +141,12 @@ public class MyPlayerActivity extends Activity {
 		playerService.playNext();
 
 	}
+
 	public void onClickRewind(View v) {
 		playerService.playNext();
 
 	}
+
 	public void onClickStop(View v) {
 		playerService.stopMusic();
 	}

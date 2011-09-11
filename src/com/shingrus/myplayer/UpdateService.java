@@ -351,15 +351,13 @@ public class UpdateService extends Service {
 
 							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
 							
-							File f = new File(URI.create(filename));
+							//File f = new File(URI.create(filename));
 							
 							//i don't know why, but sometimes i'm getting 
 							//broken files. i can't find when DM removes files.
-							if (f.exists()) {
-								// i could use currentDownload link, but i 
-								tl.setFileName(currentDownload, filename);
+							// i could use currentDownload link, but i 
+							tl.setFileName(currentDownload, filename);
 									
-							}
 							// try {
 							// dm.openDownloadedFile(downloadId);
 							// } catch (FileNotFoundException e) {
@@ -387,6 +385,7 @@ public class UpdateService extends Service {
 		// Start update thread
 //		updateThread.start();
 		// Start download thread
+		//TODO: start only once
 		downloadThread.start();
 //		return super.onStartCommand(intent, flags, startId);
 		return START_NOT_STICKY;

@@ -2,6 +2,7 @@ package com.shingrus.myplayer;
 
 import com.shingrus.myplayer.R;
 
+import java.io.File;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -16,6 +17,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -46,6 +48,10 @@ public class TrackList {
 
 	// private final Context context;
 
+	//TODO - move basedapter to activity
+	//TODO - give handler from activity
+	//TODO - and don't use runonuithread!
+	
 	class TrackListAdapter extends BaseAdapter {
 		private final Activity activity;
 
@@ -132,7 +138,11 @@ public class TrackList {
 						null, null);
 				if (c != null && c.moveToFirst()) {
 					do {
-						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3));
+						String filename = c.getString(3);
+						File f = new File(Uri.parse(filename).getPath());
+						if (!f.exists()) 
+							filename = "";
+						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), filename);
 						trackList.add(mt);
 					} while (c.moveToNext());
 					c.close();

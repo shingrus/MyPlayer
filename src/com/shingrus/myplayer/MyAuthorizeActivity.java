@@ -61,8 +61,9 @@ public class MyAuthorizeActivity extends Activity {
 			this.progressDialog.dismiss();
 			if (result == AUTHORIZE_RESULT_SUCCESS && mpopCookie!= null) {
 				mpf.setMpopCookie(mpopCookie);
-				mpf.setEmail(login);
+				mpf.setLogin(login);
 				mpf.setPassword(password);
+				mpf.store(MyAuthorizeActivity.this);
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);
 				finish();

@@ -7,7 +7,7 @@
     <string name="authorize_activity_name">MyPlayerAuthorize</string>
     
     
-    <string name="mailru_email_preference_key">mailru_email_preference</string>
+    <string name="mailru_login_preference_key">mailru_email_preference</string>
 	<string name="title_mailru_email_preference">Mail.Ru E-mail</string>
 	<string name="summary_mailru_email_preference">Ваш почтовый ящик, например yermakov@mail.ru</string>
 	<string name="dialog_title_mailru_email_preference">Mail.Ru E-mail</string>
