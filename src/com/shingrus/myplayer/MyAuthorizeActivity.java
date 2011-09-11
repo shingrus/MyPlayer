@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 public class MyAuthorizeActivity extends Activity {
 
@@ -53,6 +54,9 @@ public class MyAuthorizeActivity extends Activity {
 			if (mpopCookie != null && mpopCookie.length() > 0) {
 				result = AUTHORIZE_RESULT_SUCCESS;
 			}
+			else {
+				result = AUTHORIZE_RESULT_INVALID_PASS;
+			}
 			return result;
 		}
 
@@ -68,6 +72,11 @@ public class MyAuthorizeActivity extends Activity {
 				startActivity(i);
 				finish();
 			}
+			else if (AUTHORIZE_RESULT_INVALID_PASS == result) {
+				TextView t = (TextView) findViewById(R.id.LoginPassword_ErrorMsg);
+				t.setVisibility(View.VISIBLE);
+			}
+
 			authorizationInProgress = false;
 		}
 
@@ -98,6 +107,8 @@ public class MyAuthorizeActivity extends Activity {
 			mailAuthorize = new MailRuAuthorization();
 			String login = ((EditText) findViewById(R.id.LoginPassword_LoginId)).getText().toString();
 			String password = ((EditText) findViewById(R.id.LoginPassword_PasswordId)).getText().toString();
+			TextView t = (TextView) findViewById(R.id.LoginPassword_ErrorMsg);
+			t.setVisibility(View.INVISIBLE);
 			mailAuthorize.execute(login, password);
 		}
 	}

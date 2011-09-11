@@ -34,6 +34,8 @@
 	<string name="stopButtonText">Stop</string>
 	<string name="LoginPassword_LoginTitle">Login:</string>
 	<string name="LoginPassword_PasswordTitle">Password:</string>
+	<string name="LoginPassword_LoginIncorrectErrorText">Login and Password are incorrect!</string>
+	
 	<string name="LoginPassword_ServiceSelectTitle">Service provider:</string>
 	<string name="LoginPassword_LoginButton">Login</string>
 	<string name="LoginPassword_SpinnerDialogText">Authorization in progress...</string>
