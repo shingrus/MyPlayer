@@ -92,6 +92,7 @@ public class MyPlayerActivity extends Activity {
 		}
 		if (updateThread != null) {
 			updateThread.interrupt();
+			updateThread=null;
 		}
 		updateInProgress = false;
 		

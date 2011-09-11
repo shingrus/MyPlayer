@@ -106,6 +106,8 @@ public class UpdateService extends Service {
 						r.setAllowedOverRoaming(false);
 						MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
 
+						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
+						r.setTitle(currentDownload.getTitle());
 						// TODO remove mailru prefix to profile_name prefix
 						// TODO may be it's good idea to change directoty to
 						// public Music
@@ -370,6 +372,9 @@ public class UpdateService extends Service {
 					}
 					currentDownload = null;
 					downloadEnqueue = 0;
+				}
+				else {
+					Log.i("shingrus", "DM reciever: got unknown action:" + action);
 				}
 			}
 		};
