@@ -85,7 +85,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		//i.setFlags(Intent.FLAG_ACTIVITY_SIN GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi  = PendingIntent.getActivity(this,0, i, 0);
 		notification.setLatestEventInfo(this, currentTitle, "Playing", pi);
-		//notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+		notification.flags |= Notification.FLAG_NO_CLEAR;
 		nm.notify(NOTIFICATION_ID, notification);
 	}
 
