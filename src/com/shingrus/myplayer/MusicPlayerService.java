@@ -2,7 +2,11 @@ package com.shingrus.myplayer;
 
 import java.io.IOException;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -11,14 +15,21 @@ import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
 import android.media.*;
 
+
+
 public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
 		MediaPlayer.OnCompletionListener {
 
+	
+	private static final int NOTIFICATION_ID = 100500;
 	MediaPlayer mp;
 	TrackList trackList;
-	MusicTrack currentTrack;
+//	MusicTrack currentTrack;
+	String currentTitle;
 	private final IBinder mBinder = new LocalBinder();
 	boolean isPaused = false;
+	NotificationManager nm;
+	Notification notification;
 	
 	public class LocalBinder extends Binder {
 		MusicPlayerService getService() {
@@ -34,8 +45,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public void onCreate() {
 		mp = new MediaPlayer();
+		currentTitle = "";
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		trackList = TrackList.getInstance();
+		nm  = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		super.onCreate();
 	}
 
@@ -43,15 +56,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onDestroy() {
 		Log.d("shingrus", "Destroy: MusicPlayerService");
 		if (mp != null) {
+			nm.cancel(NOTIFICATION_ID);
 			if (mp.isPlaying())
 				mp.stop();
 			mp.release();
 		}
+		
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		return Service.START_NOT_STICKY;
+		nm.cancel(NOTIFICATION_ID);
+		return Service.START_STICKY;
 	}
 
 	/**
@@ -60,6 +76,17 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public void onPrepared(MediaPlayer mp) {
 		mp.start();
+		isPaused=false;
+		if (notification == null) {
+			notification = new Notification(R.drawable.ringtone,currentTitle,System.currentTimeMillis());
+		}
+		
+		Intent i = new Intent(this, MyPlayerActivity.class);
+		//i.setFlags(Intent.FLAG_ACTIVITY_SIN GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		PendingIntent pi  = PendingIntent.getActivity(this,0, i, 0);
+		notification.setLatestEventInfo(this, currentTitle, "Playing", pi);
+		//notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
+		nm.notify(NOTIFICATION_ID, notification);
 	}
 
 	/**
@@ -74,9 +101,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	private void playMusic(MusicTrack mt) {
 		if (mt != null && mt.filename.length() > 0) {
 			mp.reset();
+			nm.cancel(NOTIFICATION_ID);
 			isPaused = false;
 			try {
 				mp.setDataSource(mt.filename);
+				currentTitle = mt.getTitle();
 				mp.setOnPreparedListener(this);
 				mp.setOnCompletionListener(this);
 				mp.prepareAsync();
@@ -125,6 +154,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	
 	public void stopMusic() {
 		mp.stop();
+		nm.cancel(NOTIFICATION_ID);
 		isPaused = false;
 	}
 

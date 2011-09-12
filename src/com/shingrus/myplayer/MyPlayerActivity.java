@@ -63,7 +63,7 @@ public class MyPlayerActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		Log.d("shingrus", "Creating Player Activity");
 		this.bindService(new Intent(this, MusicPlayerService.class), musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
 		ListView lv = (ListView) findViewById(R.id.playListView);
@@ -83,7 +83,7 @@ public class MyPlayerActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		Log.i("shingrus", "Destroying main activity");
+		Log.i("shingrus", "Destroying Player activity");
 		if (trackList != null)
 			trackList.dropAdapter();
 		if (musicPlayerConnection != null) {

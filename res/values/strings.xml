@@ -28,9 +28,9 @@
 	<string name="menu_update_item_name">Update</string>
 	
 	
-	<string name="forwardButtonText">F.F</string>
-	<string name="rewindButtonText">Rew</string>
-	<string name="playButtonText">Play</string>
+	<string name="forwardButtonText">Next</string>
+	<string name="rewindButtonText">Previos</string>
+	<string name="playButtonText">Play/Pause</string>
 	<string name="stopButtonText">Stop</string>
 	<string name="LoginPassword_LoginTitle">Login:</string>
 	<string name="LoginPassword_PasswordTitle">Password:</string>
