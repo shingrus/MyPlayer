@@ -77,10 +77,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onPrepared(MediaPlayer mp) {
 		mp.start();
 		isPaused=false;
-		if (notification == null) {
-			notification = new Notification(R.drawable.ringtone,currentTitle,System.currentTimeMillis());
-		}
-		
+		notification = new Notification(R.drawable.ringtone,currentTitle,System.currentTimeMillis());
 		Intent i = new Intent(this, MyPlayerActivity.class);
 		//i.setFlags(Intent.FLAG_ACTIVITY_SIN GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi  = PendingIntent.getActivity(this,0, i, 0);
