@@ -157,10 +157,10 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 									}
 								} else if (localName.equalsIgnoreCase(URL_TAG)) {
 									isInsideFURL = false;
-									mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
+									mt.setUrl(builder.toString().replaceAll("[\\r\\n]", ""));
 								} else if (localName.equalsIgnoreCase(NAME_TAG)) {
 									isInsideName = false;
-									mt.setTitle(builder.toString().replaceAll("[\\r\\n\\s]", ""));
+									mt.setTitle(builder.toString().replaceAll("[\\r\\n]", ""));
 								} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
 									isInsideMusicList = false;
 									if (builder.toString().equals("Error!")) {
