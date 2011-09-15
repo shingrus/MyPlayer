@@ -1,8 +1,13 @@
 package com.shingrus.myplayer;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Random;
 
@@ -10,6 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
 import org.apache.http.client.ClientProtocolException;
@@ -20,6 +26,8 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.protocol.HttpContext;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -50,7 +58,7 @@ public class UpdateService extends Service {
 	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
 	public static final int UPDATE_SLEEP_MS = 600 * 1000;
 
-//	UpdateThread updateThread;
+	// UpdateThread updateThread;
 	Thread downloadThread;
 	boolean continueWorking = true;
 
@@ -61,14 +69,15 @@ public class UpdateService extends Service {
 	TrackList tl;
 	Handler tracksHandler;
 
-	public static final int MAXIMUM_SIM_DOWNLOAD = 1;
+	// public static final int MAXIMUM_SIM_DOWNLOAD = 1;
+	public static final int DOWNLOAD_CONNECTION_TIMEOUT = 15 * 1000;
 	private BroadcastReceiver downloadsReceiver;
 
 	// private final IBinder mBinder = new LocalBinder();
 
 	public UpdateService() {
 		super();
-//		this.updateThread = new UpdateThread();
+		// this.updateThread = new UpdateThread();
 		this.downloadThread = new DownloadThread();
 
 		downloadEnqueue = 0;
@@ -91,6 +100,84 @@ public class UpdateService extends Service {
 
 		@Override
 		public void run() {
+			MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
+			while (UpdateService.this.continueWorking) {
+				Thread.yield();
+				boolean isWiFiEnabled = true;
+				if (UpdateService.this.currentDownload == null && isWiFiEnabled) { // we are
+																	// waiting
+																	// for
+																	// downloading
+					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
+						String urlString = "http://" + currentDownload.getUrl();
+						BasicHttpParams httpParams = new BasicHttpParams();
+						httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, DOWNLOAD_CONNECTION_TIMEOUT);
+						httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, DOWNLOAD_CONNECTION_TIMEOUT);
+
+						AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
+						HttpGet httpGet = new HttpGet(urlString);
+
+						BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, prefs.getMpopCookie());
+						cookie.setDomain(".mail.ru");
+						cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
+						cookie.setPath("/");
+						httpClient.getCookieStore().addCookie(cookie);
+						File file = null;
+						
+						
+						try {
+							HttpResponse resp = httpClient.execute(httpGet);
+							InputStream is = resp.getEntity().getContent();
+							byte[] buf = new byte[4096];
+							int readed = 0;
+							int written = 0;
+							String filename = "/mailru" + prefs.getNextFilenameCounter() + ".mp3";
+
+							filename = getExternalFilesDir(Environment.DIRECTORY_MUSIC) + filename;
+							file = new File(filename);
+							OutputStream out = new FileOutputStream(file);
+							while ((readed = is.read(buf)) != -1 && UpdateService.this.continueWorking) {
+								out.write(buf, 0, readed);
+								written += readed;
+							}
+							if (UpdateService.this.continueWorking && written > 0) {
+								// chek gotten size and if i got less than
+								// Content-Length remove file.
+								Header h = resp.getFirstHeader("Content-Length");
+								if (h != null) {
+									int fileLength = Integer.parseInt(h.getValue());
+									if (fileLength == written) {
+										// add file to tracklist
+										tl.setFileName(currentDownload, filename);
+										//i got it
+										currentDownload = null;
+										file = null;
+									} else {
+										Log.d("shingrus", "Remove file in case of invalid size");
+									}
+								}
+							}
+							if (file != null) 
+								file.delete();
+						} catch (ClientProtocolException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							if (file != null) {
+								file.delete();
+							}
+						}
+
+					}
+				}
+				try {
+					Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
+				} catch (InterruptedException e) {
+					UpdateService.this.continueWorking = false;
+				}
+			} // while
+		}
+
+		public void run2() {
 
 			while (UpdateService.this.continueWorking) {
 				Thread.yield();
@@ -109,17 +196,15 @@ public class UpdateService extends Service {
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
 						r.setTitle(currentDownload.getTitle());
 						// TODO remove mailru prefix to profile_name prefix
-						// TODO may be it's good idea to change directoty to
-						// public Music
-						r.setDestinationInExternalFilesDir(UpdateService.this, Environment.DIRECTORY_MUSIC, "mailru" + prefs.getNextFilenameCounter()
-								+ ".mp3");
+						r.setDestinationInExternalFilesDir(UpdateService.this, Environment.DIRECTORY_MUSIC, "mailru" + prefs.getNextFilenameCounter() + ".mp3");
 
 						// TODO use wifi according to user settings
-						//r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+						// r.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
+						// | DownloadManager.Request.NETWORK_MOBILE);
 
-						int flags = DownloadManager.Request.NETWORK_WIFI | (prefs.useOnlyWifi()? 0:DownloadManager.Request.NETWORK_MOBILE);
+						int flags = DownloadManager.Request.NETWORK_WIFI | (prefs.useOnlyWifi() ? 0 : DownloadManager.Request.NETWORK_MOBILE);
 						r.setAllowedNetworkTypes(flags);
-						
+
 						r.setDescription(DOWNLOAD_MANAGER_DESCRIPTION);
 						r.addRequestHeader("Cookie", MailRuProfile.MAILRU_COOKIE_NAME + "=" + prefs.getMpopCookie());
 						UpdateService.this.downloadEnqueue = dm.enqueue(r);
@@ -129,197 +214,208 @@ public class UpdateService extends Service {
 				try {
 					Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
 				} catch (InterruptedException e) {
-
+					UpdateService.this.continueWorking = false;
 				}
 
 			}
 		}
 	}
 
-//	class UpdateThread extends Thread {
-//
-//		private boolean reAuthorizationRequired;
-//		String mpopCookie;
-//
-//		public UpdateThread() {
-//			super();
-//			this.mpopCookie = null;
-//			this.reAuthorizationRequired = false;
-//		}
-//
-//		protected void updateTrackList() {
-//			if (this.mpopCookie != null && this.mpopCookie.length() > 0) {
-//				AbstractHttpClient httpClient = new DefaultHttpClient();
-//				HttpGet httpGet = new HttpGet(MailRuProfile.MUSIC_URL);
-//
-//				BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, this.mpopCookie);
-//				cookie.setDomain(".mail.ru");
-//				cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
-//				cookie.setPath("/");
-//				httpClient.getCookieStore().addCookie(cookie);
-//
-//				try {
-//					HttpResponse musicListResponse = httpClient.execute(httpGet);
-//
-//					if (null != musicListResponse && musicListResponse.getStatusLine().getStatusCode() == 200) {
-//						// Log.i("shingrus", "got music list");
-//						SAXParserFactory sf = SAXParserFactory.newInstance();
-//						try {
-//							SAXParser parser = sf.newSAXParser();
-//							XMLReader xr = parser.getXMLReader();
-//							// boolean authorizationError = false;
-//							
-//							//XXX: !!!!it should create list and do not modify tracklist inside global track list!!
-//							xr.setContentHandler(new DefaultHandler() {
-//
-//								MusicTrack mt = new MusicTrack();
-//
-//								public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG = "FURL", PARAM_ID = "id",
-//										MUSICLIST_TAG = "MUSIC_LIST";
-//								boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName = false, isInsideMusicList = false;
-//								StringBuilder builder = new StringBuilder();
-//
-//								@Override
-//								public void characters(char[] ch, int start, int length) throws SAXException {
-//									if (isInsideFURL || isInsideName || isInsideMusicList) {
-//										builder.append(ch, start, length);
-//									}
-//								}
-//
-//								@Override
-//								public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-//									// Log.i("shingrus",
-//									// "XML: start element: " + localName);
-//									super.startElement(uri, localName, qName, attributes);
-//									if (localName.equalsIgnoreCase(TRACK_TAG)) {
-//										isInsideTrackTag = true;
-//										mt = new MusicTrack();
-//										mt.setId(attributes.getValue(PARAM_ID));
-//									} else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
-//										isInsideFURL = true;
-//									} else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
-//										isInsideName = true;
-//									} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
-//										isInsideMusicList = true;
-//									}
-//
-//								}
-//
-//								@Override
-//								public void endElement(String uri, String localName, String qName) throws SAXException {
-//
-//									// Log.i("shingrus",
-//									// "XML: end element: " + localName);
-//
-//									if (localName.equalsIgnoreCase(TRACK_TAG)) {
-//										isInsideTrackTag = false;
-//										isInsideName = isInsideFURL = false;
-//										if (mt.isComplete()) {
-//
-//											final TrackList tl = TrackList.getInstance();
-//											Log.i("shingrus", mt.toString());
-//
-//											// well, we have completed mt
-//											// object with url and id
-//											tl.addTrack(mt);
-//										}
-//									} else if (localName.equalsIgnoreCase(URL_TAG)) {
-//										isInsideFURL = false;
-//										mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
-//									} else if (localName.equalsIgnoreCase(NAME_TAG)) {
-//										isInsideName = false;
-//										mt.setTitle(builder.toString().replaceAll("[\\r\\n\\s]", ""));
-//									} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
-//										isInsideMusicList = false;
-//										if (builder.toString().equals("Error!")) {
-//											UpdateThread.this.reAuthorizationRequired = true;
-//										}
-//
-//									}
-//									if (builder.length() > 0) {
-//										builder.setLength(0);
-//									}
-//								}
-//							});
-//							InputSource is = new InputSource(musicListResponse.getEntity().getContent());
-//							xr.parse(is);
-//						} catch (ParserConfigurationException e) {
-//							e.printStackTrace();
-//						} catch (SAXException e) {
-//							e.printStackTrace();
-//						}
-//
-//					}
-//				} catch (ClientProtocolException e) {
-//					e.printStackTrace();
-//				} catch (IllegalStateException e) {
-//					e.printStackTrace();
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//			} else
-//				UpdateThread.this.reAuthorizationRequired = true;
-//		}
-//
-//		/**
-//		 * It Makes authorization on mail.ru currently, in future it may be
-//		 * the implementation of the interface
-//		 * 
-//		 * @return true - in success, false in vice versa
-//		 */
-//		protected boolean authorize() {
-//
-//			boolean result = false;
-//
-//			if (this.mpopCookie != null && reAuthorizationRequired == false) {
-//				result = true;
-//			} else if (reAuthorizationRequired == false && (this.mpopCookie == null || this.mpopCookie.length() == 0)) {
-//				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
-//				if (mpf != null) {
-//					String mpopCookie = mpf.getMpopCookie();
-//					if (mpopCookie != null && mpopCookie.length() > 0) {
-//						this.mpopCookie = mpopCookie;
-//						result = true;
-//					} else
-//						reAuthorizationRequired = true;
-//				} else
-//					reAuthorizationRequired = true;
-//			} else {
-//				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
-//				this.mpopCookie = mpf.getProfile().authorize(mpf.getEmail(), mpf.getPassword());
-//				if (this.mpopCookie != null) {
-//					result = true;
-//					reAuthorizationRequired = false;
-//					// store it
-//					mpf.setMpopCookie(this.mpopCookie);
-//				}
-//			}
-//			return result;
-//		}
-//
-//		@Override
-//		public void run() {
-//			Thread.yield();
-//			while (UpdateService.this.continueWorking) {
-//				if (authorize()) {
-//					updateTrackList();
-//				}
-//				try {
-//					Thread.sleep(UPDATE_SLEEP_MS);
-//				} catch (InterruptedException e) {
-//
-//					continueWorking = false;
-//				}
-//			}
-//
-//		}
-//
-//	}
+	// class UpdateThread extends Thread {
+	//
+	// private boolean reAuthorizationRequired;
+	// String mpopCookie;
+	//
+	// public UpdateThread() {
+	// super();
+	// this.mpopCookie = null;
+	// this.reAuthorizationRequired = false;
+	// }
+	//
+	// protected void updateTrackList() {
+	// if (this.mpopCookie != null && this.mpopCookie.length() > 0) {
+	// AbstractHttpClient httpClient = new DefaultHttpClient();
+	// HttpGet httpGet = new HttpGet(MailRuProfile.MUSIC_URL);
+	//
+	// BasicClientCookie cookie = new
+	// BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, this.mpopCookie);
+	// cookie.setDomain(".mail.ru");
+	// cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
+	// cookie.setPath("/");
+	// httpClient.getCookieStore().addCookie(cookie);
+	//
+	// try {
+	// HttpResponse musicListResponse = httpClient.execute(httpGet);
+	//
+	// if (null != musicListResponse &&
+	// musicListResponse.getStatusLine().getStatusCode() == 200) {
+	// // Log.i("shingrus", "got music list");
+	// SAXParserFactory sf = SAXParserFactory.newInstance();
+	// try {
+	// SAXParser parser = sf.newSAXParser();
+	// XMLReader xr = parser.getXMLReader();
+	// // boolean authorizationError = false;
+	//
+	// //XXX: !!!!it should create list and do not modify tracklist inside
+	// global track list!!
+	// xr.setContentHandler(new DefaultHandler() {
+	//
+	// MusicTrack mt = new MusicTrack();
+	//
+	// public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG =
+	// "FURL", PARAM_ID = "id",
+	// MUSICLIST_TAG = "MUSIC_LIST";
+	// boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName =
+	// false, isInsideMusicList = false;
+	// StringBuilder builder = new StringBuilder();
+	//
+	// @Override
+	// public void characters(char[] ch, int start, int length) throws
+	// SAXException {
+	// if (isInsideFURL || isInsideName || isInsideMusicList) {
+	// builder.append(ch, start, length);
+	// }
+	// }
+	//
+	// @Override
+	// public void startElement(String uri, String localName, String qName,
+	// Attributes attributes) throws SAXException {
+	// // Log.i("shingrus",
+	// // "XML: start element: " + localName);
+	// super.startElement(uri, localName, qName, attributes);
+	// if (localName.equalsIgnoreCase(TRACK_TAG)) {
+	// isInsideTrackTag = true;
+	// mt = new MusicTrack();
+	// mt.setId(attributes.getValue(PARAM_ID));
+	// } else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
+	// isInsideFURL = true;
+	// } else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
+	// isInsideName = true;
+	// } else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
+	// isInsideMusicList = true;
+	// }
+	//
+	// }
+	//
+	// @Override
+	// public void endElement(String uri, String localName, String qName) throws
+	// SAXException {
+	//
+	// // Log.i("shingrus",
+	// // "XML: end element: " + localName);
+	//
+	// if (localName.equalsIgnoreCase(TRACK_TAG)) {
+	// isInsideTrackTag = false;
+	// isInsideName = isInsideFURL = false;
+	// if (mt.isComplete()) {
+	//
+	// final TrackList tl = TrackList.getInstance();
+	// Log.i("shingrus", mt.toString());
+	//
+	// // well, we have completed mt
+	// // object with url and id
+	// tl.addTrack(mt);
+	// }
+	// } else if (localName.equalsIgnoreCase(URL_TAG)) {
+	// isInsideFURL = false;
+	// mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
+	// } else if (localName.equalsIgnoreCase(NAME_TAG)) {
+	// isInsideName = false;
+	// mt.setTitle(builder.toString().replaceAll("[\\r\\n\\s]", ""));
+	// } else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
+	// isInsideMusicList = false;
+	// if (builder.toString().equals("Error!")) {
+	// UpdateThread.this.reAuthorizationRequired = true;
+	// }
+	//
+	// }
+	// if (builder.length() > 0) {
+	// builder.setLength(0);
+	// }
+	// }
+	// });
+	// InputSource is = new
+	// InputSource(musicListResponse.getEntity().getContent());
+	// xr.parse(is);
+	// } catch (ParserConfigurationException e) {
+	// e.printStackTrace();
+	// } catch (SAXException e) {
+	// e.printStackTrace();
+	// }
+	//
+	// }
+	// } catch (ClientProtocolException e) {
+	// e.printStackTrace();
+	// } catch (IllegalStateException e) {
+	// e.printStackTrace();
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// } else
+	// UpdateThread.this.reAuthorizationRequired = true;
+	// }
+	//
+	// /**
+	// * It Makes authorization on mail.ru currently, in future it may be
+	// * the implementation of the interface
+	// *
+	// * @return true - in success, false in vice versa
+	// */
+	// protected boolean authorize() {
+	//
+	// boolean result = false;
+	//
+	// if (this.mpopCookie != null && reAuthorizationRequired == false) {
+	// result = true;
+	// } else if (reAuthorizationRequired == false && (this.mpopCookie == null
+	// || this.mpopCookie.length() == 0)) {
+	// MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+	// if (mpf != null) {
+	// String mpopCookie = mpf.getMpopCookie();
+	// if (mpopCookie != null && mpopCookie.length() > 0) {
+	// this.mpopCookie = mpopCookie;
+	// result = true;
+	// } else
+	// reAuthorizationRequired = true;
+	// } else
+	// reAuthorizationRequired = true;
+	// } else {
+	// MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+	// this.mpopCookie = mpf.getProfile().authorize(mpf.getEmail(),
+	// mpf.getPassword());
+	// if (this.mpopCookie != null) {
+	// result = true;
+	// reAuthorizationRequired = false;
+	// // store it
+	// mpf.setMpopCookie(this.mpopCookie);
+	// }
+	// }
+	// return result;
+	// }
+	//
+	// @Override
+	// public void run() {
+	// Thread.yield();
+	// while (UpdateService.this.continueWorking) {
+	// if (authorize()) {
+	// updateTrackList();
+	// }
+	// try {
+	// Thread.sleep(UPDATE_SLEEP_MS);
+	// } catch (InterruptedException e) {
+	//
+	// continueWorking = false;
+	// }
+	// }
+	//
+	// }
+	//
+	// }
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		Log.i("shingrus", "OnconfigurationChanged in  updateService:" + newConfig);
-		//super.onConfigurationChanged(newConfig);
+		// super.onConfigurationChanged(newConfig);
 	}
 
 	@Override
@@ -352,14 +448,14 @@ public class UpdateService extends Service {
 						if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
 
 							String filename = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
-							
-							//File f = new File(URI.create(filename));
-							
-							//i don't know why, but sometimes i'm getting 
-							//broken files. i can't find when DM removes files.
-							// i could use currentDownload link, but i 
+
+							// File f = new File(URI.create(filename));
+
+							// i don't know why, but sometimes i'm getting
+							// broken files. i can't find when DM removes files.
+							// i could use currentDownload link, but i
 							tl.setFileName(currentDownload, filename);
-									
+
 							// try {
 							// dm.openDownloadedFile(downloadId);
 							// } catch (FileNotFoundException e) {
@@ -372,8 +468,7 @@ public class UpdateService extends Service {
 					}
 					currentDownload = null;
 					downloadEnqueue = 0;
-				}
-				else {
+				} else {
 					Log.i("shingrus", "DM reciever: got unknown action:" + action);
 				}
 			}
@@ -381,29 +476,29 @@ public class UpdateService extends Service {
 
 		registerReceiver(downloadsReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
-		//super.onCreate();
+		// super.onCreate();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i("shingrus", "Strart updateService");
 		// Start update thread
-//		updateThread.start();
+		// updateThread.start();
 		// Start download thread
-		//TODO: start only once
+		// TODO: start only once
 		downloadThread.start();
-//		return super.onStartCommand(intent, flags, startId);
+		// return super.onStartCommand(intent, flags, startId);
 		return START_NOT_STICKY;
 	}
 
 	@Override
 	public void onDestroy() {
 		this.dm.remove(downloadEnqueue);
-		//no more async updates in threads	
-		//updateThread.interrupt();
+		// no more async updates in threads
+		// updateThread.interrupt();
 		downloadThread.interrupt();
 		unregisterReceiver(downloadsReceiver);
-		//super.onDestroy();
+		// super.onDestroy();
 	}
 
 	@Override
