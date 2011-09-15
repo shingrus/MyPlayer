@@ -157,7 +157,7 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 									}
 								} else if (localName.equalsIgnoreCase(URL_TAG)) {
 									isInsideFURL = false;
-									mt.setUrl(builder.toString().replaceAll("[\\r\\n]", ""));
+									mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
 								} else if (localName.equalsIgnoreCase(NAME_TAG)) {
 									isInsideName = false;
 									mt.setTitle(builder.toString().replaceAll("[\\r\\n]", ""));
