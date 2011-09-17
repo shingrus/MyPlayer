@@ -54,6 +54,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 //import android.util.Log;
+import android.test.IsolatedContext;
 import android.util.Log;
 
 public class UpdateService extends Service {
@@ -105,18 +106,27 @@ public class UpdateService extends Service {
 		public void run() {
 			MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
 			ConnectivityManager conMan = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-			NetworkInfo wifi;
+			NetworkInfo network;
 			while (UpdateService.this.continueWorking) {
 				Thread.yield();
 				boolean isNetworkReady = false;
-//TODO roaming
-				if (prefs.useOnlyWifi()) {
-					wifi = conMan.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-					if (wifi != null && wifi.isConnected()) {
+				network  = conMan.getActiveNetworkInfo();
+				if (network != null) {
+					switch (network.getType()) {
+					case ConnectivityManager.TYPE_WIMAX:
 						isNetworkReady = true;
+						break;
+					case ConnectivityManager.TYPE_MOBILE:
+						if (!network.isRoaming() && !prefs.useOnlyWifi()) {//roaming transfer doesn't allowed
+							isNetworkReady = true;
+						}
+						break;
+					case ConnectivityManager.TYPE_WIFI:
+							isNetworkReady = true;
+						break;
 					}
-				} else
-					isNetworkReady = true;
+					
+				}					
 				// we are waiting for downloading
 				if (UpdateService.this.currentDownload == null && isNetworkReady) {
 
