@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
@@ -59,7 +60,6 @@ public class MyPlayerActivity extends Activity {
 
 	}
 
-	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -133,6 +133,8 @@ public class MyPlayerActivity extends Activity {
 		return true;
 	}
 
+	
+	
 	// Click Listeners
 	public void onClickPlayPause(View v) {
 		playerService.playPause();
@@ -150,5 +152,6 @@ public class MyPlayerActivity extends Activity {
 	public void onClickStop(View v) {
 		playerService.stopMusic();
 	}
+
 
 }

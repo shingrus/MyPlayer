@@ -28,6 +28,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class TrackList {
+	
 	enum Direction {
 		PREVIOUS, NEXT
 	}
@@ -44,11 +45,16 @@ public class TrackList {
 			+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
 	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
 			+ ") VALUES (?, ?, ?)";
+
+	
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
 	DBHelper dbHelper;
 	private boolean isLoaded = false;
-
+	List<MusicTrack> trackList;
+	private int iteratePosition = 0;
+	private boolean isPlaying = false;
+	
 	// private final Context context;
 
 	// TODO - move basedapter to activity
@@ -86,6 +92,9 @@ public class TrackList {
 			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			MusicTrack mt = trackList.get(position);
 			text.setText(mt.getTitle());
+			if(isPlaying && position == iteratePosition) {
+				text.setTextColor(0xAAFF0000);
+			}
 			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
 			text.setText(mt.getFilename().length() > 0 ? "+" : "-");
 			return rowView;
@@ -93,9 +102,6 @@ public class TrackList {
 
 	}
 
-	// LinkedHashSet<MusicTrack> trackList;
-	List<MusicTrack> trackList;
-	private int iteratePosition = 0;
 
 	// Create Only static
 	private TrackList() {
@@ -302,6 +308,18 @@ public class TrackList {
 		return trackList.get(iteratePosition);
 	}
 
+	
+	public final void notifyPlayStarted() {
+		isPlaying = true;
+		dataChanged();
+	}
+
+	public final void notifyPlayStopped() {
+		isPlaying = false;
+		dataChanged();
+	}
+
+	
 	public TrackListAdapter getAdapter(Activity actvty) {
 		adapter = new TrackListAdapter(actvty);
 		return adapter;

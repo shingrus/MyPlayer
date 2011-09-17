@@ -40,4 +40,9 @@
 	<string name="LoginPassword_LoginButton">Login</string>
 	<string name="LoginPassword_SpinnerDialogText">Authorization in progress...</string>
 	
+	
+	<string name="NotificationTitle_Playing">Playing</string>
+	<string name="NotificationTitle_Paused">Paused</string>
+	<string name="NotificationTitle_Stopped">Stopped</string>
+	
 </resources>

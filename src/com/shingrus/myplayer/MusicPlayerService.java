@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
@@ -20,9 +21,9 @@ import android.media.*;
 public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
 		MediaPlayer.OnCompletionListener {
 
-	private final String NOTIFICATION_STATUS_STOPPED="Stopped";
-	private final String NOTIFICATION_STATUS_PLAYING="Playing";
-	private final String NOTIFICATION_STATUS_PAUSED="Paused";
+	enum NotificationStatus {
+		Stopped, Playing, Paused
+	}
 
 	
 	
@@ -36,6 +37,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	NotificationManager nm;
 	Notification notification;
 	String currentStatusDesc;
+	private Handler updatesHandler;
 	
 	
 	public class LocalBinder extends Binder {
@@ -44,6 +46,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 	}
 
+	public void subscribeOnPlayUpdates (Handler h ){
+		this.updatesHandler = h;
+	}
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -58,16 +64,40 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		nm  = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		notification = new Notification(R.drawable.ringtone,"",System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
-		updateNotification(NOTIFICATION_STATUS_STOPPED);
+		updateNotification(NotificationStatus.Stopped);
 		super.onCreate();
 	}
 
-	private final void updateNotification(String nTitle) {
+	private final void updateNotification(NotificationStatus nStatus) {
+		CharSequence nTitle = "";
+		switch (nStatus) {
+		case Paused:
+			nTitle = getText(R.string.NotificationTitle_Paused);
+			break;
+		case Playing:
+			nTitle = getText(R.string.NotificationTitle_Playing);
+			trackList.notifyPlayStarted();
+			break;
+		case Stopped:
+			nTitle = getText(R.string.NotificationTitle_Stopped);
+			trackList.notifyPlayStopped();
+			break;
+		}
+
 		Intent i = new Intent(this, MyPlayerActivity.class);
 		//i.setFlags(Intent.FLAG_ACTIVITY_SIN GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi  = PendingIntent.getActivity(this,0, i, 0);
 		notification.setLatestEventInfo(this, "MyPlayer - " + nTitle, currentTitle, pi);
 		nm.notify(NOTIFICATION_ID, notification);
+		switch (nStatus) {
+		case Paused:
+		case Playing:
+			trackList.notifyPlayStarted();
+			break;
+		case Stopped:
+			trackList.notifyPlayStopped();
+			break;
+		}
 	}
 
 	@Override
@@ -95,7 +125,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onPrepared(MediaPlayer mp) {
 		mp.start();
 		isPaused=false;
-		updateNotification(NOTIFICATION_STATUS_PLAYING);
+		updateNotification(NotificationStatus.Playing);
 	}
 
 	/**
@@ -104,14 +134,14 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public boolean onError(MediaPlayer mp, int what, int extra) {
 		Log.i("shingrus", "MP error: " + what);
-		updateNotification(NOTIFICATION_STATUS_STOPPED);
+		updateNotification(NotificationStatus.Stopped);
 		return false;
 	}
 
 	private void playMusic(MusicTrack mt) {
 		if (mt != null && mt.filename.length() > 0) {
 			mp.reset();
-			updateNotification(NOTIFICATION_STATUS_STOPPED);
+			updateNotification(NotificationStatus.Stopped);
 			isPaused = false;
 			try {
 				mp.setDataSource(mt.filename);
@@ -160,19 +190,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void playPause() {
 		if(mp.isPlaying()){
 			mp.pause();
-			updateNotification(NOTIFICATION_STATUS_PAUSED);
+			updateNotification(NotificationStatus.Paused);
 			isPaused = true;
 		}
 		else if (isPaused){
 			mp.start();
-			updateNotification(NOTIFICATION_STATUS_PLAYING);
+			updateNotification(NotificationStatus.Playing);
 			isPaused=false;
 		}
 	}
 	
 	public void stopMusic() {
 		mp.stop();
-		updateNotification(NOTIFICATION_STATUS_STOPPED);
+		updateNotification(NotificationStatus.Stopped);
 		isPaused = false;
 	}
 
