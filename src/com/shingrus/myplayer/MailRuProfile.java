@@ -160,7 +160,7 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 									mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
 								} else if (localName.equalsIgnoreCase(NAME_TAG)) {
 									isInsideName = false;
-									mt.setTitle(builder.toString().replaceAll("[\\r\\n]", ""));
+									mt.setTitle(builder.toString().replaceAll("^\\s+", ""));
 								} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
 									isInsideMusicList = false;
 									if (builder.toString().equals("Error!")) {
