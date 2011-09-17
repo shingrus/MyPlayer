@@ -8,12 +8,14 @@
 		android:id="@+id/trackrow_textid"
 		android:layout_width="wrap_content"
 		android:layout_height="match_parent"
+		android:maxLines="1"
 		android:textSize="20dp">
 	</TextView>
 	<TextView
 		android:layout_width="match_parent"
 		android:gravity="right"
 		android:layout_height="match_parent"
+		android:width="10dp"
 		android:id="@+id/trackrow_statusid"></TextView>
 </LinearLayout>
 

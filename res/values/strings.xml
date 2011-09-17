@@ -29,7 +29,7 @@
 	
 	
 	<string name="forwardButtonText">Next</string>
-	<string name="rewindButtonText">Previos</string>
+	<string name="rewindButtonText">Previous</string>
 	<string name="playButtonText">Play/Pause</string>
 	<string name="stopButtonText">Stop</string>
 	<string name="LoginPassword_LoginTitle">Login:</string>

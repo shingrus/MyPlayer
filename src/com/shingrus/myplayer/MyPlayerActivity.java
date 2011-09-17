@@ -144,8 +144,7 @@ public class MyPlayerActivity extends Activity {
 	}
 
 	public void onClickRewind(View v) {
-		playerService.playNext();
-
+		playerService.playPrevious();
 	}
 
 	public void onClickStop(View v) {

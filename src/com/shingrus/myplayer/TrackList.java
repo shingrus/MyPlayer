@@ -28,6 +28,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class TrackList {
+	enum Direction {
+		PREVIOUS, NEXT
+	}
 
 	public static final int LIMIT_TRACKS = 1024;
 	public static final String DATABASE_NAME = "TrackList";
@@ -37,8 +40,8 @@ public class TrackList {
 	private static final String TRACK_FILENAME = "Filename";
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
-	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0,"
-			+ TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_TITLE
+			+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
 	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
 			+ ") VALUES (?, ?, ?)";
 	private static TrackList trackListInstance;
@@ -48,10 +51,10 @@ public class TrackList {
 
 	// private final Context context;
 
-	//TODO - move basedapter to activity
-	//TODO - give handler from activity
-	//TODO - and don't use runonuithread!
-	
+	// TODO - move basedapter to activity
+	// TODO - give handler from activity
+	// TODO - and don't use runonuithread!
+
 	class TrackListAdapter extends BaseAdapter {
 		private final Activity activity;
 
@@ -134,13 +137,12 @@ public class TrackList {
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null,
-						null, null);
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null, null);
 				if (c != null && c.moveToFirst()) {
 					do {
 						String filename = c.getString(3);
 						File f = new File(Uri.parse(filename).getPath());
-						if (!f.exists()) 
+						if (!f.exists())
 							filename = "";
 						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), filename);
 						trackList.add(mt);
@@ -263,24 +265,41 @@ public class TrackList {
 		return trackList.get(position);
 	}
 
-	public final synchronized MusicTrack getNextTrack() {
+	private final MusicTrack getTrack(Direction direction) {
 		int counter = trackList.size();
 		MusicTrack mt = null;
 		for (; counter > 0; counter--) {
-			if (iteratePosition >= trackList.size()) 
-				iteratePosition = 0;
-			if (trackList.get(iteratePosition).filename.length()>0) { 
-				 mt = trackList.get(iteratePosition++);
-				 break;
+
+			if (direction == Direction.NEXT) {
+				iteratePosition++;
+				if (iteratePosition >= trackList.size())
+					iteratePosition = 0;
+			} else {
+				--iteratePosition;
+				if (iteratePosition < 0)
+					iteratePosition = trackList.size() - 1;
+			}
+
+			if (trackList.get(iteratePosition).filename.length() > 0) {
+				mt = trackList.get(iteratePosition);
+				break;
 			}
 		}
 		return mt;
 	}
 
+	public final synchronized MusicTrack getPreviuosTrack() {
+		return getTrack(Direction.PREVIOUS);
+	}
+
+	public final synchronized MusicTrack getNextTrack() {
+		return getTrack(Direction.NEXT);
+	}
+
 	public final synchronized MusicTrack startIterateFrom(int position) {
-		// TODO check size and check that we got mt with filename
+		// TODO check size and check that we got mt with Bfilename
 		iteratePosition = (position > trackList.size() - 1) ? 0 : position;
-		return trackList.get(iteratePosition++);
+		return trackList.get(iteratePosition);
 	}
 
 	public TrackListAdapter getAdapter(Activity actvty) {

@@ -151,6 +151,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	}
 
+	public void playPrevious() {
+		MusicTrack mt = trackList.getPreviuosTrack();
+		playMusic(mt);
+
+	}
+	
 	public void playPause() {
 		if(mp.isPlaying()){
 			mp.pause();
