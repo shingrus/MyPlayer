@@ -32,10 +32,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	boolean isPaused = false;
 	NotificationManager nm;
 	TelephonyManager tm;
+	PhoneStateListener mPhoneListener;
 	Notification notification;
 	String currentStatusDesc;
 	BroadcastReceiver audioReceiver = new AudioBroacastReciever();
 
+	
 	// private Handler updatesHandler;
 
 	public class LocalBinder extends Binder {
@@ -74,8 +76,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		notification = new Notification(R.drawable.ringtone, "", System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		updateNotification(NotificationStatus.Stopped);
-		
-		tm.listen(new PhoneStateListener() {
+		mPhoneListener = new PhoneStateListener() {
 
 			@Override
 			public void onCallStateChanged(int state, String incomingNumber) {
@@ -92,7 +93,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				}
 			}
 
-		}, PhoneStateListener.LISTEN_CALL_STATE);
+		};
+		tm.listen(mPhoneListener, PhoneStateListener.LISTEN_CALL_STATE);
 		registerReceiver(audioReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
 		super.onCreate();
 	}
@@ -140,7 +142,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			mp.release();
 		}
 		if (tm!=null) 
-			tm.listen(null, PhoneStateListener.LISTEN_NONE);
+			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
 		unregisterReceiver(audioReceiver);
 
 	}
