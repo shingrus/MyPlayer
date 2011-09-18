@@ -2,7 +2,11 @@ package com.shingrus.myplayer;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -40,6 +44,13 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 	
 	public static final String REFRESH_TOKEN_NAME = "refresh_token";
 	public static final String ACCESS_TOKEN_NAME = "access_token";
+	public static final String UID_NAME = "x_mailru_vid";
+	
+	private static final String BASE_API_URL = "http://www.appsmail.ru/platform/api?";
+	private static final String GET_TRACKS_LIST_METHOD = "audio.get";
+	private static final String PRIVATE_KEY = "8bd7022c723f4cea429a70437d72ad07";
+	private static final String SECRET_KEY = "dce3709dff6f799ab55705295f11ec09";
+	
 	
 	public static final String MAILRU_COOKIE_NAME = "Mpop";
 
@@ -49,6 +60,8 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 	boolean isAccessTokenChanged = false;
 	private String refreshToken;
 	boolean isRefreshTokenChanged = false;
+	private String uid;
+	boolean isUidChanged = false;
 	
 	TrackListFetchingStatus lastFetchResult;
 	
@@ -92,8 +105,38 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 		return mpopCookie;
 	}
 	
+	private final String md5(String s) {
+	    try {
+	        // Create MD5 Hash
+	        MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+	        digest.update(s.getBytes());
+	        byte messageDigest[] = digest.digest();
+
+	        // Create Hex String
+	        StringBuffer hexString = new StringBuffer();
+	        for (int i=0; i<messageDigest.length; i++)
+	            hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+	        return hexString.toString();
+
+	    } catch (NoSuchAlgorithmException e) {
+	        e.printStackTrace();
+	    }
+	    return "";
+	}
+
 	
-	
+	public final TrackListFetchingStatus getTrackList(TrackList tl) {
+		lastFetchResult = TrackListFetchingStatus.ERROR;
+		String params = "app_id=" + APPID + "method="+GET_TRACKS_LIST_METHOD+"session_key="+accessToken;
+		
+		
+		String md5  = md5("1324730981306483817app_id=423004method=friends.getsession_key=be6ef89965d58e56dec21acb9b62bdaa7815696ecbf1c96e6894b779456d330e");
+		md5 = md5(uid+params+PRIVATE_KEY);
+		
+		String url = BASE_API_URL + "method="+GET_TRACKS_LIST_METHOD+"&"+"app_id="+APPID+"&session_key=" + accessToken+ "&sig="+md5; 
+		
+		return lastFetchResult;
+	}
 
 	public final TrackListFetchingStatus getTrackListFromInternet(final TrackList tl, String mpopCookie) {
 		lastFetchResult = TrackListFetchingStatus.ERROR;
@@ -217,15 +260,15 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 	public String getOAuthURL() {
 		return OAUTH_URL;
 	}
-	public void setAccessToken(String access_token) {
-		this.accessToken = access_token;
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
 		this.isAccessTokenChanged = true;
 	}
 	public final String getAccessToken() {
 		return accessToken;
 	}
-	public void setRefreshToken(String refresh_token) {
-		this.refreshToken = refresh_token;
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
 		this.isRefreshTokenChanged= true;
 	}
 	public final String getRefreshToken() {
@@ -233,9 +276,16 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 	}
 	
 	@Override
+	public void setUID(String uid) {
+		this.uid = uid;
+		isUidChanged = true;
+		
+	}
+	@Override
 	public void loadPreferences(SharedPreferences preferences) {
 		this.refreshToken = preferences.getString(REFRESH_TOKEN_NAME, "");
 		this.accessToken = preferences.getString(ACCESS_TOKEN_NAME, "");
+		this.uid = preferences.getString(UID_NAME, "");
 	}
 	@Override
 	public void storePreferences(SharedPreferences preferences) {
@@ -246,8 +296,13 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 		if (isRefreshTokenChanged) {
 			editor.putString(REFRESH_TOKEN_NAME, refreshToken);
 		}
+		if (isUidChanged) {
+			editor.putString(UID_NAME, uid);
+		}
+
 		editor.apply();
-		isAccessTokenChanged = isRefreshTokenChanged = true;
+		isAccessTokenChanged = isRefreshTokenChanged = isUidChanged = true;
 	}
+	
 	
 }
