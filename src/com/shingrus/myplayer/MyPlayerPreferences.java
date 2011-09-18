@@ -15,7 +15,7 @@ public class MyPlayerPreferences {
 	
 	private final String MPOPCOOKIE_KEY = "mpop_cookie";
 	private final String FILENAMECOUNTER_KEY = "filename_counter";
-	private boolean useOnlyWifi;
+	private boolean useOnlyWifi, pauseOnLoud, pauseOnCall;
 	private int nextFilenameCounter;
 	private SharedPreferences preferences;
 	private static MyPlayerPreferences playerPreferences ;
@@ -112,6 +112,8 @@ public class MyPlayerPreferences {
 		login = new String();
 		password = new String();
 		useOnlyWifi = true;
+		pauseOnCall = true;
+		pauseOnLoud = true;
 		preferences = null;
 		mpopCookie = new String();
 		profile = new MailRuProfile();
@@ -124,6 +126,9 @@ public class MyPlayerPreferences {
 			this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
 			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
+			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
+			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);
+			
 			this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
 			
 	}

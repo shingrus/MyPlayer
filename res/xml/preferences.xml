@@ -1,29 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" android:key="first_preferencescreen">
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:key="first_preferencescreen">
 
-	<PreferenceCategory android:title="@string/authorization_preferences_group">
-		  <EditTextPreference
-                android:key="@string/mailru_login_preference_key"
-                android:title="@string/title_mailru_email_preference"
-                android:summary="@string/summary_mailru_email_preference"
-                android:dialogTitle="@string/dialog_title_mailru_email_preference" />
+	<PreferenceCategory
+		android:title="@string/authorization_preferences_group">
+		<EditTextPreference
+			android:key="@string/mailru_login_preference_key"
+			android:title="@string/title_mailru_email_preference"
+			android:summary="@string/summary_mailru_email_preference"
+			android:dialogTitle="@string/dialog_title_mailru_email_preference" />
 
-		  <EditTextPreference
-                android:key="@string/mailru_password_preference_key"
-                android:title="@string/title_mailru_password_preference"
-                android:summary="@string/summary_mailru_password_preference"
-                android:dialogTitle="@string/dialog_title_mailru_password_preference" 
-                android:password="true"
-                />
+		<EditTextPreference
+			android:key="@string/mailru_password_preference_key"
+			android:title="@string/title_mailru_password_preference"
+			android:summary="@string/summary_mailru_password_preference"
+			android:dialogTitle="@string/dialog_title_mailru_password_preference"
+			android:password="true" />
 	</PreferenceCategory>
-	
-	<PreferenceCategory android:title="@string/other_preferences_group">
+
+	<PreferenceCategory
+		android:title="@string/other_preferences_group">
 		<CheckBoxPreference
-                        android:title="@string/use_wifi_only_preferences_title"
-                        android:defaultValue="true"
-                        android:summary="@string/use_wifi_only_preferences_desc"
-                        android:key="@string/useWifiOnly_key" />
+			android:title="@string/use_wifi_only_preferences_title"
+			android:defaultValue="true"
+			android:summary="@string/use_wifi_only_preferences_desc"
+			android:key="@string/useWifiOnly_key" />
+		<CheckBoxPreference
+			android:title="@string/pause_on_loud_preferences_title"
+			android:defaultValue="true"
+			android:summary="@string/pause_on_loud_preferences_desc"
+			android:key="@string/pauseOnLoud_key" />
+		<CheckBoxPreference
+			android:title="@string/pause_on_call_preferences_title"
+			android:defaultValue="true"
+			android:summary="@string/pause_on_call_preferences_desc"
+			android:key="@string/pauseOnCall_key" />
 	</PreferenceCategory>
-    
-	
+
+
 </PreferenceScreen> 

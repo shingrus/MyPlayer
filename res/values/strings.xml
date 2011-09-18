@@ -24,6 +24,19 @@
 	<string name="use_wifi_only_preferences_title">Обновление только через WIFI</string>
 	<string name="use_wifi_only_preferences_desc">Новые треки будут скачиваться только через wi-fi</string>
 	
+	
+	<string name="pauseOnLoud_key">pauseOnLoud</string>
+	
+	<string name="pause_on_loud_preferences_title">Пауза, если отключены наушники</string>
+	<string name="pause_on_loud_preferences_desc"></string>
+	
+	<string name="pauseOnCall_key">pauseOnLoud</string>
+	
+	<string name="pause_on_call_preferences_title">Ставить на паузу во время звонка.</string>
+	<string name="pause_on_call_preferences_desc"></string>
+
+
+	
 	<string name="menu_preferences_item_name">Settings</string>
 	<string name="menu_update_item_name">Update</string>
 	
