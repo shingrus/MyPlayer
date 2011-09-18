@@ -6,50 +6,58 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
 import android.media.*;
 
-
-
-public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-		MediaPlayer.OnCompletionListener {
+public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
 
 	enum NotificationStatus {
 		Stopped, Playing, Paused
 	}
 
-	
-	
 	private static final int NOTIFICATION_ID = 100500;
 	MediaPlayer mp;
 	TrackList trackList;
-//	MusicTrack currentTrack;
+	// MusicTrack currentTrack;
 	String currentTitle;
 	private final IBinder mBinder = new LocalBinder();
 	boolean isPaused = false;
 	NotificationManager nm;
+	TelephonyManager tm;
 	Notification notification;
 	String currentStatusDesc;
-	private Handler updatesHandler;
-	
-	
+	BroadcastReceiver audioReceiver = new AudioBroacastReciever();
+
+	// private Handler updatesHandler;
+
 	public class LocalBinder extends Binder {
 		MusicPlayerService getService() {
 			return MusicPlayerService.this;
 		}
 	}
 
-	public void subscribeOnPlayUpdates (Handler h ){
-		this.updatesHandler = h;
+	/**
+	 * Reciever for AudioManager.ACTION_AUDIO_BECOMING_NOISY
+	 * it pauses if headphones disable
+	 * @author shingrus
+	 */
+	public class AudioBroacastReciever extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
+				pause();
+			}
+		}
 	}
-	
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -61,10 +69,31 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		currentTitle = "";
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		trackList = TrackList.getInstance();
-		nm  = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		notification = new Notification(R.drawable.ringtone,"",System.currentTimeMillis());
+		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		notification = new Notification(R.drawable.ringtone, "", System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		updateNotification(NotificationStatus.Stopped);
+		
+		tm.listen(new PhoneStateListener() {
+
+			@Override
+			public void onCallStateChanged(int state, String incomingNumber) {
+				switch (state) {
+				case TelephonyManager.CALL_STATE_IDLE:
+					playPaused();
+					break;
+				case TelephonyManager.CALL_STATE_OFFHOOK:
+					pause();
+					break;
+				case TelephonyManager.CALL_STATE_RINGING:
+					pause();
+					break;
+				}
+			}
+
+		}, PhoneStateListener.LISTEN_CALL_STATE);
+		registerReceiver(audioReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
 		super.onCreate();
 	}
 
@@ -85,8 +114,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 
 		Intent i = new Intent(this, MyPlayerActivity.class);
-		//i.setFlags(Intent.FLAG_ACTIVITY_SIN GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
-		PendingIntent pi  = PendingIntent.getActivity(this,0, i, 0);
+		// i.setFlags(Intent.FLAG_ACTIVITY_SIN
+		// GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 		notification.setLatestEventInfo(this, "MyPlayer - " + nTitle, currentTitle, pi);
 		nm.notify(NOTIFICATION_ID, notification);
 		switch (nStatus) {
@@ -109,7 +139,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				mp.stop();
 			mp.release();
 		}
-		
+		if (tm!=null) 
+			tm.listen(null, PhoneStateListener.LISTEN_NONE);
+		unregisterReceiver(audioReceiver);
+
 	}
 
 	@Override
@@ -124,7 +157,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public void onPrepared(MediaPlayer mp) {
 		mp.start();
-		isPaused=false;
+		isPaused = false;
 		updateNotification(NotificationStatus.Playing);
 	}
 
@@ -186,20 +219,30 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		playMusic(mt);
 
 	}
-	
-	public void playPause() {
-		if(mp.isPlaying()){
+
+	private void pause() {
+		if (mp.isPlaying()) {
 			mp.pause();
 			updateNotification(NotificationStatus.Paused);
 			isPaused = true;
 		}
-		else if (isPaused){
+	}
+
+	private void playPaused() {
+		if (isPaused) {
 			mp.start();
 			updateNotification(NotificationStatus.Playing);
-			isPaused=false;
+			isPaused = false;
 		}
 	}
-	
+
+	public void playPause() {
+		if (mp.isPlaying()) {
+			pause();
+		} else
+			playPaused();
+	}
+
 	public void stopMusic() {
 		mp.stop();
 		updateNotification(NotificationStatus.Stopped);
