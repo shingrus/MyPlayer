@@ -77,12 +77,14 @@ public class UpdateService extends Service {
 
 		@Override
 		public void run() {
+			boolean checkForNext = false;
 			MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
 			ConnectivityManager conMan = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 			NetworkInfo network;
 			while (UpdateService.this.continueWorking) {
 				Thread.yield();
 				boolean isNetworkReady = false;
+				checkForNext = false;
 				network  = conMan.getActiveNetworkInfo();
 				if (network != null) {
 					switch (network.getType()) {
@@ -153,6 +155,7 @@ public class UpdateService extends Service {
 												// i got it
 												currentDownload = null;
 												file = null;
+												checkForNext = true;
 											} else {
 												Log.d("shingrus", "Remove file in case of invalid size");
 											}
@@ -181,10 +184,12 @@ public class UpdateService extends Service {
 
 					}
 				}
-				try {
-					Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
-				} catch (InterruptedException e) {
-					UpdateService.this.continueWorking = false;
+				if (!checkForNext) {
+					try {
+						Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
+					} catch (InterruptedException e) {
+						UpdateService.this.continueWorking = false;
+					}
 				}
 			} // while
 		}
