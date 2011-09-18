@@ -13,7 +13,8 @@ public class MyPlayerPreferences {
 	private boolean isLoginChanged = false, isPasswordChanged = false;
 	
 	
-	private final String MPOPCOOKIE_KEY = "mpop_cookie";
+	private static final String MPOPCOOKIE_KEY = "mpop_cookie";
+	public static final String OAUTH_URL = "openauthurl";
 	private final String FILENAMECOUNTER_KEY = "filename_counter";
 	private boolean useOnlyWifi, pauseOnLoud, pauseOnCall;
 	private int nextFilenameCounter;
@@ -54,7 +55,7 @@ public class MyPlayerPreferences {
 		isPasswordChanged = true;
 	}
 	
-	public void store(Context ctx) {
+	public void storePreferences(Context ctx) {
 		if (ctx != null) {
 			SharedPreferences.Editor editor = this.preferences.edit();
 			if (isLoginChanged ) {
@@ -65,6 +66,7 @@ public class MyPlayerPreferences {
 			}
 			editor.apply();
 			isLoginChanged = isPasswordChanged = true;
+			profile.storePreferences(preferences);
 		}
 	}
 	
@@ -135,9 +137,10 @@ public class MyPlayerPreferences {
 			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
 			this.pauseOnLoud = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
-			this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);
-			
+			this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);			
 			this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
+			
+			profile.loadPreferences(preferences);
 			
 	}
 

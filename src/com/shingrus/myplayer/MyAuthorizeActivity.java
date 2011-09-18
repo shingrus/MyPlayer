@@ -67,7 +67,7 @@ public class MyAuthorizeActivity extends Activity {
 				mpf.setMpopCookie(mpopCookie);
 				mpf.setLogin(login);
 				mpf.setPassword(password);
-				mpf.store(MyAuthorizeActivity.this);
+				mpf.storePreferences(MyAuthorizeActivity.this);
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);
 				finish();

@@ -42,6 +42,10 @@
 			android:name="MyPlayerPreferencesActivity"
 			android:label="@string/preferences_activity_name">
 		</activity>
+		<activity
+			android:name="OAuthWebAuthorization"
+			android:label="@string/oauth_activity_name">
+		</activity>
 		<service
 			android:name=".UpdateService"
 			android:enabled="true"></service>

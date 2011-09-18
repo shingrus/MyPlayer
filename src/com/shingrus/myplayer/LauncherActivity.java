@@ -14,7 +14,9 @@ public class LauncherActivity extends Activity {
 		if (mpp.getEmail() != null && mpp.getEmail().length() > 0) {
 			i = new Intent(this, MyPlayerActivity.class);
 		} else {
-			i = new Intent(this, MyAuthorizeActivity.class);
+//			i = new Intent(this, MyAuthorizeActivity.class);
+			i = new Intent(this, OAuthWebAuthorization.class);
+			i.putExtra(MyPlayerPreferences.OAUTH_URL, MailRuProfile.OAUTH_URL);
 		}
 		startActivity(i);
 		finish();

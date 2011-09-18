@@ -5,6 +5,8 @@
     
     <string name="preferences_activity_name">MyPlayerPreferences</string>
     <string name="authorize_activity_name">MyPlayerAuthorize</string>
+    <string name="oauth_activity_name">MyPlayerAuthorize</string>
+    
     
     
     <string name="mailru_login_preference_key">mailru_email_preference</string>

@@ -27,19 +27,34 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 
 public class MailRuProfile  implements MyPlayerAccountProfile {
 	public static final String SWA_URL = "http://swa.mail.ru/?";
 	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
+	public static final String SUCCESS_OATH_PREFIX = "http://connect.mail.ru/oauth/success.html#";
+	public static final String APPID = "640583";
+	public static final String OAUTH_URL = "https://connect.mail.ru/oauth/authorize?client_id=" + APPID 
+	+ "&response_type=token&redirect_uri=http%3A%2F%2Fconnect.mail.ru%2Foauth%2Fsuccess.html&display=mobile";
+	
+	public static final String REFRESH_TOKEN_NAME = "refresh_token";
+	public static final String ACCESS_TOKEN_NAME = "access_token";
+	
 	public static final String MAILRU_COOKIE_NAME = "Mpop";
 
 	public static final int CONNECTION_TIMEOUT = 15*1000;
 	
+	private String accessToken;
+	boolean isAccessTokenChanged = false;
+	private String refreshToken;
+	boolean isRefreshTokenChanged = false;
+	
 	TrackListFetchingStatus lastFetchResult;
 	
 	public MailRuProfile () {
-		
+		accessToken = "";
+		refreshToken= "";
 	}
 	public final String  authorize (String login, String password) {
 		String mpopCookie = null;
@@ -198,4 +213,41 @@ public class MailRuProfile  implements MyPlayerAccountProfile {
 	public final TrackListFetchingStatus lastFetchResult() {
 		return lastFetchResult;
 	}
+	@Override
+	public String getOAuthURL() {
+		return OAUTH_URL;
+	}
+	public void setAccessToken(String access_token) {
+		this.accessToken = access_token;
+		this.isAccessTokenChanged = true;
+	}
+	public final String getAccessToken() {
+		return accessToken;
+	}
+	public void setRefreshToken(String refresh_token) {
+		this.refreshToken = refresh_token;
+		this.isRefreshTokenChanged= true;
+	}
+	public final String getRefreshToken() {
+		return refreshToken;
+	}
+	
+	@Override
+	public void loadPreferences(SharedPreferences preferences) {
+		this.refreshToken = preferences.getString(REFRESH_TOKEN_NAME, "");
+		this.accessToken = preferences.getString(ACCESS_TOKEN_NAME, "");
+	}
+	@Override
+	public void storePreferences(SharedPreferences preferences) {
+		SharedPreferences.Editor editor = preferences.edit();
+		if (isAccessTokenChanged ) {
+			editor.putString(ACCESS_TOKEN_NAME, accessToken);
+		}
+		if (isRefreshTokenChanged) {
+			editor.putString(REFRESH_TOKEN_NAME, refreshToken);
+		}
+		editor.apply();
+		isAccessTokenChanged = isRefreshTokenChanged = true;
+	}
+	
 }
