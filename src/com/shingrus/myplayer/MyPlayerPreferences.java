@@ -108,6 +108,14 @@ public class MyPlayerPreferences {
 		return useOnlyWifi;
 	}
 
+	public final boolean isPauseOnLoud() {
+		return pauseOnLoud;
+	}
+
+	public final boolean isPauseOnCall() {
+		return pauseOnCall;
+	}
+
 	private MyPlayerPreferences() {
 		login = new String();
 		password = new String();
@@ -126,8 +134,8 @@ public class MyPlayerPreferences {
 			this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
 			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
-			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
-			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);
+			this.pauseOnLoud = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
+			this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);
 			
 			this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
 			

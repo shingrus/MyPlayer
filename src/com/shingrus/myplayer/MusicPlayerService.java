@@ -35,9 +35,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	PhoneStateListener mPhoneListener;
 	Notification notification;
 	String currentStatusDesc;
-	BroadcastReceiver audioReceiver = new AudioBroacastReciever();
+	BroadcastReceiver audioReceiver;
+	MyPlayerPreferences mpf;
 
-	
 	// private Handler updatesHandler;
 
 	public class LocalBinder extends Binder {
@@ -47,14 +47,15 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	/**
-	 * Reciever for AudioManager.ACTION_AUDIO_BECOMING_NOISY
-	 * it pauses if headphones disable
+	 * Reciever for AudioManager.ACTION_AUDIO_BECOMING_NOISY it pauses if
+	 * headphones disable
+	 * 
 	 * @author shingrus
 	 */
 	public class AudioBroacastReciever extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
+			if (mpf.isPauseOnLoud() && intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
 				pause();
 			}
 		}
@@ -76,20 +77,24 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		notification = new Notification(R.drawable.ringtone, "", System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		updateNotification(NotificationStatus.Stopped);
+		audioReceiver = new AudioBroacastReciever();
+		mpf = MyPlayerPreferences.getInstance(null);
 		mPhoneListener = new PhoneStateListener() {
 
 			@Override
 			public void onCallStateChanged(int state, String incomingNumber) {
-				switch (state) {
-				case TelephonyManager.CALL_STATE_IDLE:
-					playPaused();
-					break;
-				case TelephonyManager.CALL_STATE_OFFHOOK:
-					pause();
-					break;
-				case TelephonyManager.CALL_STATE_RINGING:
-					pause();
-					break;
+				if (mpf.isPauseOnCall()) {
+					switch (state) {
+					case TelephonyManager.CALL_STATE_IDLE:
+						playPaused();
+						break;
+					case TelephonyManager.CALL_STATE_OFFHOOK:
+						pause();
+						break;
+					case TelephonyManager.CALL_STATE_RINGING:
+						pause();
+						break;
+					}
 				}
 			}
 
@@ -141,7 +146,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				mp.stop();
 			mp.release();
 		}
-		if (tm!=null) 
+		if (tm != null)
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
 		unregisterReceiver(audioReceiver);
 
