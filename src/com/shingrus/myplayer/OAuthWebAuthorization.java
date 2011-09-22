@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.utils.URLEncodedUtils;
 
 import android.app.Activity;
@@ -14,6 +15,7 @@ import android.content.Intent;
 import android.net.MailTo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
@@ -26,9 +28,11 @@ public class OAuthWebAuthorization extends Activity {
 
 	private class HelloWebViewClient extends WebViewClient {
 		@Override
+		
 		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			Log.d("shingrus", "Loading url: " + url);
 			if (url.startsWith(MailRuProfile.SUCCESS_OATH_PREFIX)) {
-				// seems we got auth
+				// seems that we've got auth
 				String fragment, accessToken = null, refreshToken = null, uid = null;
 				Uri uri = Uri.parse(url);
 				if (uri != null && (fragment = uri.getEncodedFragment()) != null) {
@@ -40,9 +44,9 @@ public class OAuthWebAuthorization extends Activity {
 							continue;
 						if (nameValue.length == 2) {
 							String name = nameValue[0];
-							if (name.equals(MailRuProfile.ACCESS_TOKEN_NAME) && nameValue[1].length() > 2)
+							if (name.equals(MailRuProfile.ACCESS_TOKEN_NAME) && nameValue[1].length() == 32)
 								accessToken = nameValue[1];
-							else if (name.equals(MailRuProfile.REFRESH_TOKEN_NAME) && nameValue[1].length() > 2)
+							else if (name.equals(MailRuProfile.REFRESH_TOKEN_NAME) && nameValue[1].length() == 32)
 								refreshToken = nameValue[1];
 							else if (name.equals(MailRuProfile.UID_NAME) && nameValue[1].length() > 2)
 								uid = nameValue[1];
@@ -81,12 +85,12 @@ public class OAuthWebAuthorization extends Activity {
 			url = b.getString(MyPlayerPreferences.OAUTH_URL);
 		}
 		mWebView = (WebView) findViewById(R.id.oauthWebView);
-		mWebView.setWebViewClient(new HelloWebViewClient());
-		mWebView.getSettings().setJavaScriptEnabled(true);
-		CookieSyncManager.createInstance(this);
-		CookieManager cookieManager = CookieManager.getInstance();
-		cookieManager.removeAllCookie();
+//		CookieSyncManager.createInstance(this);
+//		CookieManager cm = CookieManager.getInstance();
+//		cm.removeAllCookie();
 
+		mWebView.getSettings().setJavaScriptEnabled(true);
+		mWebView.setWebViewClient(new HelloWebViewClient());
 		mWebView.loadUrl(url);
 	}
 

@@ -50,7 +50,7 @@ public class MyAuthorizeActivity extends Activity {
 			login = params[0];
 			password = params[1];
 
-			 mpopCookie = mpf.getProfile().authorize(login, password);
+			 mpopCookie = mpf.getProfile().getRefreshToken(login, password);//authorize(login, password);
 			if (mpopCookie != null && mpopCookie.length() > 0) {
 				result = AUTHORIZE_RESULT_SUCCESS;
 			}

@@ -13,9 +13,12 @@ public interface MyPlayerAccountProfile {
 	public  TrackListFetchingStatus getTrackListFromInternet(TrackList tl, String cookie);
 	public TrackListFetchingStatus getTrackList(TrackList tl);
 	public String getOAuthURL();
+	public String getRefreshToken(String login, String password);
+	
 	public void loadPreferences(SharedPreferences preferences); 
 	public void storePreferences(SharedPreferences preferences);
 	public void setAccessToken(String acccessToken);
 	public void setRefreshToken(String refreshToken);
+
 	public void setUID(String uid);
 }
