@@ -1,24 +1,28 @@
 package com.shingrus.myplayer;
 
+import java.util.List;
+
 import android.content.SharedPreferences;
 
 public interface MyPlayerAccountProfile {
 	
-	public  String  authorize (String login, String password);
-	
 	public enum TrackListFetchingStatus {
-		SUCCESS, ERROR, NEEDREAUTH, UNKNOWN}
-
+		SUCCESS, ERROR, NEEDREAUTH, UPDATEACCESSTOKEN, UNKNOWN
+	}
+		
+	public enum AuhorizeStatus {
+		UNKNOWN, INVALID, SUCCESS 
+	}
+	
 	public TrackListFetchingStatus lastFetchResult();
-	public  TrackListFetchingStatus getTrackListFromInternet(TrackList tl, String cookie);
-	public TrackListFetchingStatus getTrackList(TrackList tl);
+	public  TrackListFetchingStatus getTrackListFromInternet();
 	public String getOAuthURL();
-	public String getRefreshToken(String login, String password);
+//	public String getTokens(String...strings);
+	public AuhorizeStatus authorize(String login, String password);
 	
 	public void loadPreferences(SharedPreferences preferences); 
 	public void storePreferences(SharedPreferences preferences);
-	public void setAccessToken(String acccessToken);
+	public void setAccessToken(String acccessToken, int validUntil);
 	public void setRefreshToken(String refreshToken);
-
 	public void setUID(String uid);
 }

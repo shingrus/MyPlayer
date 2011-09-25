@@ -11,7 +11,7 @@ public class LauncherActivity extends Activity {
 
 		MyPlayerPreferences mpp = MyPlayerPreferences.getInstance(null);
 		Intent i;
-		if (mpp.getEmail() != null && mpp.getEmail().length() > 0) {
+		if (mpp.isHasProfile()) {
 			i = new Intent(this, MyPlayerActivity.class);
 		} else {
 			i = new Intent(this, MyAuthorizeActivity.class);

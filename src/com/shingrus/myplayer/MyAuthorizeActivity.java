@@ -1,5 +1,7 @@
 package com.shingrus.myplayer;
 
+import com.shingrus.myplayer.MyPlayerAccountProfile.AuhorizeStatus;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -12,19 +14,17 @@ import android.widget.TextView;
 
 public class MyAuthorizeActivity extends Activity {
 
-	public static final int AUTHORIZE_RESULT_SUCCESS = 103;
-	public static final int AUTHORIZE_RESULT_INVALID_PASS = 105;
-	public static final int AUTHORIZE_RESULT_NETWORK_ERROR = 106;
-	public static final int AUTHORIZE_RESULT_NETWORK_CANCELED = 107;
+	
 	
 	private MailRuAuthorization mailAuthorize;
 	private boolean authorizationInProgress = false;
 
-	class MailRuAuthorization extends AsyncTask<String, Void, Integer> {
+	class MailRuAuthorization extends AsyncTask<String, Void, AuhorizeStatus> {
 
 		ProgressDialog progressDialog;
-		String login, password, mpopCookie;
+		String login, password, refreshToken, accessToken;
 		MyPlayerPreferences mpf;
+		
 
 		public MailRuAuthorization() {
 			super();
@@ -45,34 +45,30 @@ public class MyAuthorizeActivity extends Activity {
 		}
 
 		@Override
-		protected Integer doInBackground(String... params) {
-			int result = AUTHORIZE_RESULT_NETWORK_ERROR;
+		protected AuhorizeStatus doInBackground(String... params) {
+			AuhorizeStatus result = AuhorizeStatus.UNKNOWN;
 			login = params[0];
 			password = params[1];
 
-			 mpopCookie = mpf.getProfile().getRefreshToken(login, password);//authorize(login, password);
-			if (mpopCookie != null && mpopCookie.length() > 0) {
-				result = AUTHORIZE_RESULT_SUCCESS;
-			}
-			else {
-				result = AUTHORIZE_RESULT_INVALID_PASS;
+			result = mpf.getProfile().authorize(login, password);
+			
+			if (result == AuhorizeStatus.SUCCESS) {
+				mpf.setHasProfile(true);
+				mpf.storePreferences(MyAuthorizeActivity.this);
 			}
 			return result;
 		}
 
 		@Override
-		protected void onPostExecute(Integer result) {
+		protected void onPostExecute(AuhorizeStatus result) {
 			this.progressDialog.dismiss();
-			if (result == AUTHORIZE_RESULT_SUCCESS && mpopCookie!= null) {
-				mpf.setMpopCookie(mpopCookie);
-				mpf.setLogin(login);
-				mpf.setPassword(password);
+			if (result == AuhorizeStatus.SUCCESS) {
 				mpf.storePreferences(MyAuthorizeActivity.this);
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);
 				finish();
 			}
-			else if (AUTHORIZE_RESULT_INVALID_PASS == result) {
+			else if (result == AuhorizeStatus.INVALID) {
 				TextView t = (TextView) findViewById(R.id.LoginPassword_ErrorMsg);
 				t.setVisibility(View.VISIBLE);
 			}

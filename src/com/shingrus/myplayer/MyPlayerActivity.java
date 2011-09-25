@@ -121,8 +121,7 @@ public class MyPlayerActivity extends Activity {
 				updateInProgress = true;
 				updateThread = new Thread() {
 					public void run() {
-						mpf.getProfile().getTrackList(null);
-						MyPlayerActivity.this.updateStatus = mpf.getProfile().getTrackListFromInternet(TrackList.getInstance(), mpf.getMpopCookie());
+						MyPlayerActivity.this.updateStatus = mpf.getProfile().getTrackListFromInternet();
 						handleUpdate.post(resultUpdate);
 					}
 				};

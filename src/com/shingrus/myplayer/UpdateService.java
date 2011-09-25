@@ -107,7 +107,7 @@ public class UpdateService extends Service {
 
 					// check for wifi status
 					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
-						String urlString = "http://" + currentDownload.getUrl();
+						String urlString = currentDownload.getUrl();
 						BasicHttpParams httpParams = new BasicHttpParams();
 						httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, DOWNLOAD_CONNECTION_TIMEOUT);
 						httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, DOWNLOAD_CONNECTION_TIMEOUT);
@@ -115,11 +115,11 @@ public class UpdateService extends Service {
 						AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
 						HttpGet httpGet = new HttpGet(urlString);
 
-						BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, prefs.getMpopCookie());
-						cookie.setDomain(".mail.ru");
-						cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
-						cookie.setPath("/");
-						httpClient.getCookieStore().addCookie(cookie);
+//						BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, prefs.getMpopCookie());
+//						cookie.setDomain(".mail.ru");
+//						cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
+//						cookie.setPath("/");
+//						httpClient.getCookieStore().addCookie(cookie);
 						File file = null;
 
 						try {
@@ -152,8 +152,7 @@ public class UpdateService extends Service {
 											if (fileLength == written) {
 												// add file to tracklist
 												tl.setFileName(currentDownload, filename);
-												// i got it
-												currentDownload = null;
+												// i've got it
 												file = null;
 												checkForNext = true;
 											} else {
@@ -183,6 +182,7 @@ public class UpdateService extends Service {
 						}
 
 					}
+					currentDownload = null;
 				}
 				if (!checkForNext) {
 					try {

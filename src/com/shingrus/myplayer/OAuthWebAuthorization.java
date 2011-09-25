@@ -34,6 +34,7 @@ public class OAuthWebAuthorization extends Activity {
 			if (url.startsWith(MailRuProfile.SUCCESS_OATH_PREFIX)) {
 				// seems that we've got auth
 				String fragment, accessToken = null, refreshToken = null, uid = null;
+				int refresh_in =0;
 				Uri uri = Uri.parse(url);
 				if (uri != null && (fragment = uri.getEncodedFragment()) != null) {
 					Scanner sc = new Scanner(fragment);
@@ -48,8 +49,10 @@ public class OAuthWebAuthorization extends Activity {
 								accessToken = nameValue[1];
 							else if (name.equals(MailRuProfile.REFRESH_TOKEN_NAME) && nameValue[1].length() == 32)
 								refreshToken = nameValue[1];
-							else if (name.equals(MailRuProfile.UID_NAME) && nameValue[1].length() > 2)
+							else if (name.equals(MailRuProfile.UID_RESPONSE_NAME) && nameValue[1].length() > 2)
 								uid = nameValue[1];
+							else if (name.equals(MailRuProfile.EXPIRES_IN_RESPONSE_NAME) && nameValue[1].length()>0)
+								refresh_in = Integer.getInteger(nameValue[1], 0);
 						}
 					}
 				}
@@ -59,7 +62,7 @@ public class OAuthWebAuthorization extends Activity {
 					MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
 
 					MyPlayerAccountProfile mpp = mpf.getProfile();
-					mpp.setAccessToken(accessToken);
+					mpp.setAccessToken(accessToken,refresh_in);
 					mpp.setRefreshToken(refreshToken);
 					mpp.setUID(uid);
 					mpf.storePreferences(OAuthWebAuthorization.this);

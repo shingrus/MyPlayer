@@ -21,11 +21,12 @@ public class MyPlayerPreferences {
 	private SharedPreferences preferences;
 	private static MyPlayerPreferences playerPreferences ;
 	
-	
-	
+	private static final String PLAYER_PROFILES_LIST_KEY = "profiles_list";
+	private boolean hasProfile = false;
 	
 	//TODO in next version it should be an array
-	private MyPlayerAccountProfile profile; 
+	private MyPlayerAccountProfile profile;
+	private boolean isProfileChanged = false; 
 	
 
 	public String getMpopCookie() {
@@ -64,8 +65,11 @@ public class MyPlayerPreferences {
 			if (isPasswordChanged) {
 				editor.putString(ctx.getString(R.string.mailru_password_preference_key), this.password);
 			}
+			if (isProfileChanged) {
+				editor.putBoolean(PLAYER_PROFILES_LIST_KEY, hasProfile);
+			}
 			editor.apply();
-			isLoginChanged = isPasswordChanged = true;
+			isLoginChanged = isPasswordChanged = isProfileChanged = false;
 			profile.storePreferences(preferences);
 		}
 	}
@@ -81,20 +85,35 @@ public class MyPlayerPreferences {
 		editor.apply();
 		return this.nextFilenameCounter;
 	}
+//	/**
+//	 * 
+//	 * @return {@link String} user's email
+//	 */
+//	public synchronized String getEmail() {
+//		return login;
+//	}
+//
+//	/**
+//	 * 
+//	 * @return {@link String} user's password
+//	 */
+//	public synchronized String getPassword() {
+//		return password;
+//	}
+
 	/**
-	 * 
-	 * @return {@link String} user's email
+	 * @return the hasProfile
 	 */
-	public synchronized String getEmail() {
-		return login;
+	public boolean isHasProfile() {
+		return hasProfile;
 	}
 
 	/**
-	 * 
-	 * @return {@link String} user's password
+	 * @param hasProfile the hasProfile to set
 	 */
-	public synchronized String getPassword() {
-		return password;
+	public void setHasProfile(boolean hasProfile) {
+		this.hasProfile = hasProfile;
+		this.isProfileChanged = true;
 	}
 
 	public MyPlayerAccountProfile getProfile() {
@@ -127,6 +146,7 @@ public class MyPlayerPreferences {
 		preferences = null;
 		mpopCookie = new String();
 		profile = new MailRuProfile();
+		
 	}
 
 	public synchronized void loadPreferences(Context context) {
@@ -138,8 +158,9 @@ public class MyPlayerPreferences {
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
 			this.pauseOnLoud = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
 			this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);			
+			this.hasProfile = preferences.getBoolean(PLAYER_PROFILES_LIST_KEY, false);
 			this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
-			
+
 			profile.loadPreferences(preferences);
 			
 	}
