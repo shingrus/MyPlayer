@@ -86,7 +86,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 	// API CONSTANTS
 	private static final String BASE_API_URL = "http://www.appsmail.ru/platform/api?";
-	private static final String GET_TRACKS_LIST_METHOD = "audio.get";
+	private static final String GET_TRACKS_LIST_METHOD = "audios.get";
 	private static final String API_UID_NAME = "uid";
 	private static final String PRIVATE_KEY = "8bd7022c723f4cea429a70437d72ad07";
 	private static final String JSON_MUSIC_ID = "mid";
@@ -169,7 +169,11 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 				HttpPost httpPost = new HttpPost(POST_OAUTH_TOKEN_URL);
 				List<NameValuePair> postParams = new ArrayList<NameValuePair>(6);
-				postParams.add(new BasicNameValuePair("grant_type", "password"));
+				if (grantType == GrantType.PASSWORD) {
+					postParams.add(new BasicNameValuePair("grant_type", "password"));
+				} else if (grantType == GrantType.TOKEN) {
+					postParams.add(new BasicNameValuePair("grant_type", "refresh_token"));
+				}
 				postParams.add(new BasicNameValuePair("client_id", APPID));
 				postParams.add(new BasicNameValuePair("client_secret", PRIVATE_KEY));
 				if (grantType == GrantType.PASSWORD) {
@@ -308,6 +312,10 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 								result = TrackListFetchingStatus.UPDATEACCESSTOKEN;
 							}
 						}
+					}
+					else {
+						result = TrackListFetchingStatus.UPDATEACCESSTOKEN;
+						setAccessToken("",0);
 					}
 				}
 
