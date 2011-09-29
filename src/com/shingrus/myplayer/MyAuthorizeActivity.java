@@ -92,7 +92,9 @@ public class MyAuthorizeActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		// TODO Auto-generated method stub
+		if(authorizationInProgress && mailAuthorize != null) {
+			mailAuthorize.cancel(true);
+		}
 		super.onDestroy();
 	}
 

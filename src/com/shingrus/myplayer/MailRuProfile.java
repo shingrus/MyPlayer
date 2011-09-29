@@ -82,6 +82,9 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	public static final String REFRESH_TOKEN_KEY = "mailru_refresh_token";
 	public static final String ACCESS_TOKEN_KEY = "mailru_access_token";
 	public static final String UID_KEY = "mailru_uid";
+	public static final String LOGIN_KEY = "mailru_login";
+	public static final String PASSWORD_KEY = "mailru_password";
+	
 	private static final String ACCESS_TOKEN_VALID_KEY = "mailru_valid_until";
 
 	// API CONSTANTS
@@ -101,11 +104,18 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 	private String accessToken;
 	boolean isAccessTokenChanged = false;
+	
 	private String refreshToken;
 	boolean isRefreshTokenChanged = false;
+	
 	private String uid;
 	boolean isUidChanged = false;
+	
 	long accessTokenValidUntil = 0;
+	
+	String login,password;
+	boolean isLoginChanged = false, isPasswordChanged = false;
+	
 
 	TrackListFetchingStatus lastFetchResult;
 
@@ -210,6 +220,8 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 										&& uid.length() > 0) {
 									if (grantType == GrantType.PASSWORD)
 										setRefreshToken(refreshToken);
+										setLogin(login);
+										setPassword(password);
 									try {
 										expires_in = Integer.parseInt(expires);
 									} catch (NumberFormatException e) {
@@ -398,12 +410,32 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 	}
 
+	private final String getLogin() {
+		return login;
+	}
+
+	private final void setLogin(String login) {
+		this.login = login;
+		isLoginChanged = true;
+	}
+
+	private String getPassword() {
+		return password;
+	}
+
+	private void setPassword(String password) {
+		this.password = password;
+		isPasswordChanged = true;
+	}
+
 	@Override
 	public void loadPreferences(SharedPreferences preferences) {
 		this.refreshToken = preferences.getString(REFRESH_TOKEN_KEY, "");
 		this.accessToken = preferences.getString(ACCESS_TOKEN_KEY, "");
 		this.accessTokenValidUntil = preferences.getLong(ACCESS_TOKEN_VALID_KEY, 0);
 		this.uid = preferences.getString(UID_KEY, "");
+		this.login = preferences.getString(LOGIN_KEY, "");
+		this.password = preferences.getString(PASSWORD_KEY, "");
 
 	}
 
@@ -419,6 +451,12 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 		}
 		if (isUidChanged) {
 			editor.putString(UID_KEY, uid);
+		}
+		if (isLoginChanged) {
+			editor.putString(LOGIN_KEY, login);
+		}
+		if (isPasswordChanged) {
+			editor.putString(PASSWORD_KEY, password);
 		}
 
 		editor.apply();

@@ -8,11 +8,6 @@ import android.preference.PreferenceManager;
 
 public class MyPlayerPreferences {
 
-	private String login, password, mpopCookie;
-	//yeah! it should be map or vector.
-	private boolean isLoginChanged = false, isPasswordChanged = false;
-	
-	
 	private static final String MPOPCOOKIE_KEY = "mpop_cookie";
 	public static final String OAUTH_URL = "openauthurl";
 	private final String FILENAMECOUNTER_KEY = "filename_counter";
@@ -29,47 +24,15 @@ public class MyPlayerPreferences {
 	private boolean isProfileChanged = false; 
 	
 
-	public String getMpopCookie() {
-		return mpopCookie;
-	}
-
-	/**
-	 * This method stores mpopCookie inside preferences
-	 * it makes it asynchronously
-	 * 
-	 * @param mpopCookie
-	 */
-	synchronized public void setMpopCookie(String mpopCookie) {
-		SharedPreferences.Editor editor = this.preferences.edit();
-		editor.putString(MPOPCOOKIE_KEY, mpopCookie);
-		editor.apply();
-		this.mpopCookie = mpopCookie;
-	}
-
-	public void setLogin(String login) {
-		this.login = login;
-		isLoginChanged = true;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-		isPasswordChanged = true;
-	}
 	
 	public void storePreferences(Context ctx) {
 		if (ctx != null) {
 			SharedPreferences.Editor editor = this.preferences.edit();
-			if (isLoginChanged ) {
-				editor.putString(ctx.getString(R.string.mailru_login_preference_key), this.login);
-			}
-			if (isPasswordChanged) {
-				editor.putString(ctx.getString(R.string.mailru_password_preference_key), this.password);
-			}
 			if (isProfileChanged) {
 				editor.putBoolean(PLAYER_PROFILES_LIST_KEY, hasProfile);
 			}
 			editor.apply();
-			isLoginChanged = isPasswordChanged = isProfileChanged = false;
+			isProfileChanged = false;
 			profile.storePreferences(preferences);
 		}
 	}
@@ -138,13 +101,10 @@ public class MyPlayerPreferences {
 	}
 
 	private MyPlayerPreferences() {
-		login = new String();
-		password = new String();
 		useOnlyWifi = true;
 		pauseOnCall = true;
 		pauseOnLoud = true;
 		preferences = null;
-		mpopCookie = new String();
 		profile = new MailRuProfile();
 		
 	}
@@ -152,9 +112,6 @@ public class MyPlayerPreferences {
 	public synchronized void loadPreferences(Context context) {
 			PreferenceManager.setDefaultValues(context, R.xml.preferences, false);
 			this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
-			this.login = preferences.getString(context.getString(R.string.mailru_login_preference_key), "");
-			this.password = preferences.getString(context.getString(R.string.mailru_password_preference_key), "");
-			this.mpopCookie = preferences.getString(MPOPCOOKIE_KEY, "");
 			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
 			this.pauseOnLoud = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
 			this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);			

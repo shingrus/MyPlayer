@@ -41,7 +41,7 @@
 	
 	<string name="menu_preferences_item_name">Settings</string>
 	<string name="menu_update_item_name">Update</string>
-	
+	<string name="menu_reauth_item_name">Re-Authorize</string>
 	
 	<string name="forwardButtonText">Next</string>
 	<string name="rewindButtonText">Previous</string>

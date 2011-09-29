@@ -129,6 +129,11 @@ public class MyPlayerActivity extends Activity {
 			}
 			break;
 		}
+		case R.id.MenuHandshakeItem: {
+			//TODO start authorize activity again
+			Intent i = new Intent(this, MyAuthorizeActivity.class);
+			startActivity(i);
+		}
 		}
 		return true;
 	}
