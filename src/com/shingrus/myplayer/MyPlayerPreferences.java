@@ -23,6 +23,8 @@ public class MyPlayerPreferences {
 	private MyPlayerAccountProfile profile;
 	private boolean isProfileChanged = false; 
 	
+	
+	public static final int CONNECTION_TIMEOUT = 15*1000;
 
 	
 	public void storePreferences(Context ctx) {

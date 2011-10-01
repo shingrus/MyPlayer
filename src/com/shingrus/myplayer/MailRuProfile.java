@@ -1,12 +1,13 @@
 package com.shingrus.myplayer;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Inherited;
 import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -16,15 +17,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.ProtocolException;
@@ -37,7 +34,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.scheme.SocketFactory;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.AbstractHttpClient;
@@ -47,24 +43,15 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.SSLCertificateSocketFactory;
 import android.util.Log;
 
 public class MailRuProfile implements MyPlayerAccountProfile {
-	public static final String SWA_URL = "http://swa.mail.ru/?";
+	public static final String SWA_URL = "http://swa.mail.ru/cgi-bin/auth?";
 	public static final String MUSIC_URL = "http://my.mail.ru/musxml";
 	public static final String SUCCESS_OATH_PREFIX = "http://connect.mail.ru/oauth/success.html#";
 	public static final String APPID = "640583";
@@ -84,13 +71,12 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	public static final String UID_KEY = "mailru_uid";
 	public static final String LOGIN_KEY = "mailru_login";
 	public static final String PASSWORD_KEY = "mailru_password";
-	
+
 	private static final String ACCESS_TOKEN_VALID_KEY = "mailru_valid_until";
 
 	// API CONSTANTS
 	private static final String BASE_API_URL = "http://www.appsmail.ru/platform/api?";
 	private static final String GET_TRACKS_LIST_METHOD = "audios.get";
-	private static final String API_UID_NAME = "uid";
 	private static final String PRIVATE_KEY = "8bd7022c723f4cea429a70437d72ad07";
 	private static final String JSON_MUSIC_ID = "mid";
 	private static final String JSON_MUSIC_TITLE = "title";
@@ -100,23 +86,21 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 	public static final String MAILRU_COOKIE_NAME = "Mpop";
 
-	public static final int CONNECTION_TIMEOUT = 15 * 1000;
-
 	private String accessToken;
 	boolean isAccessTokenChanged = false;
-	
+
 	private String refreshToken;
 	boolean isRefreshTokenChanged = false;
-	
+
 	private String uid;
 	boolean isUidChanged = false;
-	
-	long accessTokenValidUntil = 0;
-	
-	String login,password;
-	boolean isLoginChanged = false, isPasswordChanged = false;
-	
 
+	long accessTokenValidUntil = 0;
+
+	String login, password;
+	boolean isLoginChanged = false, isPasswordChanged = false;
+
+	private String mpopCookie = "";
 	TrackListFetchingStatus lastFetchResult;
 
 	public MailRuProfile() {
@@ -143,18 +127,19 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 		if ((grantType == GrantType.PASSWORD && strings.length == 2 && strings[0] != null && strings[1] != null) || (grantType == GrantType.TOKEN)) {
 			String refreshToken = null;
 			String accessToken = null;
+			String login = null, password = null;
 			String uid = null;
 			int expires_in = 0;
 
 			BasicHttpParams httpParams = new BasicHttpParams();
-			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, CONNECTION_TIMEOUT);
-			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, CONNECTION_TIMEOUT);
+			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
+			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
 			try {
 				SchemeRegistry schemeRegistry = new SchemeRegistry();
 				KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
 				trustStore.load(null, null);
 
-				SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
+				// SSLSocketFactory sf = new MySSLSocketFactory(trustStore);
 
 				schemeRegistry.register(new Scheme("https", new MySSLSocketFactory(trustStore)
 
@@ -187,7 +172,8 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 				postParams.add(new BasicNameValuePair("client_id", APPID));
 				postParams.add(new BasicNameValuePair("client_secret", PRIVATE_KEY));
 				if (grantType == GrantType.PASSWORD) {
-					String login = strings[0], password = strings[1];
+					login = strings[0];
+					password = strings[1];
 					postParams.add(new BasicNameValuePair("username", login));
 					postParams.add(new BasicNameValuePair("password", password));
 				} else { // token
@@ -218,10 +204,11 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 								if (refreshToken != null && refreshToken.length() == 32 && accessToken != null && accessToken.length() == 32 && uid != null
 										&& uid.length() > 0) {
-									if (grantType == GrantType.PASSWORD)
+									if (grantType == GrantType.PASSWORD) {
 										setRefreshToken(refreshToken);
 										setLogin(login);
 										setPassword(password);
+									}
 									try {
 										expires_in = Integer.parseInt(expires);
 									} catch (NumberFormatException e) {
@@ -285,8 +272,8 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 			// well we have the url
 
 			BasicHttpParams httpParams = new BasicHttpParams();
-			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, CONNECTION_TIMEOUT);
-			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, CONNECTION_TIMEOUT);
+			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
+			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
 
 			AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
 			HttpGet httpGet = new HttpGet(trackListURL);
@@ -324,10 +311,9 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 								result = TrackListFetchingStatus.UPDATEACCESSTOKEN;
 							}
 						}
-					}
-					else {
+					} else {
 						result = TrackListFetchingStatus.UPDATEACCESSTOKEN;
-						setAccessToken("",0);
+						setAccessToken("", 0);
 					}
 				}
 
@@ -366,7 +352,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	}
 
 	private void refreshAccessToken() {
-		getTokens(GrantType.TOKEN, null);
+		getTokens(GrantType.TOKEN);
 	}
 
 	@Override
@@ -410,17 +396,9 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 	}
 
-	private final String getLogin() {
-		return login;
-	}
-
 	private final void setLogin(String login) {
 		this.login = login;
 		isLoginChanged = true;
-	}
-
-	private String getPassword() {
-		return password;
 	}
 
 	private void setPassword(String password) {
@@ -472,160 +450,238 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 		return result;
 	}
 
-	// ************************************************
-	// public final String authorize(String login, String password) {
-	// String mpopCookie = null;
-	// BasicHttpParams httpParams = new BasicHttpParams();
-	// httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,
-	// CONNECTION_TIMEOUT);
-	// httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT,
-	// CONNECTION_TIMEOUT);
-	//
-	// HttpClient swaClient = new DefaultHttpClient(httpParams);
-	// ((AbstractHttpClient) (swaClient)).setRedirectHandler(new
-	// RedirectHandler() {
-	// @Override
-	// public boolean isRedirectRequested(HttpResponse response, HttpContext
-	// context) {
-	// return false;
-	// }
-	//
-	// @Override
-	// public URI getLocationURI(HttpResponse response, HttpContext context)
-	// throws ProtocolException {
-	// return null;
-	// }
-	// });
-	//
-	// try {
-	// HttpGet httpGet = new HttpGet(SWA_URL + "Login=" + login + "&Password=" +
-	// password);
-	// HttpResponse swaResponse = swaClient.execute(httpGet);
-	// if (null != swaResponse) {
-	// for (Cookie cookie : ((AbstractHttpClient)
-	// swaClient).getCookieStore().getCookies()) {
-	// if (cookie.getName().equalsIgnoreCase(MAILRU_COOKIE_NAME)) {
-	// mpopCookie = cookie.getValue();
-	// break;
-	// }
-	// }
-	// }
-	// } catch (ClientProtocolException e) {
-	// } catch (IOException e) {
-	// }
-	// return mpopCookie;
-	// }
-	public final TrackListFetchingStatus getTrackListFromInternet2(final TrackList tl, String mpopCookie) {
-		lastFetchResult = TrackListFetchingStatus.ERROR;
+	private final String getMpopCookie() {
+
+		setMpopCookie("");
+		BasicHttpParams httpParams = new BasicHttpParams();
+		httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
+		httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
+		HttpClient swaClient = new DefaultHttpClient(httpParams);
+
+		((AbstractHttpClient) (swaClient)).setRedirectHandler(new RedirectHandler() {
+			@Override
+			public boolean isRedirectRequested(HttpResponse response, HttpContext context) {
+				return false;
+			}
+
+			@Override
+			public URI getLocationURI(HttpResponse response, HttpContext context) throws ProtocolException {
+				return null;
+			}
+		});
+
+		try {
+			HttpPost httpPost = new HttpPost(SWA_URL);
+			List<NameValuePair> postParams = new ArrayList<NameValuePair>(6);
+			postParams.add(new BasicNameValuePair("Login", login));
+			postParams.add(new BasicNameValuePair("Password", password));
+			httpPost.setEntity(new UrlEncodedFormEntity(postParams));
+			HttpResponse swaResponse = swaClient.execute(httpPost);
+			if (null != swaResponse) {
+				for (Cookie cookie : ((AbstractHttpClient) swaClient).getCookieStore().getCookies()) {
+					if (cookie.getName().equalsIgnoreCase(MAILRU_COOKIE_NAME)) {
+						setMpopCookie(cookie.getValue());
+						break;
+					}
+				}
+			}
+		} catch (ClientProtocolException e) {
+		} catch (IOException e) {
+		}
+
+		return mpopCookie;
+	}
+
+	/**
+	 * Setter for the internal field mpopCookie
+	 * 
+	 * @param mpopCookie
+	 */
+	private void setMpopCookie(String mpopCookie) {
+		this.mpopCookie = mpopCookie;
+	}
+
+	public boolean downloadAudioFile(String url, File whereToDownload) {
+		boolean result = false;
+
+		if (mpopCookie == null || mpopCookie.length() < 10) {
+			getMpopCookie();
+		}
 
 		if (mpopCookie != null && mpopCookie.length() > 0) {
 			BasicHttpParams httpParams = new BasicHttpParams();
-			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, CONNECTION_TIMEOUT);
-			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, CONNECTION_TIMEOUT);
+			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
+			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
 
 			AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
-			HttpGet httpGet = new HttpGet(MailRuProfile.MUSIC_URL);
+			HttpGet httpGet = new HttpGet(url);
 
 			BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, mpopCookie);
 			cookie.setDomain(".mail.ru");
 			cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
 			cookie.setPath("/");
 			httpClient.getCookieStore().addCookie(cookie);
-
 			try {
-				HttpResponse musicListResponse = httpClient.execute(httpGet);
+				HttpResponse resp = httpClient.execute(httpGet);
+				StatusLine status = resp.getStatusLine();
+				if (status != null && status.getStatusCode() == 200) {
+					Header contentLengthH = resp.getFirstHeader("Content-Length");
+					Header contentTypeH = resp.getFirstHeader("Content-Type");
 
-				if (null != musicListResponse && musicListResponse.getStatusLine().getStatusCode() == 200) {
-					lastFetchResult = TrackListFetchingStatus.SUCCESS;
-					SAXParserFactory sf = SAXParserFactory.newInstance();
-					try {
-						SAXParser parser = sf.newSAXParser();
-						XMLReader xr = parser.getXMLReader();
-						xr.setContentHandler(new DefaultHandler() {
+					if (contentTypeH != null && contentTypeH.getValue().contains("audio")) {
+						InputStream is = resp.getEntity().getContent();
+						byte[] buf = new byte[4 * 1024 * 10];
+						int readed = 0;
+						int written = 0;
 
-							MusicTrack mt = new MusicTrack();
-
-							public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG = "FURL", PARAM_ID = "id", MUSICLIST_TAG = "MUSIC_LIST";
-							boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName = false, isInsideMusicList = false;
-							StringBuilder builder = new StringBuilder();
-
-							@Override
-							public void characters(char[] ch, int start, int length) throws SAXException {
-								if (isInsideFURL || isInsideName || isInsideMusicList) {
-									builder.append(ch, start, length);
-								}
+						OutputStream out = new FileOutputStream(whereToDownload);
+						while ((readed = is.read(buf)) != -1) {
+							out.write(buf, 0, readed);
+							written += readed;
+						}
+						if (written > 0) {
+							if (contentLengthH != null) {
+								int fileLength = Integer.parseInt(contentLengthH.getValue());
+								if (fileLength == written)
+									result = true;
 							}
-
-							@Override
-							public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-								// Log.i("shingrus",
-								// "XML: start element: " + localName);
-								super.startElement(uri, localName, qName, attributes);
-								if (localName.equalsIgnoreCase(TRACK_TAG)) {
-									isInsideTrackTag = true;
-									mt = new MusicTrack();
-									mt.setId(attributes.getValue(PARAM_ID));
-								} else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
-									isInsideFURL = true;
-								} else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
-									isInsideName = true;
-								} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
-									isInsideMusicList = true;
-								}
-
-							}
-
-							@Override
-							public void endElement(String uri, String localName, String qName) throws SAXException {
-
-								if (localName.equalsIgnoreCase(TRACK_TAG)) {
-									isInsideTrackTag = false;
-									isInsideName = isInsideFURL = false;
-									if (mt.isComplete()) {
-
-										Log.i("shingrus", mt.toString());
-
-										// well, we have completed mt
-										// object with url and id
-										tl.addTrack(mt);
-									}
-								} else if (localName.equalsIgnoreCase(URL_TAG)) {
-									isInsideFURL = false;
-									mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
-								} else if (localName.equalsIgnoreCase(NAME_TAG)) {
-									isInsideName = false;
-									mt.setTitle(builder.toString().replaceAll("^\\s+", ""));
-								} else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
-									isInsideMusicList = false;
-									if (builder.toString().equals("Error!")) {
-										lastFetchResult = TrackListFetchingStatus.NEEDREAUTH;
-									}
-
-								}
-								if (builder.length() > 0) {
-									builder.setLength(0);
-								}
-							}
-						});
-						InputSource is = new InputSource(musicListResponse.getEntity().getContent());
-						xr.parse(is);
-					} catch (ParserConfigurationException e) {
-						e.printStackTrace();
-					} catch (SAXException e) {
-						e.printStackTrace();
+						}
 					}
-
+				} else if (status.getStatusCode() == 500) { // seems like we are
+															// not authorized
+					setMpopCookie("");
 				}
 			} catch (ClientProtocolException e) {
 				e.printStackTrace();
-			} catch (IllegalStateException e) {
-				e.printStackTrace();
 			} catch (IOException e) {
-				e.printStackTrace();
 			}
-		} else
-			lastFetchResult = TrackListFetchingStatus.NEEDREAUTH;
-
-		return lastFetchResult;
+		}
+		return result;
 	}
+
+	// public final TrackListFetchingStatus getTrackListFromInternet2(final
+	// TrackList tl, String mpopCookie) {
+	// lastFetchResult = TrackListFetchingStatus.ERROR;
+	//
+	// if (mpopCookie != null && mpopCookie.length() > 0) {
+	// BasicHttpParams httpParams = new BasicHttpParams();
+	// httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,
+	// CONNECTION_TIMEOUT);
+	// httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT,
+	// CONNECTION_TIMEOUT);
+	//
+	// AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
+	// HttpGet httpGet = new HttpGet(MailRuProfile.MUSIC_URL);
+	//
+	// BasicClientCookie cookie = new
+	// BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, mpopCookie);
+	// cookie.setDomain(".mail.ru");
+	// cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
+	// cookie.setPath("/");
+	// httpClient.getCookieStore().addCookie(cookie);
+	//
+	// try {
+	// HttpResponse musicListResponse = httpClient.execute(httpGet);
+	//
+	// if (null != musicListResponse &&
+	// musicListResponse.getStatusLine().getStatusCode() == 200) {
+	// lastFetchResult = TrackListFetchingStatus.SUCCESS;
+	// SAXParserFactory sf = SAXParserFactory.newInstance();
+	// try {
+	// SAXParser parser = sf.newSAXParser();
+	// XMLReader xr = parser.getXMLReader();
+	// xr.setContentHandler(new DefaultHandler() {
+	//
+	// MusicTrack mt = new MusicTrack();
+	//
+	// public final String TRACK_TAG = "TRACK", NAME_TAG = "NAME", URL_TAG =
+	// "FURL", PARAM_ID = "id", MUSICLIST_TAG = "MUSIC_LIST";
+	// boolean isInsideTrackTag = false, isInsideFURL = false, isInsideName =
+	// false, isInsideMusicList = false;
+	// StringBuilder builder = new StringBuilder();
+	//
+	// @Override
+	// public void characters(char[] ch, int start, int length) throws
+	// SAXException {
+	// if (isInsideFURL || isInsideName || isInsideMusicList) {
+	// builder.append(ch, start, length);
+	// }
+	// }
+	//
+	// @Override
+	// public void startElement(String uri, String localName, String qName,
+	// Attributes attributes) throws SAXException {
+	// // Log.i("shingrus",
+	// // "XML: start element: " + localName);
+	// super.startElement(uri, localName, qName, attributes);
+	// if (localName.equalsIgnoreCase(TRACK_TAG)) {
+	// isInsideTrackTag = true;
+	// mt = new MusicTrack();
+	// mt.setId(attributes.getValue(PARAM_ID));
+	// } else if (localName.equalsIgnoreCase(URL_TAG) && isInsideTrackTag) {
+	// isInsideFURL = true;
+	// } else if (localName.equalsIgnoreCase(NAME_TAG) && isInsideTrackTag) {
+	// isInsideName = true;
+	// } else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
+	// isInsideMusicList = true;
+	// }
+	//
+	// }
+	//
+	// @Override
+	// public void endElement(String uri, String localName, String qName) throws
+	// SAXException {
+	//
+	// if (localName.equalsIgnoreCase(TRACK_TAG)) {
+	// isInsideTrackTag = false;
+	// isInsideName = isInsideFURL = false;
+	// if (mt.isComplete()) {
+	//
+	// Log.i("shingrus", mt.toString());
+	//
+	// // well, we have completed mt
+	// // object with url and id
+	// tl.addTrack(mt);
+	// }
+	// } else if (localName.equalsIgnoreCase(URL_TAG)) {
+	// isInsideFURL = false;
+	// mt.setUrl(builder.toString().replaceAll("[\\r\\n\\s]", ""));
+	// } else if (localName.equalsIgnoreCase(NAME_TAG)) {
+	// isInsideName = false;
+	// mt.setTitle(builder.toString().replaceAll("^\\s+", ""));
+	// } else if (localName.equalsIgnoreCase(MUSICLIST_TAG)) {
+	// isInsideMusicList = false;
+	// if (builder.toString().equals("Error!")) {
+	// lastFetchResult = TrackListFetchingStatus.NEEDREAUTH;
+	// }
+	//
+	// }
+	// if (builder.length() > 0) {
+	// builder.setLength(0);
+	// }
+	// }
+	// });
+	// InputSource is = new
+	// InputSource(musicListResponse.getEntity().getContent());
+	// xr.parse(is);
+	// } catch (ParserConfigurationException e) {
+	// e.printStackTrace();
+	// } catch (SAXException e) {
+	// e.printStackTrace();
+	// }
+	//
+	// }
+	// } catch (ClientProtocolException e) {
+	// e.printStackTrace();
+	// } catch (IllegalStateException e) {
+	// e.printStackTrace();
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// } else
+	// lastFetchResult = TrackListFetchingStatus.NEEDREAUTH;
+	//
+	// return lastFetchResult;
+	// }
+
 }

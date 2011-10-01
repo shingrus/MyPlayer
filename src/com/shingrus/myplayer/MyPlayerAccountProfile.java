@@ -1,5 +1,6 @@
 package com.shingrus.myplayer;
 
+import java.io.File;
 import java.util.List;
 
 import android.content.SharedPreferences;
@@ -19,6 +20,7 @@ public interface MyPlayerAccountProfile {
 	public String getOAuthURL();
 //	public String getTokens(String...strings);
 	public AuhorizeStatus authorize(String login, String password);
+	public boolean downloadAudioFile(String url, File whereToDownload);
 	
 	public void loadPreferences(SharedPreferences preferences); 
 	public void storePreferences(SharedPreferences preferences);

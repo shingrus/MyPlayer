@@ -41,7 +41,7 @@ public class UpdateService extends Service {
 
 	long downloadEnqueue;
 	DownloadManager dm;
-	MusicTrack currentDownload;
+	// MusicTrack currentDownload;
 
 	TrackList tl;
 	Handler tracksHandler;
@@ -77,121 +77,65 @@ public class UpdateService extends Service {
 
 		@Override
 		public void run() {
-			boolean checkForNext = false;
+			boolean doNotSleepInNextIteration = false;
 			MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
 			ConnectivityManager conMan = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 			NetworkInfo network;
 			while (UpdateService.this.continueWorking) {
 				Thread.yield();
-				boolean isNetworkReady = false;
-				checkForNext = false;
-				network  = conMan.getActiveNetworkInfo();
-				if (network != null) {
-					switch (network.getType()) {
-					case ConnectivityManager.TYPE_WIMAX:
-						isNetworkReady = true;
-						break;
-					case ConnectivityManager.TYPE_MOBILE:
-						if (!network.isRoaming() && !prefs.useOnlyWifi()) {//roaming transfer doesn't allowed
-							isNetworkReady = true;
+				doNotSleepInNextIteration = false;
+				MusicTrack currentDownload;
+				// check for wifi status
+				if ((currentDownload = tl.getNextForDownLoad()) != null) {
+					boolean isNetworkReady = checkNetworkState(prefs, conMan);
+					if (isNetworkReady) {
+						String filename = "/mailru" + prefs.getNextFilenameCounter() + ".mp3";
+						filename = getExternalFilesDir(Environment.DIRECTORY_MUSIC) + filename;
+						File file = new File(filename);
+						boolean result = prefs.getProfile().downloadAudioFile(currentDownload.url, file);
+						if (result) {
+							tl.setFileName(currentDownload, filename);
+							// i've got it
+							doNotSleepInNextIteration = true;
+						} else {
+							file.delete();
 						}
-						break;
-					case ConnectivityManager.TYPE_WIFI:
-							isNetworkReady = true;
-						break;
 					}
-					
-				}					
-				// we are waiting for downloading
-				if (UpdateService.this.currentDownload == null && isNetworkReady) {
 
-					// check for wifi status
-					if ((UpdateService.this.currentDownload = tl.getNextForDownLoad()) != null) {
-						String urlString = currentDownload.getUrl();
-						BasicHttpParams httpParams = new BasicHttpParams();
-						httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, DOWNLOAD_CONNECTION_TIMEOUT);
-						httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, DOWNLOAD_CONNECTION_TIMEOUT);
-
-						AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
-						HttpGet httpGet = new HttpGet(urlString);
-
-//						BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, prefs.getMpopCookie());
-//						cookie.setDomain(".mail.ru");
-//						cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
-//						cookie.setPath("/");
-//						httpClient.getCookieStore().addCookie(cookie);
-						File file = null;
-
-						try {
-							HttpResponse resp = httpClient.execute(httpGet);
-							StatusLine status = resp.getStatusLine();
-							if (status != null && status.getStatusCode() == 200) {
-								Header contentLengthH = resp.getFirstHeader("Content-Length");
-								Header contentTypeH = resp.getFirstHeader("Content-Type");
-
-								if (contentTypeH != null && contentTypeH.getValue().contains("audio")) {
-									InputStream is = resp.getEntity().getContent();
-									byte[] buf = new byte[4096];
-									int readed = 0;
-									int written = 0;
-									String filename = "/mailru" + prefs.getNextFilenameCounter() + ".mp3";
-
-									filename = getExternalFilesDir(Environment.DIRECTORY_MUSIC) + filename;
-									file = new File(filename);
-									OutputStream out = new FileOutputStream(file);
-									while ((readed = is.read(buf)) != -1 && UpdateService.this.continueWorking) {
-										out.write(buf, 0, readed);
-										written += readed;
-									}
-									if (UpdateService.this.continueWorking && written > 0) {
-										// chek gotten size and if i got less
-										// than
-										// Content-Length remove file.
-										if (contentLengthH != null) {
-											int fileLength = Integer.parseInt(contentLengthH.getValue());
-											if (fileLength == written) {
-												// add file to tracklist
-												tl.setFileName(currentDownload, filename);
-												// i've got it
-												file = null;
-												checkForNext = true;
-											} else {
-												Log.d("shingrus", "Remove file in case of invalid size");
-											}
-										}
-									}
-
-								}
-							}// seems like we are not authorized
-							else if (status.getStatusCode() == 500){
-								// TODO here needs to notify about problem with
-								// authorization
-								
-							}
-							if (file != null) {
-								file.delete();
-								file = null;
-							}
-						} catch (ClientProtocolException e) {
-							e.printStackTrace();
-						} catch (IOException e) {
-							if (file != null) {
-								file.delete();
-								file = null;
-							}
-						}
-
-					}
-					currentDownload = null;
 				}
-				if (!checkForNext) {
+				if (!doNotSleepInNextIteration) {
 					try {
 						Thread.sleep(UpdateService.DOWNLOAD_SLEEP_MS);
 					} catch (InterruptedException e) {
 						UpdateService.this.continueWorking = false;
 					}
 				}
-			} // while
+			}
+		}
+
+		private boolean checkNetworkState(MyPlayerPreferences prefs, ConnectivityManager conMan) {
+			boolean isNetworkReady = false;
+			NetworkInfo network = conMan.getActiveNetworkInfo();
+			if (network != null) {
+				switch (network.getType()) {
+				case ConnectivityManager.TYPE_WIMAX:
+					isNetworkReady = true;
+					break;
+				case ConnectivityManager.TYPE_MOBILE:
+					if (!network.isRoaming() && !prefs.useOnlyWifi()) {// roaming
+																		// transfer
+																		// doesn't
+																		// allowed
+						isNetworkReady = true;
+					}
+					break;
+				case ConnectivityManager.TYPE_WIFI:
+					isNetworkReady = true;
+					break;
+				}
+
+			}
+			return isNetworkReady;
 		}
 
 	}
