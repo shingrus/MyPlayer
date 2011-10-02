@@ -54,7 +54,6 @@ public class MyAuthorizeActivity extends Activity {
 			
 			if (result == AuhorizeStatus.SUCCESS) {
 				mpf.setHasProfile(true);
-				mpf.storePreferences(MyAuthorizeActivity.this);
 			}
 			return result;
 		}

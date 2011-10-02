@@ -225,6 +225,9 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 							}
 						}
 					}
+					else if (grantType == GrantType.PASSWORD) {
+						result = AuhorizeStatus.INVALID;
+					}
 				}
 			} catch (UnsupportedEncodingException e) {
 			} catch (ClientProtocolException e) {
@@ -444,7 +447,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	@Override
 	public AuhorizeStatus authorize(String login, String password) {
 		AuhorizeStatus result = getTokens(GrantType.PASSWORD, login, password);
-		if (refreshToken != null && refreshToken.length() == 32) {
+		if (result == AuhorizeStatus.SUCCESS && refreshToken != null && refreshToken.length() == 32) {
 			result = AuhorizeStatus.SUCCESS;
 		}
 		return result;
