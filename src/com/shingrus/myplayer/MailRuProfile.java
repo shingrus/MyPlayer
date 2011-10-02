@@ -18,6 +18,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -224,8 +225,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 							}
 						}
-					}
-					else if (grantType == GrantType.PASSWORD) {
+					} else if (grantType == GrantType.PASSWORD) {
 						result = AuhorizeStatus.INVALID;
 					}
 				}
@@ -251,8 +251,11 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 			// Create Hex String
 			StringBuffer hexString = new StringBuffer();
-			for (int i = 0; i < messageDigest.length; i++)
-				hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+			for (int i = 0; i < messageDigest.length; i++) {
+				hexString.append(Character.forDigit((messageDigest[i] & 0xf0) >> 4, 16));
+				hexString.append(Character.forDigit(messageDigest[i] & 0x0f, 16));
+				// Integer.toHexString(0xFF & messageDigest[i]));
+			}
 			return hexString.toString();
 
 		} catch (NoSuchAlgorithmException e) {
