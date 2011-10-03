@@ -77,7 +77,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 
 	// API CONSTANTS
 	private static final String BASE_API_URL = "http://www.appsmail.ru/platform/api?";
-	private static final String GET_TRACKS_LIST_METHOD = "audios.get";
+	private static final String GET_TRACKS_LIST_METHOD = "audio.get";
 	private static final String PRIVATE_KEY = "8bd7022c723f4cea429a70437d72ad07";
 	private static final String JSON_MUSIC_ID = "mid";
 	private static final String JSON_MUSIC_TITLE = "title";
