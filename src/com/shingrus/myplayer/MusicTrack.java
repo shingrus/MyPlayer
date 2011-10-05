@@ -93,8 +93,8 @@ public final class MusicTrack {
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof MusicTrack) {
-			
-			return this.title.equals(((MusicTrack)o).title);
+			return this.id.equals(((MusicTrack)o).id);
+//			return this.title.equals(((MusicTrack)o).title);
 		}
 		return super.equals(o);
 	}

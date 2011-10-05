@@ -30,30 +30,51 @@ public class MyPlayerActivity extends Activity {
 	final Handler handleUpdate = new Handler();
 	MyPlayerPreferences mpf;
 	TrackListFetchingStatus updateStatus;
-	
+	private ListView lv = null;
+
 	boolean updateInProgress = false;
 	Thread updateThread;
-	
+
 	final Runnable resultUpdate = new Runnable() {
-		
+
 		@Override
 		public void run() {
 			updateInProgress = false;
 			updateThread = null;
 		}
 	};
-	
+
 	public MyPlayerActivity() {
 		trackList = TrackList.getInstance();
 		musicPlayerConnection = new ServiceConnection() {
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
 				playerService = null;
+
 			}
 
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder binder) {
 				playerService = ((MusicPlayerService.LocalBinder) binder).getService();
+				playerService.setEventsListener(new PlayingEventsListener() {
+
+					@Override
+					public void onStop() {
+					}
+
+					@Override
+					public void onPlay() {
+					}
+
+					@Override
+					public void onPause() {
+					}
+
+					@Override
+					public void onChangePlayPosition(int position) {
+//						lv.setSelection(position);
+					}
+				});
 			}
 		};
 		mpf = MyPlayerPreferences.getInstance(null);
@@ -64,9 +85,10 @@ public class MyPlayerActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d("shingrus", "Creating Player Activity");
-		this.bindService(new Intent(this, MusicPlayerService.class), musicPlayerConnection, Context.BIND_AUTO_CREATE);
+		Intent i = new Intent(this, MusicPlayerService.class);
+		this.bindService(i, musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
-		ListView lv = (ListView) findViewById(R.id.playListView);
+		lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
 		lv.setOnItemClickListener(new OnItemClickListener() {
 			@Override
@@ -87,15 +109,17 @@ public class MyPlayerActivity extends Activity {
 		if (trackList != null)
 			trackList.dropAdapter();
 		if (musicPlayerConnection != null) {
+			if (playerService != null)
+				playerService.unsetEventsListener();
 			unbindService(musicPlayerConnection);
 			musicPlayerConnection = null;
 		}
 		if (updateThread != null) {
 			updateThread.interrupt();
-			updateThread=null;
+			updateThread = null;
 		}
 		updateInProgress = false;
-		
+
 		super.onDestroy();
 	}
 
@@ -130,7 +154,7 @@ public class MyPlayerActivity extends Activity {
 			break;
 		}
 		case R.id.MenuHandshakeItem: {
-			//TODO start authorize activity again
+			// TODO start authorize activity again
 			Intent i = new Intent(this, MyAuthorizeActivity.class);
 			startActivity(i);
 		}
@@ -138,8 +162,6 @@ public class MyPlayerActivity extends Activity {
 		return true;
 	}
 
-	
-	
 	// Click Listeners
 	public void onClickPlayPause(View v) {
 		playerService.playPause();
@@ -157,6 +179,5 @@ public class MyPlayerActivity extends Activity {
 	public void onClickStop(View v) {
 		playerService.stopMusic();
 	}
-
 
 }

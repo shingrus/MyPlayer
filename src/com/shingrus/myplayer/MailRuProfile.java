@@ -307,8 +307,10 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 									artist = trackDescription.getString(JSON_MUSIC_ARTIST);
 									result = TrackListFetchingStatus.SUCCESS;
 									Log.d("shingrus", "Got track: " + artist + "-" + title + ":" + murl);
-									MusicTrack mt = new MusicTrack(id, artist + "-" + title, murl, "");
-									tl.add(mt);
+									if (id != null && id.length() > 0 && title != null && title.length() > 0 && murl != null && murl.length() > 0) {
+										MusicTrack mt = new MusicTrack(id, artist == null ? "" : artist + "-" + title, murl, "");
+										tl.add(mt);
+									}
 								}
 
 							} catch (JSONException e) {

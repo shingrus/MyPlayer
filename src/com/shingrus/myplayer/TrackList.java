@@ -308,6 +308,10 @@ public class TrackList {
 		return trackList.get(iteratePosition);
 	}
 
+
+	public int getIteratePosition() {
+		return iteratePosition;
+	}
 	
 	public final void notifyPlayStarted() {
 		isPlaying = true;

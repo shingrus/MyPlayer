@@ -30,6 +30,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	String currentTitle;
 	private final IBinder mBinder = new LocalBinder();
 	boolean isPaused = false;
+	boolean isPausedDirungCall = false;
 	NotificationManager nm;
 	TelephonyManager tm;
 	PhoneStateListener mPhoneListener;
@@ -37,6 +38,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	String currentStatusDesc;
 	BroadcastReceiver audioReceiver;
 	MyPlayerPreferences mpf;
+	private PlayingEventsListener eventsListener = null;
 
 	// private Handler updatesHandler;
 
@@ -86,13 +88,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				if (mpf.isPauseOnCall()) {
 					switch (state) {
 					case TelephonyManager.CALL_STATE_IDLE:
-						playPaused();
+						if (isPausedDirungCall)
+							playPaused();
 						break;
 					case TelephonyManager.CALL_STATE_OFFHOOK:
 						pause();
+						isPausedDirungCall = true;
 						break;
 					case TelephonyManager.CALL_STATE_RINGING:
 						pause();
+						isPausedDirungCall = true;
 						break;
 					}
 				}
@@ -129,7 +134,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		switch (nStatus) {
 		case Paused:
 		case Playing:
+			//TODO remove this strange notify throw tracklist scheme
 			trackList.notifyPlayStarted();
+			if (this.eventsListener!=null) {
+				eventsListener.onChangePlayPosition(trackList.getIteratePosition());
+			}
 			break;
 		case Stopped:
 			trackList.notifyPlayStopped();
@@ -165,6 +174,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onPrepared(MediaPlayer mp) {
 		mp.start();
 		isPaused = false;
+		isPausedDirungCall = false;
 		updateNotification(NotificationStatus.Playing);
 	}
 
@@ -183,6 +193,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			mp.reset();
 			updateNotification(NotificationStatus.Stopped);
 			isPaused = false;
+			isPausedDirungCall = false;
 			try {
 				mp.setDataSource(mt.filename);
 				currentTitle = mt.getTitle();
@@ -240,6 +251,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			mp.start();
 			updateNotification(NotificationStatus.Playing);
 			isPaused = false;
+			isPausedDirungCall = false;
 		}
 	}
 
@@ -254,6 +266,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		mp.stop();
 		updateNotification(NotificationStatus.Stopped);
 		isPaused = false;
+		isPausedDirungCall = false;
 	}
 
+	public void setEventsListener(PlayingEventsListener listener) {
+		this.eventsListener  = listener;
+	}
+	public void unsetEventsListener(){
+		this.eventsListener=null;
+	}
 }
