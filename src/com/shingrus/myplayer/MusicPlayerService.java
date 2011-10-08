@@ -198,6 +198,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				mp.setDataSource(mt.filename);
 				currentTitle = mt.getTitle();
 				mp.setOnPreparedListener(this);
+				mp.setOnCompletionListener(this);
 				mp.prepareAsync();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
