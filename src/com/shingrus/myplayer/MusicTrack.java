@@ -10,7 +10,7 @@ public final class MusicTrack {
 		DOWNLOADING		
 	};
 	
-	public String title, id, url, filename;
+	public String title, id, url, filename, artist;
 	private int Duration = 0;
 //	private MusicTrackStatus status = MusicTrackStatus.NEW;
 	

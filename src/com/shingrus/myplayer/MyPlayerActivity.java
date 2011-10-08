@@ -16,8 +16,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
@@ -71,8 +73,19 @@ public class MyPlayerActivity extends Activity {
 					}
 
 					@Override
-					public void onChangePlayPosition(int position) {
-//						lv.setSelection(position);
+					public void onChangePlayingItem(int position) {
+						// int pos = position - lv.getFirstVisiblePosition();
+						// pos /=2;
+						// lv.setSelection(pos);
+					}
+
+					@Override
+					public void onPlayedPosition(int playedDurationSecs) {
+						MyPlayerActivity.this.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+							}
+						});
 					}
 				});
 			}
@@ -96,11 +109,16 @@ public class MyPlayerActivity extends Activity {
 				if (playerService != null) {
 					playerService.startPlayFrom(position);
 				}
-
 			}
-
 		});
-
+		// SeekBar sb = (SeekBar) findViewById(R.id.playingSeek);
+		// sb.setClickable(false);
+		// sb.setOnTouchListener(new View.OnTouchListener() {
+		// @Override
+		// public boolean onTouch(View v, MotionEvent event) {
+		// return true;
+		// }
+		// });
 	}
 
 	@Override
@@ -132,13 +150,13 @@ public class MyPlayerActivity extends Activity {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Intent i;
 		switch (item.getItemId()) {
-		case R.id.MenuPreferencesItem: {
-			Intent i = new Intent(this, MyPlayerPreferencesActivity.class);
+		case R.id.MenuPreferencesItem: 
+			i = new Intent(this, MyPlayerPreferencesActivity.class);
 			startActivity(i);
 			break;
-		}
-		case R.id.MenuUpdateItem: {
+		case R.id.MenuUpdateItem: 
 			// TODO start AsyncTask for update
 			// i decided to use handler for learning purpose
 			if (!updateInProgress) {
@@ -152,12 +170,11 @@ public class MyPlayerActivity extends Activity {
 				updateThread.start();
 			}
 			break;
-		}
-		case R.id.MenuHandshakeItem: {
+		case R.id.MenuHandshakeItem: 
 			// TODO start authorize activity again
-			Intent i = new Intent(this, MyAuthorizeActivity.class);
+			i = new Intent(this, MyAuthorizeActivity.class);
 			startActivity(i);
-		}
+			break;
 		}
 		return true;
 	}

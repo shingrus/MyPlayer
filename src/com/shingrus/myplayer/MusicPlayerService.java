@@ -134,10 +134,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		switch (nStatus) {
 		case Paused:
 		case Playing:
-			//TODO remove this strange notify throw tracklist scheme
+			// TODO remove this strange notify throw tracklist scheme
 			trackList.notifyPlayStarted();
-			if (this.eventsListener!=null) {
-				eventsListener.onChangePlayPosition(trackList.getIteratePosition());
+			if (this.eventsListener != null) {
+				eventsListener.onChangePlayingItem(trackList.getIteratePosition());
 			}
 			break;
 		case Stopped:
@@ -198,7 +198,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				mp.setDataSource(mt.filename);
 				currentTitle = mt.getTitle();
 				mp.setOnPreparedListener(this);
-				mp.setOnCompletionListener(this);
 				mp.prepareAsync();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
@@ -270,9 +269,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	public void setEventsListener(PlayingEventsListener listener) {
-		this.eventsListener  = listener;
+		this.eventsListener = listener;
 	}
-	public void unsetEventsListener(){
-		this.eventsListener=null;
+
+	public void unsetEventsListener() {
+		this.eventsListener = null;
 	}
 }
