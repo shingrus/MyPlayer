@@ -37,14 +37,15 @@ public class TrackList {
 	public static final String DATABASE_NAME = "TrackList";
 	public static final int DATABASE_VERSION = 1;
 	public static final String TABLE_NAME = "track";
+	private static final String TRACK_ARTIST = "Artist";
 	private static final String TRACK_TITLE = "Title";
 	private static final String TRACK_FILENAME = "Filename";
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
-	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_TITLE
-			+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
-	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
-			+ ") VALUES (?, ?, ?)";
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," 
+	+TRACK_ARTIST + " TEXT not null," + TRACK_TITLE+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
+	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " ("+TRACK_ARTIST+"," + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
+			+ ") VALUES (?,?, ?, ?)";
 
 	
 	private static TrackList trackListInstance;
@@ -146,11 +147,11 @@ public class TrackList {
 				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null, null);
 				if (c != null && c.moveToFirst()) {
 					do {
-						String filename = c.getString(3);
+						String filename = c.getString(4);
 						File f = new File(Uri.parse(filename).getPath());
 						if (!f.exists())
 							filename = "";
-						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), filename);
+						MusicTrack mt = new MusicTrack(c.getString(0),c.getString(1), c.getString(2), c.getString(3), filename);
 						trackList.add(mt);
 					} while (c.moveToNext());
 					c.close();
@@ -176,8 +177,8 @@ public class TrackList {
 					if (dbHelper != null) {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
-
 							SQLiteStatement insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
+							insertStmt.bindString(0, mt.getArtist());
 							insertStmt.bindString(1, mt.getTitle());
 							insertStmt.bindString(2, mt.getUrl());
 							insertStmt.bindString(3, mt.getFilename());
