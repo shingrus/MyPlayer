@@ -28,7 +28,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class TrackList {
-	
+
 	enum Direction {
 		PREVIOUS, NEXT
 	}
@@ -37,16 +37,16 @@ public class TrackList {
 	public static final String DATABASE_NAME = "TrackList";
 	public static final int DATABASE_VERSION = 1;
 	public static final String TABLE_NAME = "track";
+	private static final String TRACK_ARTIST = "Artist";
 	private static final String TRACK_TITLE = "Title";
 	private static final String TRACK_FILENAME = "Filename";
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
-	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_TITLE
-			+ " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
-	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_TITLE + "," + TRACK_URL + "," + TRACK_FILENAME
-			+ ") VALUES (?, ?, ?)";
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_ARTIST
+			+ " TEXT not null," + TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
+	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL + ","
+			+ TRACK_FILENAME + ") VALUES (?,?, ?, ?)";
 
-	
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
 	DBHelper dbHelper;
@@ -54,7 +54,7 @@ public class TrackList {
 	List<MusicTrack> trackList;
 	private int iteratePosition = 0;
 	private boolean isPlaying = false;
-	
+
 	// private final Context context;
 
 	// TODO - move basedapter to activity
@@ -91,8 +91,8 @@ public class TrackList {
 			TextView text = (TextView) rowView.findViewById(R.id.trackrow_textid);
 			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			MusicTrack mt = trackList.get(position);
-			text.setText(mt.getTitle());
-			if(isPlaying && position == iteratePosition) {
+			text.setText(mt.toString());
+			if (isPlaying && position == iteratePosition) {
 				text.setTextColor(0xAAFF0000);
 			}
 			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
@@ -101,7 +101,6 @@ public class TrackList {
 		}
 
 	}
-
 
 	// Create Only static
 	private TrackList() {
@@ -143,14 +142,14 @@ public class TrackList {
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null, null);
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null, null);
 				if (c != null && c.moveToFirst()) {
 					do {
-						String filename = c.getString(3);
+						String filename = c.getString(4);
 						File f = new File(Uri.parse(filename).getPath());
 						if (!f.exists())
 							filename = "";
-						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), filename);
+						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3), filename);
 						trackList.add(mt);
 					} while (c.moveToNext());
 					c.close();
@@ -176,11 +175,11 @@ public class TrackList {
 					if (dbHelper != null) {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
-
 							SQLiteStatement insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
-							insertStmt.bindString(1, mt.getTitle());
-							insertStmt.bindString(2, mt.getUrl());
-							insertStmt.bindString(3, mt.getFilename());
+							insertStmt.bindString(1, mt.getArtist());
+							insertStmt.bindString(2, mt.getTitle());
+							insertStmt.bindString(3, mt.getUrl());
+							insertStmt.bindString(4, mt.getFilename());
 							long rowid = insertStmt.executeInsert();
 							if (rowid == -1) {
 								Log.i("shingrus", "Can't insert new value to db");
@@ -259,9 +258,11 @@ public class TrackList {
 	}
 
 	public synchronized MusicTrack getNextForDownLoad() {
-		for (MusicTrack mt : trackList) {
-			if (mt.getFilename() == null || mt.getFilename().length() < 1) {
-				return mt;
+		synchronized (this.trackList) {
+			for (MusicTrack mt : trackList) {
+				if (mt.getFilename() == null || mt.getFilename().length() < 1) {
+					return mt;
+				}
 			}
 		}
 		return null;
@@ -308,11 +309,10 @@ public class TrackList {
 		return trackList.get(iteratePosition);
 	}
 
-
 	public int getIteratePosition() {
 		return iteratePosition;
 	}
-	
+
 	public final void notifyPlayStarted() {
 		isPlaying = true;
 		dataChanged();
@@ -323,7 +323,6 @@ public class TrackList {
 		dataChanged();
 	}
 
-	
 	public TrackListAdapter getAdapter(Activity actvty) {
 		adapter = new TrackListAdapter(actvty);
 		return adapter;

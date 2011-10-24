@@ -23,6 +23,7 @@ public final class MusicTrack {
 		filename = new String();
 		id = new String();
 		url = new String();
+		artist  = new String();
 	}
 	/**
 	 * 
@@ -31,7 +32,8 @@ public final class MusicTrack {
 	 * @param url - String Track URL
 	 * @param filename - String
 	 */
-	public MusicTrack(String id, String title, String url, String filename) {
+	public MusicTrack(String id, String artist, String title, String url, String filename) {
+		this.artist = artist;
 		this.title = title;
 		this.id = id;
 		this.url = url;
@@ -80,7 +82,7 @@ public final class MusicTrack {
 
 	@Override
 	public String toString() {
-		return "MT: " + this.title + " : " + this.url;	
+		return this.artist + "-"+ this.title;	
 	}
 
 	
@@ -107,5 +109,10 @@ public final class MusicTrack {
 		return result;
 
 	}
+
+	public String getArtist() {
+		return this.artist;
+	}
+	
 
 }
