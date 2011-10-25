@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content">
-	<TextView
+<RelativeLayout 	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+		<TextView
 		android:orientation="horizontal"
 		android:id="@+id/trackrow_textid"
 		android:layout_width="wrap_content"
 		android:layout_height="match_parent"
 		android:maxLines="1"
+		android:fadingEdge="horizontal"
 		android:textSize="20dp">
 	</TextView>
 	<TextView
-		android:layout_width="match_parent"
 		android:gravity="right"
+		android:layout_width="wrap_content"
 		android:layout_height="match_parent"
 		android:width="10dp"
+		android:layout_alignParentRight="true"
 		android:id="@+id/trackrow_statusid"></TextView>
-</LinearLayout>
+</RelativeLayout>
 
 

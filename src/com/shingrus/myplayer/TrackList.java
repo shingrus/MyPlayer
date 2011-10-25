@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class TrackList {
@@ -87,7 +88,7 @@ public class TrackList {
 		@Override
 		public synchronized View getView(int position, View convertView, ViewGroup parent) {
 			LayoutInflater inflater = this.activity.getLayoutInflater();
-			LinearLayout rowView = (LinearLayout) inflater.inflate(R.layout.tracklist_item, null, true);
+			RelativeLayout rowView = (RelativeLayout) inflater.inflate(R.layout.tracklist_item, null, true);
 			TextView text = (TextView) rowView.findViewById(R.id.trackrow_textid);
 			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			MusicTrack mt = trackList.get(position);
