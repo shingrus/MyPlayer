@@ -113,6 +113,5 @@ public final class MusicTrack {
 	public String getArtist() {
 		return this.artist;
 	}
-	
 
 }
