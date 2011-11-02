@@ -88,7 +88,7 @@ public final class MusicTrack {
 	
 	@Override
 	public int hashCode() {
-		return this.url.hashCode();
+		return this.id.hashCode();
 	}
 
 	

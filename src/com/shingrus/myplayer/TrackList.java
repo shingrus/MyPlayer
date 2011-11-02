@@ -43,10 +43,10 @@ public class TrackList {
 	private static final String TRACK_FILENAME = "Filename";
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
-	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " INTEGER PRIMARY KEY autoincrement default 0," + TRACK_ARTIST
+	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " CHAR PRIMARY KEY NOT NULL UNIQUE ," + TRACK_ARTIST
 			+ " TEXT not null," + TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
-	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL + ","
-			+ TRACK_FILENAME + ") VALUES (?,?, ?, ?)";
+	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ID + ","+ TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL + ","
+			+ TRACK_FILENAME + ") VALUES (?, ?, ?, ?, ?)";
 
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
@@ -177,10 +177,11 @@ public class TrackList {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
 							SQLiteStatement insertStmt = db.compileStatement(TRACK_INSERT_STMNT);
-							insertStmt.bindString(1, mt.getArtist());
-							insertStmt.bindString(2, mt.getTitle());
-							insertStmt.bindString(3, mt.getUrl());
-							insertStmt.bindString(4, mt.getFilename());
+							insertStmt.bindString(1, mt.getId());
+							insertStmt.bindString(2, mt.getArtist());
+							insertStmt.bindString(3, mt.getTitle());
+							insertStmt.bindString(4, mt.getUrl());
+							insertStmt.bindString(5, mt.getFilename());
 							long rowid = insertStmt.executeInsert();
 							if (rowid == -1) {
 								Log.i("shingrus", "Can't insert new value to db");
