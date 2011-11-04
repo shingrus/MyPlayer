@@ -129,6 +129,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			break;
 		}
 
+		
 		Intent i = new Intent(this, MyPlayerActivity.class);
 		// i.setFlags(Intent.FLAG_ACTIVITY_SIN
 		// GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
