@@ -30,7 +30,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	String currentTitle;
 	private final IBinder mBinder = new LocalBinder();
 	boolean isPaused = false;
-	boolean isPausedDirungCall = false;
+	boolean isPausedDurinngCall = false;
 	NotificationManager nm;
 	TelephonyManager tm;
 	PhoneStateListener mPhoneListener;
@@ -85,19 +85,23 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 			@Override
 			public void onCallStateChanged(int state, String incomingNumber) {
-				if (mpf.isPauseOnCall()) {
+				if (mpf.doPauseOnCall()) {
 					switch (state) {
 					case TelephonyManager.CALL_STATE_IDLE:
-						if (isPausedDirungCall)
+						if (isPausedDurinngCall)
 							playPaused();
 						break;
 					case TelephonyManager.CALL_STATE_OFFHOOK:
-						pause();
-						isPausedDirungCall = true;
+						if (!isPaused) {
+							pause();
+							isPausedDurinngCall = true;
+						}
 						break;
 					case TelephonyManager.CALL_STATE_RINGING:
-						pause();
-						isPausedDirungCall = true;
+						if (!isPaused) {
+							pause();
+							isPausedDurinngCall = true;
+						}
 						break;
 					}
 				}
@@ -174,7 +178,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onPrepared(MediaPlayer mp) {
 		mp.start();
 		isPaused = false;
-		isPausedDirungCall = false;
+		isPausedDurinngCall = false;
 		updateNotification(NotificationStatus.Playing);
 	}
 
@@ -193,7 +197,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			mp.reset();
 			updateNotification(NotificationStatus.Stopped);
 			isPaused = false;
-			isPausedDirungCall = false;
+			isPausedDurinngCall = false;
 			try {
 				mp.setDataSource(mt.filename);
 				currentTitle = mt.getTitle();
@@ -251,7 +255,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			mp.start();
 			updateNotification(NotificationStatus.Playing);
 			isPaused = false;
-			isPausedDirungCall = false;
+			isPausedDurinngCall = false;
 		}
 	}
 
@@ -266,7 +270,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		mp.stop();
 		updateNotification(NotificationStatus.Stopped);
 		isPaused = false;
-		isPausedDirungCall = false;
+		isPausedDurinngCall = false;
 	}
 
 	public void setEventsListener(PlayingEventsListener listener) {

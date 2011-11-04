@@ -98,7 +98,7 @@ public class MyPlayerPreferences {
 		return pauseOnLoud;
 	}
 
-	public final boolean isPauseOnCall() {
+	public final boolean doPauseOnCall() {
 		return pauseOnCall;
 	}
 
