@@ -319,7 +319,11 @@ public class TrackList {
 		isPlaying = true;
 		dataChanged();
 	}
-
+	
+	public final boolean isEmpty(){
+		return trackList.isEmpty();
+	}
+	
 	public final void notifyPlayStopped() {
 		isPlaying = false;
 		dataChanged();

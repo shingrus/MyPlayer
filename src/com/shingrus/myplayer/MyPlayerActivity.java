@@ -18,7 +18,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.animation.Animation;
 import android.widget.AdapterView;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -33,6 +36,7 @@ public class MyPlayerActivity extends Activity {
 	MyPlayerPreferences mpf;
 	TrackListFetchingStatus updateStatus;
 	private ListView lv = null;
+	private ProgressBar pb = null;
 
 	boolean updateInProgress = false;
 	Thread updateThread;
@@ -43,6 +47,9 @@ public class MyPlayerActivity extends Activity {
 		public void run() {
 			updateInProgress = false;
 			updateThread = null;
+			if (pb!=null) {
+				pb.setVisibility(View.INVISIBLE);
+			}
 		}
 	};
 
@@ -97,10 +104,19 @@ public class MyPlayerActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+//		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+//		setProgressBarIndeterminateVisibility(true);
+		boolean isCustomTitileSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 		Log.d("shingrus", "Creating Player Activity");
 		Intent i = new Intent(this, MusicPlayerService.class);
 		this.bindService(i, musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
+		
+		if (isCustomTitileSupported) {
+			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.playertitle);
+		}
+		
+		pb = (ProgressBar) findViewById(R.id.playerTitleProgressId);
 		lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
 		lv.setOnItemClickListener(new OnItemClickListener() {
@@ -111,6 +127,7 @@ public class MyPlayerActivity extends Activity {
 				}
 			}
 		});
+		
 		// SeekBar sb = (SeekBar) findViewById(R.id.playingSeek);
 		// sb.setClickable(false);
 		// sb.setOnTouchListener(new View.OnTouchListener() {
@@ -119,6 +136,14 @@ public class MyPlayerActivity extends Activity {
 		// return true;
 		// }
 		// });
+	}
+
+	@Override
+	protected void onResume() {
+		if (trackList.isEmpty()) {
+			startUpdate();
+		}
+		super.onResume();
 	}
 
 	@Override
@@ -137,7 +162,8 @@ public class MyPlayerActivity extends Activity {
 			updateThread = null;
 		}
 		updateInProgress = false;
-
+		lv = null;
+		pb = null;
 		super.onDestroy();
 	}
 
@@ -157,18 +183,7 @@ public class MyPlayerActivity extends Activity {
 			startActivity(i);
 			break;
 		case R.id.MenuUpdateItem: 
-			// TODO start AsyncTask for update
-			// i decided to use handler for learning purpose
-			if (!updateInProgress) {
-				updateInProgress = true;
-				updateThread = new Thread() {
-					public void run() {
-						MyPlayerActivity.this.updateStatus = mpf.getProfile().getTrackListFromInternet();
-						handleUpdate.post(resultUpdate);
-					}
-				};
-				updateThread.start();
-			}
+			startUpdate();
 			break;
 		case R.id.MenuHandshakeItem: 
 			// TODO start authorize activity again
@@ -179,6 +194,24 @@ public class MyPlayerActivity extends Activity {
 		return true;
 	}
 
+	private void startUpdate() {
+		// TODO start AsyncTask for update
+		// i decided to use handler for learning purpose
+		if (!updateInProgress) {
+			updateInProgress = true;
+			if (pb!=null) {
+				pb.setVisibility(View.VISIBLE);
+			}
+			updateThread = new Thread() {
+				public void run() {
+					MyPlayerActivity.this.updateStatus = mpf.getProfile().getTrackListFromInternet();
+					handleUpdate.post(resultUpdate);
+				}
+			};
+			updateThread.start();
+		}
+	}
+	
 	// Click Listeners
 	public void onClickPlayPause(View v) {
 		playerService.playPause();
