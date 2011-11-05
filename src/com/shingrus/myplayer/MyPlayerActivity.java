@@ -113,7 +113,7 @@ public class MyPlayerActivity extends Activity {
 		setContentView(R.layout.playlist);
 		
 		if (isCustomTitileSupported) {
-			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.playertitle);
+			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.activetitle);
 		}
 		
 		pb = (ProgressBar) findViewById(R.id.playerTitleProgressId);
