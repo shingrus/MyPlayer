@@ -130,7 +130,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 
 		
-		Intent i = new Intent(this, MyPlayerActivity.class);
+//		Intent i = new Intent(this, MyPlayerActivity.class);
+		Intent i = new Intent(this, LauncherActivity.class);
 		// i.setFlags(Intent.FLAG_ACTIVITY_SIN
 		// GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
