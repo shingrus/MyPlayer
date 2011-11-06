@@ -445,7 +445,8 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 			editor.putString(PASSWORD_KEY, password);
 		}
 
-		editor.apply();
+		//editor.apply();
+		editor.commit();
 		isAccessTokenChanged = isRefreshTokenChanged = isUidChanged = true;
 	}
 

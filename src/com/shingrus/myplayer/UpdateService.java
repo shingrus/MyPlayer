@@ -16,7 +16,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
-import android.app.DownloadManager;
+
+import android.app.AlarmManager;
+//import android.app.DownloadManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -40,18 +42,15 @@ public class UpdateService extends Service {
 	boolean continueWorking = true;
 
 	long downloadEnqueue;
-	DownloadManager dm;
-	// MusicTrack currentDownload;
 
 	TrackList tl;
 	Handler tracksHandler;
-
-	// public static final int MAXIMUM_SIM_DOWNLOAD = 1;
+	
 	public static final int DOWNLOAD_CONNECTION_TIMEOUT = 15 * 1000;
 	private BroadcastReceiver downloadsReceiver;
-
-	// private final IBinder mBinder = new LocalBinder();
-
+	
+	private AlarmManager alarmManager;
+	
 	public UpdateService() {
 		super();
 		// this.updateThread = new UpdateThread();
@@ -160,13 +159,14 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onCreate() {
+		alarmManager = (AlarmManager) this.getSystemService(ALARM_SERVICE);
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i("shingrus", "Strart updateService");
-		// Start update thread
-		// updateThread.start();
+
+		
 		// Start download thread
 		// TODO: start only once
 		downloadThread.start();
@@ -176,11 +176,9 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onDestroy() {
-		this.dm.remove(downloadEnqueue);
 		// no more async updates in threads
 		// updateThread.interrupt();
 		downloadThread.interrupt();
-		unregisterReceiver(downloadsReceiver);
 		// super.onDestroy();
 	}
 

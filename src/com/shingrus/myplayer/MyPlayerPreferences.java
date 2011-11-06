@@ -33,7 +33,7 @@ public class MyPlayerPreferences {
 			if (isProfileChanged) {
 				editor.putBoolean(PLAYER_PROFILES_LIST_KEY, hasProfile);
 			}
-			editor.apply();
+			editor.commit();
 			isProfileChanged = false;
 			profile.storePreferences(preferences);
 		}
@@ -47,7 +47,7 @@ public class MyPlayerPreferences {
 	synchronized public int getNextFilenameCounter() {
 		SharedPreferences.Editor editor = this.preferences.edit();
 		editor.putInt(FILENAMECOUNTER_KEY, ++this.nextFilenameCounter);
-		editor.apply();
+		editor.commit();
 		return this.nextFilenameCounter;
 	}
 //	/**
