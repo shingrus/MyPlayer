@@ -23,7 +23,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		Stopped, Playing, Paused
 	}
 
-	private static final int NOTIFICATION_ID = 100500;
+	private static final int NOTIFICATION_ID = 11;
 	MediaPlayer mp;
 	TrackList trackList;
 	// MusicTrack currentTrack;
@@ -49,7 +49,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	/**
-	 * Reciever for AudioManager.ACTION_AUDIO_BECOMING_NOISY it pauses if
+	 * Receiver for AudioManager.ACTION_AUDIO_BECOMING_NOISY it pauses if
 	 * headphones disable
 	 * 
 	 * @author shingrus
@@ -156,6 +156,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onDestroy() {
 		Log.d("shingrus", "Destroy: MusicPlayerService");
 		stopForeground(true);
+		nm.cancelAll();
 		if (mp != null) {
 			if (mp.isPlaying())
 				mp.stop();
@@ -164,7 +165,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		if (tm != null)
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
 		unregisterReceiver(audioReceiver);
-
+		super.onDestroy();
 	}
 
 	@Override

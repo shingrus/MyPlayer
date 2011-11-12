@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -16,6 +19,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
+
+import com.shingrus.myplayer.MusicPlayerService.LocalBinder;
+import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 
 import android.app.AlarmManager;
 //import android.app.DownloadManager;
@@ -34,30 +40,47 @@ import android.util.Log;
 
 public class UpdateService extends Service {
 
+	public static final String START_UPDATE_COMMAND = "START_UPDATE";
 	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
 	public static final int UPDATE_SLEEP_MS = 600 * 1000;
 
-	// UpdateThread updateThread;
-	Thread downloadThread;
+	Thread downloadThread, updateThread;
 	boolean continueWorking = true;
+	private boolean updateThreadAlreadyRunning = false;
 
-	long downloadEnqueue;
+	private final IBinder binder = new LocalBinder();
 
 	TrackList tl;
 	Handler tracksHandler;
-	
+
 	public static final int DOWNLOAD_CONNECTION_TIMEOUT = 15 * 1000;
-	private BroadcastReceiver downloadsReceiver;
-	
+
 	private AlarmManager alarmManager;
-	
+
+	/**
+	 * i use this list to store activities handlers, that will handle update
+	 * results
+	 */
+	private CopyOnWriteArrayList<UpdatesHandler> updatesHandlers;
+
 	public UpdateService() {
 		super();
-		// this.updateThread = new UpdateThread();
 		this.downloadThread = new DownloadThread();
-
-		downloadEnqueue = 0;
+		this.updateThread = new UpdateThread();
+		updatesHandlers = new CopyOnWriteArrayList<UpdateService.UpdatesHandler>();
 		tl = TrackList.getInstance();
+	}
+
+	public interface UpdatesHandler {
+		public void onUpdate(TrackListFetchingStatus updateStatus);
+	}
+
+	public void addUpdateHandler(UpdatesHandler h) {
+		updatesHandlers.add(h);
+	}
+
+	public void removeUpdateHandler(UpdatesHandler h) {
+		updatesHandlers.remove(h);
 	}
 
 	public class LocalBinder extends Binder {
@@ -139,6 +162,22 @@ public class UpdateService extends Service {
 
 	}
 
+	class UpdateThread extends Thread {
+		public void run() {
+
+			try {
+				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+				TrackListFetchingStatus updateStatus = mpf.getProfile().getTrackListFromInternet();
+
+				for (UpdatesHandler h : updatesHandlers) {
+					h.onUpdate(updateStatus);
+				}
+			} finally {
+				UpdateService.this.updateThreadAlreadyRunning = false;
+			}
+		}
+	}
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		Log.i("shingrus", "OnconfigurationChanged in  updateService:" + newConfig);
@@ -147,7 +186,6 @@ public class UpdateService extends Service {
 
 	@Override
 	public boolean onUnbind(Intent intent) {
-		Log.i("shingrus", "OnUnbind in  updateService:" + intent);
 		return super.onUnbind(intent);
 	}
 
@@ -160,18 +198,30 @@ public class UpdateService extends Service {
 	@Override
 	public void onCreate() {
 		alarmManager = (AlarmManager) this.getSystemService(ALARM_SERVICE);
+		// Start download thread
+		// TODO: start only once
+		downloadThread.start();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i("shingrus", "Strart updateService");
 
-		
-		// Start download thread
-		// TODO: start only once
-		downloadThread.start();
-		// return super.onStartCommand(intent, flags, startId);
+		if (intent != null) {
+			int i = intent.getIntExtra(START_UPDATE_COMMAND, 0);
+			if (i == 1) {
+				updateThread.start();
+			}
+		}
+
 		return START_NOT_STICKY;
+	}
+
+	void startUpdate() {
+		if (!updateThreadAlreadyRunning) {
+			updateThreadAlreadyRunning = true;
+			updateThread.start();
+		}
 	}
 
 	@Override
@@ -179,12 +229,12 @@ public class UpdateService extends Service {
 		// no more async updates in threads
 		// updateThread.interrupt();
 		downloadThread.interrupt();
-		// super.onDestroy();
+		updateThread.interrupt();
 	}
 
 	@Override
 	public IBinder onBind(Intent i) {
-		return null;
+		return binder;
 
 	}
 

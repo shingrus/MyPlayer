@@ -2,6 +2,7 @@ package com.shingrus.myplayer;
 
 import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 import com.shingrus.myplayer.R;
+import com.shingrus.myplayer.UpdateService.UpdatesHandler;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -30,9 +31,11 @@ import android.widget.ListView;
 public class MyPlayerActivity extends Activity {
 
 	TrackList trackList;
-	ServiceConnection musicPlayerConnection;
-	MusicPlayerService playerService;
-	final Handler handleUpdate = new Handler();
+	ServiceConnection musicPlayerConnection, updateServiceConnection;
+	MusicPlayerService playerService = null;
+	UpdateService updateService = null;
+//	final Handler hUpdate = new Handler();
+	final UpdateHandler updateHandler = new UpdateHandler();
 	MyPlayerPreferences mpf;
 	TrackListFetchingStatus updateStatus;
 	private ListView lv = null;
@@ -41,6 +44,7 @@ public class MyPlayerActivity extends Activity {
 	boolean updateInProgress = false;
 	Thread updateThread;
 
+	
 	final Runnable resultUpdate = new Runnable() {
 
 		@Override
@@ -52,7 +56,16 @@ public class MyPlayerActivity extends Activity {
 			}
 		}
 	};
+	
+	class UpdateHandler implements UpdatesHandler {
 
+		@Override
+		public void onUpdate(TrackListFetchingStatus updateStatus) {
+			runOnUiThread(resultUpdate);
+		}
+		
+	}
+	
 	public MyPlayerActivity() {
 		trackList = TrackList.getInstance();
 		musicPlayerConnection = new ServiceConnection() {
@@ -97,6 +110,23 @@ public class MyPlayerActivity extends Activity {
 				});
 			}
 		};
+		updateServiceConnection = new ServiceConnection() {
+			
+			@Override
+			public void onServiceDisconnected(ComponentName name) {
+				updateService.removeUpdateHandler(MyPlayerActivity.this.updateHandler);
+				updateService = null;
+			}
+			
+			@Override
+			public void onServiceConnected(ComponentName name, IBinder service) {
+				updateService = ((UpdateService.LocalBinder) service).getService();
+				updateService.addUpdateHandler(MyPlayerActivity.this.updateHandler);
+				if (trackList.isEmpty())	 {
+					startUpdate();
+				}
+			}
+		};
 		mpf = MyPlayerPreferences.getInstance(null);
 
 	}
@@ -104,8 +134,6 @@ public class MyPlayerActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-//		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-//		setProgressBarIndeterminateVisibility(true);
 		boolean isCustomTitileSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 		Log.d("shingrus", "Creating Player Activity");
 		Intent i = new Intent(this, MusicPlayerService.class);
@@ -128,6 +156,8 @@ public class MyPlayerActivity extends Activity {
 			}
 		});
 		
+		Intent service = new Intent(this, UpdateService.class);
+		bindService(service, updateServiceConnection, Context.BIND_AUTO_CREATE);
 		// SeekBar sb = (SeekBar) findViewById(R.id.playingSeek);
 		// sb.setClickable(false);
 		// sb.setOnTouchListener(new View.OnTouchListener() {
@@ -140,7 +170,7 @@ public class MyPlayerActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-		if (trackList.isEmpty()) {
+		if (trackList.isEmpty() && updateService!=null) {
 			startUpdate();
 		}
 		super.onResume();
@@ -151,6 +181,10 @@ public class MyPlayerActivity extends Activity {
 		Log.i("shingrus", "Destroying Player activity");
 		if (trackList != null)
 			trackList.dropAdapter();
+		if (updateService != null) {
+			unbindService(updateServiceConnection);
+			updateServiceConnection=null;
+		}
 		if (musicPlayerConnection != null) {
 			if (playerService != null)
 				playerService.unsetEventsListener();
@@ -202,13 +236,9 @@ public class MyPlayerActivity extends Activity {
 			if (pb!=null) {
 				pb.setVisibility(View.VISIBLE);
 			}
-			updateThread = new Thread() {
-				public void run() {
-					MyPlayerActivity.this.updateStatus = mpf.getProfile().getTrackListFromInternet();
-					handleUpdate.post(resultUpdate);
-				}
-			};
-			updateThread.start();
+			Intent service = new Intent(this,UpdateService.class);
+			service.putExtra(UpdateService.START_UPDATE_COMMAND, 1);
+			startService(service);
 		}
 	}
 	
