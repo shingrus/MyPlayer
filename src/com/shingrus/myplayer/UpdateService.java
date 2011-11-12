@@ -210,16 +210,17 @@ public class UpdateService extends Service {
 		if (intent != null) {
 			int i = intent.getIntExtra(START_UPDATE_COMMAND, 0);
 			if (i == 1) {
-				updateThread.start();
+				startUpdate();
 			}
 		}
 
 		return START_NOT_STICKY;
 	}
 
-	void startUpdate() {
+	synchronized void startUpdate() {
 		if (!updateThreadAlreadyRunning) {
 			updateThreadAlreadyRunning = true;
+			updateThread = new UpdateThread();
 			updateThread.start();
 		}
 	}
@@ -229,7 +230,8 @@ public class UpdateService extends Service {
 		// no more async updates in threads
 		// updateThread.interrupt();
 		downloadThread.interrupt();
-		updateThread.interrupt();
+		if (updateThread != null)
+			updateThread.interrupt();
 	}
 
 	@Override
