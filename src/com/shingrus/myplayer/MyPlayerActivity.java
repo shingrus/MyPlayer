@@ -34,7 +34,7 @@ public class MyPlayerActivity extends Activity {
 	ServiceConnection musicPlayerConnection, updateServiceConnection;
 	MusicPlayerService playerService = null;
 	UpdateService updateService = null;
-//	final Handler hUpdate = new Handler();
+	// final Handler hUpdate = new Handler();
 	final UpdateHandler updateHandler = new UpdateHandler();
 	MyPlayerPreferences mpf;
 	TrackListFetchingStatus updateStatus;
@@ -44,28 +44,38 @@ public class MyPlayerActivity extends Activity {
 	boolean updateInProgress = false;
 	Thread updateThread;
 
-	
 	final Runnable resultUpdate = new Runnable() {
 
 		@Override
 		public void run() {
 			updateInProgress = false;
 			updateThread = null;
-			if (pb!=null) {
+			if (pb != null) {
 				pb.setVisibility(View.INVISIBLE);
 			}
 		}
 	};
-	
+
 	class UpdateHandler implements UpdatesHandler {
 
 		@Override
-		public void onUpdate(TrackListFetchingStatus updateStatus) {
+		public void onAfterUpdate(TrackListFetchingStatus updateStatus) {
 			runOnUiThread(resultUpdate);
 		}
-		
+
+		@Override
+		public void onBeforeUpdate() {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					if (pb!=null) {
+						pb.setVisibility(View.VISIBLE);
+					}					
+				}
+			});
+		}
 	}
-	
+
 	public MyPlayerActivity() {
 		trackList = TrackList.getInstance();
 		musicPlayerConnection = new ServiceConnection() {
@@ -111,18 +121,18 @@ public class MyPlayerActivity extends Activity {
 			}
 		};
 		updateServiceConnection = new ServiceConnection() {
-			
+
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
 				updateService.removeUpdateHandler(MyPlayerActivity.this.updateHandler);
 				updateService = null;
 			}
-			
+
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				updateService = ((UpdateService.LocalBinder) service).getService();
 				updateService.addUpdateHandler(MyPlayerActivity.this.updateHandler);
-				if (trackList.isEmpty())	 {
+				if (trackList.isEmpty()) {
 					startUpdate();
 				}
 			}
@@ -139,11 +149,11 @@ public class MyPlayerActivity extends Activity {
 		Intent i = new Intent(this, MusicPlayerService.class);
 		this.bindService(i, musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
-		
+
 		if (isCustomTitileSupported) {
 			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.activetitle);
 		}
-		
+
 		pb = (ProgressBar) findViewById(R.id.playerTitleProgressId);
 		lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
@@ -155,7 +165,7 @@ public class MyPlayerActivity extends Activity {
 				}
 			}
 		});
-		
+
 		Intent service = new Intent(this, UpdateService.class);
 		bindService(service, updateServiceConnection, Context.BIND_AUTO_CREATE);
 		// SeekBar sb = (SeekBar) findViewById(R.id.playingSeek);
@@ -170,7 +180,7 @@ public class MyPlayerActivity extends Activity {
 
 	@Override
 	protected void onResume() {
-		if (trackList.isEmpty() && updateService!=null) {
+		if (trackList.isEmpty() && updateService != null) {
 			startUpdate();
 		}
 		super.onResume();
@@ -183,7 +193,7 @@ public class MyPlayerActivity extends Activity {
 			trackList.dropAdapter();
 		if (updateService != null) {
 			unbindService(updateServiceConnection);
-			updateServiceConnection=null;
+			updateServiceConnection = null;
 		}
 		if (musicPlayerConnection != null) {
 			if (playerService != null)
@@ -212,14 +222,14 @@ public class MyPlayerActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Intent i;
 		switch (item.getItemId()) {
-		case R.id.MenuPreferencesItem: 
+		case R.id.MenuPreferencesItem:
 			i = new Intent(this, MyPlayerPreferencesActivity.class);
 			startActivity(i);
 			break;
-		case R.id.MenuUpdateItem: 
+		case R.id.MenuUpdateItem:
 			startUpdate();
 			break;
-		case R.id.MenuHandshakeItem: 
+		case R.id.MenuHandshakeItem:
 			// TODO start authorize activity again
 			i = new Intent(this, MyAuthorizeActivity.class);
 			startActivity(i);
@@ -233,15 +243,13 @@ public class MyPlayerActivity extends Activity {
 		// i decided to use handler for learning purpose
 		if (!updateInProgress) {
 			updateInProgress = true;
-			if (pb!=null) {
-				pb.setVisibility(View.VISIBLE);
-			}
-			Intent service = new Intent(this,UpdateService.class);
+
+			Intent service = new Intent(this, UpdateService.class);
 			service.putExtra(UpdateService.START_UPDATE_COMMAND, 1);
 			startService(service);
 		}
 	}
-	
+
 	// Click Listeners
 	public void onClickPlayPause(View v) {
 		playerService.playPause();

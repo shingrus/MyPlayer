@@ -24,6 +24,7 @@ import com.shingrus.myplayer.MusicPlayerService.LocalBinder;
 import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 
 import android.app.AlarmManager;
+import android.app.PendingIntent;
 //import android.app.DownloadManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -36,13 +37,14 @@ import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class UpdateService extends Service {
 
 	public static final String START_UPDATE_COMMAND = "START_UPDATE";
 	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
-	public static final int UPDATE_SLEEP_MS = 600 * 1000;
+	public static final int UPDATE_PERIOD_MS = 30 * 1000;
 
 	Thread downloadThread, updateThread;
 	boolean continueWorking = true;
@@ -72,7 +74,8 @@ public class UpdateService extends Service {
 	}
 
 	public interface UpdatesHandler {
-		public void onUpdate(TrackListFetchingStatus updateStatus);
+		public void onBeforeUpdate();
+		public void onAfterUpdate(TrackListFetchingStatus updateStatus);
 	}
 
 	public void addUpdateHandler(UpdatesHandler h) {
@@ -170,7 +173,7 @@ public class UpdateService extends Service {
 				TrackListFetchingStatus updateStatus = mpf.getProfile().getTrackListFromInternet();
 
 				for (UpdatesHandler h : updatesHandlers) {
-					h.onUpdate(updateStatus);
+					h.onAfterUpdate(updateStatus);
 				}
 			} finally {
 				UpdateService.this.updateThreadAlreadyRunning = false;
@@ -198,6 +201,10 @@ public class UpdateService extends Service {
 	@Override
 	public void onCreate() {
 		alarmManager = (AlarmManager) this.getSystemService(ALARM_SERVICE);
+		Intent service = new Intent(this, UpdateService.class);
+		service.putExtra(START_UPDATE_COMMAND, 1);
+		PendingIntent operation = PendingIntent.getService(this, 0, service, 0);
+		alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+UPDATE_PERIOD_MS, UPDATE_PERIOD_MS, operation);
 		// Start download thread
 		// TODO: start only once
 		downloadThread.start();
@@ -220,6 +227,9 @@ public class UpdateService extends Service {
 	synchronized void startUpdate() {
 		if (!updateThreadAlreadyRunning) {
 			updateThreadAlreadyRunning = true;
+			for(UpdatesHandler h: updatesHandlers){
+				h.onBeforeUpdate();
+			}
 			updateThread = new UpdateThread();
 			updateThread.start();
 		}
@@ -227,8 +237,6 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onDestroy() {
-		// no more async updates in threads
-		// updateThread.interrupt();
 		downloadThread.interrupt();
 		if (updateThread != null)
 			updateThread.interrupt();
