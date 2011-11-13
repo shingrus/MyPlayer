@@ -62,9 +62,14 @@ public class MyAuthorizeActivity extends Activity {
 		protected void onPostExecute(AuhorizeStatus result) {
 			this.progressDialog.dismiss();
 			if (result == AuhorizeStatus.SUCCESS) {
+				Intent service = new Intent(MyAuthorizeActivity.this, UpdateService.class);
+				service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_TIMER);
+				startService(service);
+				
 				mpf.storePreferences(MyAuthorizeActivity.this);
 				Intent i = new Intent(MyAuthorizeActivity.this, MyPlayerActivity.class);
 				startActivity(i);
+			
 				finish();
 			}
 			else if (result == AuhorizeStatus.INVALID) {

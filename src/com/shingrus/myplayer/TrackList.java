@@ -168,7 +168,7 @@ public class TrackList {
 
 	public synchronized void addTrack(final MusicTrack mt) {
 		if (!trackList.contains(mt) && mt.getTitle().length() > 0 && mt.getUrl().length() > 0 && trackList.size() < LIMIT_TRACKS) {
-			Log.d("shingrus", "Adding new track: " + mt + ", trackList size: " + trackList.size());
+			Log.d("shingrus", "Adding new track: " + mt + ", track id: " + trackList.size());
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
@@ -182,12 +182,7 @@ public class TrackList {
 							insertStmt.bindString(3, mt.getTitle());
 							insertStmt.bindString(4, mt.getUrl());
 							insertStmt.bindString(5, mt.getFilename());
-							long rowid = insertStmt.executeInsert();
-							if (rowid == -1) {
-								Log.i("shingrus", "Can't insert new value to db");
-							} else {
-								mt.setId(Long.toString(rowid));
-							}
+//							long rowid = insertStmt.executeInsert();
 							insertStmt.clearBindings();
 						}
 					}

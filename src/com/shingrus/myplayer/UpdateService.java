@@ -43,8 +43,10 @@ import android.util.Log;
 public class UpdateService extends Service {
 
 	public static final String START_UPDATE_COMMAND = "START_UPDATE";
+	public static final int START_UPDATE_COMMAND_UPDATE = 1;
+	public static final int START_UPDATE_COMMAND_TIMER = 15;
 	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
-	public static final int UPDATE_PERIOD_MS = 30 * 1000;
+	public static final int UPDATE_PERIOD_MS = 30 * 1000;//1 hr
 
 	Thread downloadThread, updateThread;
 	boolean continueWorking = true;
@@ -58,6 +60,8 @@ public class UpdateService extends Service {
 	public static final int DOWNLOAD_CONNECTION_TIMEOUT = 15 * 1000;
 
 	private AlarmManager alarmManager;
+	PendingIntent operation = null;
+	private Intent service = null;
 
 	/**
 	 * i use this list to store activities handlers, that will handle update
@@ -201,10 +205,10 @@ public class UpdateService extends Service {
 	@Override
 	public void onCreate() {
 		alarmManager = (AlarmManager) this.getSystemService(ALARM_SERVICE);
-		Intent service = new Intent(this, UpdateService.class);
-		service.putExtra(START_UPDATE_COMMAND, 1);
-		PendingIntent operation = PendingIntent.getService(this, 0, service, 0);
-		alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+UPDATE_PERIOD_MS, UPDATE_PERIOD_MS, operation);
+		service = new Intent(this, UpdateService.class);
+		service.putExtra(START_UPDATE_COMMAND, START_UPDATE_COMMAND_UPDATE);
+		operation = PendingIntent.getService(this, 0, service, 0);
+//		startUpdateTimer();
 		// Start download thread
 		// TODO: start only once
 		downloadThread.start();
@@ -216,14 +220,28 @@ public class UpdateService extends Service {
 
 		if (intent != null) {
 			int i = intent.getIntExtra(START_UPDATE_COMMAND, 0);
-			if (i == 1) {
+			if (i == START_UPDATE_COMMAND_UPDATE) {
 				startUpdate();
+			}
+			else if (i == START_UPDATE_COMMAND_TIMER) {
+				startUpdateTimer();
 			}
 		}
 
 		return START_NOT_STICKY;
 	}
 
+	void startUpdateTimer() {		
+		MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
+		if (mpf.getUpdatePeriodInMS() >0) {
+			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+mpf.getUpdatePeriodInMS(), mpf.getUpdatePeriodInMS(), operation);
+//			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+3000, UPDATE_PERIOD_MS, operation);
+		}
+		else if (mpf.getUpdatePeriodInMS() == 0 && operation != null){
+			alarmManager.cancel(operation);
+		}
+	}
+	
 	synchronized void startUpdate() {
 		if (!updateThreadAlreadyRunning) {
 			updateThreadAlreadyRunning = true;
@@ -237,6 +255,8 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onDestroy() {
+		
+		//TODO: reemove alarm
 		downloadThread.interrupt();
 		if (updateThread != null)
 			updateThread.interrupt();

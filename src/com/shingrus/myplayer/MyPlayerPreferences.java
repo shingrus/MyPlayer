@@ -3,6 +3,7 @@ package com.shingrus.myplayer;
 import com.shingrus.myplayer.R;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
@@ -13,20 +14,19 @@ public class MyPlayerPreferences {
 	private final String FILENAMECOUNTER_KEY = "filename_counter";
 	private boolean useOnlyWifi, pauseOnLoud, pauseOnCall;
 	private int nextFilenameCounter;
+	private int updatePeriodInMS;
 	private SharedPreferences preferences;
-	private static MyPlayerPreferences playerPreferences ;
-	
+	private static MyPlayerPreferences playerPreferences;
+
 	private static final String PLAYER_PROFILES_LIST_KEY = "profiles_list";
 	private boolean hasProfile = false;
-	
-	//TODO in next version it should be an array
-	private MyPlayerAccountProfile profile;
-	private boolean isProfileChanged = false; 
-	
-	
-	public static final int CONNECTION_TIMEOUT = 15*1000;
 
-	
+	// TODO in next version it should be an array
+	private MyPlayerAccountProfile profile;
+	private boolean isProfileChanged = false;
+
+	public static final int CONNECTION_TIMEOUT = 15 * 1000;
+
 	public void storePreferences(Context ctx) {
 		if (ctx != null) {
 			SharedPreferences.Editor editor = this.preferences.edit();
@@ -38,11 +38,10 @@ public class MyPlayerPreferences {
 			profile.storePreferences(preferences);
 		}
 	}
-	
+
 	/**
 	 * 
-	 * @return Next incremented value for
-	 * filenames
+	 * @return Next incremented value for filenames
 	 */
 	synchronized public int getNextFilenameCounter() {
 		SharedPreferences.Editor editor = this.preferences.edit();
@@ -50,21 +49,6 @@ public class MyPlayerPreferences {
 		editor.commit();
 		return this.nextFilenameCounter;
 	}
-//	/**
-//	 * 
-//	 * @return {@link String} user's email
-//	 */
-//	public synchronized String getEmail() {
-//		return login;
-//	}
-//
-//	/**
-//	 * 
-//	 * @return {@link String} user's password
-//	 */
-//	public synchronized String getPassword() {
-//		return password;
-//	}
 
 	/**
 	 * @return the hasProfile
@@ -74,7 +58,8 @@ public class MyPlayerPreferences {
 	}
 
 	/**
-	 * @param hasProfile the hasProfile to set
+	 * @param hasProfile
+	 *            the hasProfile to set
 	 */
 	public void setHasProfile(boolean hasProfile) {
 		this.hasProfile = hasProfile;
@@ -94,7 +79,7 @@ public class MyPlayerPreferences {
 		return useOnlyWifi;
 	}
 
-	public final boolean isPauseOnLoud() {
+	public final boolean doPauseOnLoud() {
 		return pauseOnLoud;
 	}
 
@@ -102,26 +87,49 @@ public class MyPlayerPreferences {
 		return pauseOnCall;
 	}
 
+	public int getUpdatePeriodInMS() {
+		return updatePeriodInMS;
+	}
+
 	private MyPlayerPreferences() {
 		useOnlyWifi = true;
 		pauseOnCall = true;
 		pauseOnLoud = true;
 		preferences = null;
+		updatePeriodInMS = 0;
 		profile = new MailRuProfile();
-		
+
 	}
-
+	
+	public synchronized void updatePreferences(Context context) {
+		loadPreferences(context);
+		Intent service = new Intent(context, UpdateService.class);
+		service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_TIMER);
+		context.startService(service);
+	}
+	
+	
 	public synchronized void loadPreferences(Context context) {
-			PreferenceManager.setDefaultValues(context, R.xml.preferences, false);
-			this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
-			this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
-			this.pauseOnLoud = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
-			this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);			
-			this.hasProfile = preferences.getBoolean(PLAYER_PROFILES_LIST_KEY, false);
-			this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
+		PreferenceManager.setDefaultValues(context, R.xml.preferences, false);
+		this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
+		this.useOnlyWifi = preferences.getBoolean(context.getString(R.string.useWifiOnly_key), true);
+		this.pauseOnLoud = preferences.getBoolean(context.getString(R.string.pauseOnLoud_key), true);
+		this.pauseOnCall = preferences.getBoolean(context.getString(R.string.pauseOnCall_key), true);
+		String s = preferences.getString(context.getString(R.string.preferences_update_period_key), "0");
+		int val = 0;
+		try {
+			val = Integer.valueOf(s);
+		} catch (NumberFormatException e) {
+		}
+		val *= 3600000; // ms in one hour
+		if (val > 86400000 || val < 0)
+			val = 0;
+		this.updatePeriodInMS = val;
+		this.hasProfile = preferences.getBoolean(PLAYER_PROFILES_LIST_KEY, false);
+		this.nextFilenameCounter = preferences.getInt(FILENAMECOUNTER_KEY, 0);
 
-			profile.loadPreferences(preferences);
-			
+		profile.loadPreferences(preferences);
+
 	}
 
 	// TODO: i don't know why i made it like singleton
@@ -141,6 +149,5 @@ public class MyPlayerPreferences {
 		}
 		return playerPreferences;
 	}
-
 
 }

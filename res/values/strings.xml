@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">MyPlayer</string>
-	<string name="authorization_preferences_group">Mail.Ru Authorization</string>
+	<string name="authorization_preferences_group">Данные авторизации</string>
 
 	<string name="preferences_activity_name">MyPlayerPreferences</string>
 	<string name="authorize_activity_name">MyPlayerAuthorize</string>
@@ -20,6 +20,10 @@
 	<string name="dialog_title_mailru_password_preference">Mail.Ru Password</string>
 
 	<string name="other_preferences_group">Другие настройки</string>
+
+	<string name="preferences_update_period_key">UpdatePeriod</string>
+	<string name="preferences_update_period_title">Частота обновления</string>
+	<string name="preferences_update_period_desc">С какой частотой обновлять список треков</string>
 
 	<string name="useWifiOnly_key">useWifiOnly</string>
 
@@ -63,7 +67,17 @@
 		<item name="android:textStyle">bold</item>
 		<item name="android:textColor">#FFFFFFFF</item>
 		<item name="android:shadowColor">#FF000000</item>
-		<item name="android:shadowRadius">3</item>	
+		<item name="android:shadowRadius">3</item>
 	</style>
+	<string-array name="preferences_update_period_names">
+		<item>12 часов</item>
+		<item>Раз в день</item>
+		<item>Никогда</item>
+	</string-array>
+	<string-array name="preferences_update_period_values">
+		<item>12</item>
+		<item>24</item>
+		<item>0</item>
+	</string-array>
 
 </resources>

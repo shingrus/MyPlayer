@@ -2,8 +2,8 @@
 <manifest
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	package="com.shingrus.myplayer"
-	android:versionCode="1"
-	android:versionName="Myplayer v 0.5">
+	android:versionCode="5"
+	android:versionName="Myplayer v 0.55">
 	<uses-sdk
 		android:minSdkVersion="8" />
 	<uses-permission

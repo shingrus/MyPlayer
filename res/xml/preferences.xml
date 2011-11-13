@@ -3,8 +3,7 @@
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:key="first_preferencescreen">
 
-	<PreferenceCategory
-		android:title="@string/authorization_preferences_group">
+	<PreferenceCategory android:title="@string/authorization_preferences_group">
 		<EditTextPreference
 			android:key="@string/mailru_login_preference_key"
 			android:title="@string/title_mailru_email_preference"
@@ -19,8 +18,13 @@
 			android:password="true" />
 	</PreferenceCategory>
 
-	<PreferenceCategory
-		android:title="@string/other_preferences_group">
+	<PreferenceCategory android:title="@string/other_preferences_group">
+		<ListPreference
+			android:key="@string/preferences_update_period_key"
+			android:title="@string/preferences_update_period_title"
+			android:entries="@array/preferences_update_period_names"
+			android:entryValues="@array/preferences_update_period_values"
+			android:defaultValue="24"></ListPreference>
 		<CheckBoxPreference
 			android:title="@string/use_wifi_only_preferences_title"
 			android:defaultValue="true"

@@ -12,6 +12,9 @@ public class LauncherActivity extends Activity {
 		MyPlayerPreferences mpp = MyPlayerPreferences.getInstance(null);
 		Intent i;
 		if (mpp.isHasProfile()) {
+			Intent service = new Intent(this, UpdateService.class);
+			service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_TIMER);
+			startService(service);
 			i = new Intent(this, MyPlayerActivity.class);
 		} else {
 			i = new Intent(this, MyAuthorizeActivity.class);

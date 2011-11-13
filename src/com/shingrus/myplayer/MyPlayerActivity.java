@@ -41,14 +41,12 @@ public class MyPlayerActivity extends Activity {
 	private ListView lv = null;
 	private ProgressBar pb = null;
 
-	boolean updateInProgress = false;
 	Thread updateThread;
 
 	final Runnable resultUpdate = new Runnable() {
 
 		@Override
 		public void run() {
-			updateInProgress = false;
 			updateThread = null;
 			if (pb != null) {
 				pb.setVisibility(View.INVISIBLE);
@@ -205,7 +203,6 @@ public class MyPlayerActivity extends Activity {
 			updateThread.interrupt();
 			updateThread = null;
 		}
-		updateInProgress = false;
 		lv = null;
 		pb = null;
 		super.onDestroy();
@@ -239,15 +236,9 @@ public class MyPlayerActivity extends Activity {
 	}
 
 	private void startUpdate() {
-		// TODO start AsyncTask for update
-		// i decided to use handler for learning purpose
-		if (!updateInProgress) {
-			updateInProgress = true;
-
 			Intent service = new Intent(this, UpdateService.class);
-			service.putExtra(UpdateService.START_UPDATE_COMMAND, 1);
+			service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_UPDATE);
 			startService(service);
-		}
 	}
 
 	// Click Listeners

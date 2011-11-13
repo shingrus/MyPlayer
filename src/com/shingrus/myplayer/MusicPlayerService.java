@@ -57,7 +57,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public class AudioBroacastReciever extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			if (mpf.isPauseOnLoud() && intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
+			if (mpf.doPauseOnLoud() && intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
 				pause();
 			}
 		}
