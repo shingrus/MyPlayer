@@ -182,7 +182,7 @@ public class TrackList {
 							insertStmt.bindString(3, mt.getTitle());
 							insertStmt.bindString(4, mt.getUrl());
 							insertStmt.bindString(5, mt.getFilename());
-//							long rowid = insertStmt.executeInsert();
+							insertStmt.executeInsert();
 							insertStmt.clearBindings();
 						}
 					}
