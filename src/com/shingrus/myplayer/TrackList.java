@@ -45,8 +45,8 @@ public class TrackList {
 	private static final String TRACK_URL = "Url";
 	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " CHAR PRIMARY KEY NOT NULL UNIQUE ," + TRACK_ARTIST
 			+ " TEXT not null," + TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL)";
-	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ID + ","+ TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL + ","
-			+ TRACK_FILENAME + ") VALUES (?, ?, ?, ?, ?)";
+	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ID + "," + TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL
+			+ "," + TRACK_FILENAME + ") VALUES (?, ?, ?, ?, ?)";
 
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
@@ -143,16 +143,19 @@ public class TrackList {
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null, null, null);
-				if (c != null && c.moveToFirst()) {
-					do {
-						String filename = c.getString(4);
-						File f = new File(Uri.parse(filename).getPath());
-						if (!f.exists())
-							filename = "";
-						MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3), filename);
-						trackList.add(mt);
-					} while (c.moveToNext());
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, }, null, new String[] {}, null,
+						null, null);
+				if (c != null) {
+					if (c.moveToFirst()) {
+						do {
+							String filename = c.getString(4);
+							File f = new File(Uri.parse(filename).getPath());
+							if (!f.exists())
+								filename = "";
+							MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3), filename);
+							trackList.add(mt);
+						} while (c.moveToNext());
+					}
 					c.close();
 				}
 				db.close();
@@ -314,11 +317,11 @@ public class TrackList {
 		isPlaying = true;
 		dataChanged();
 	}
-	
-	public final boolean isEmpty(){
+
+	public final boolean isEmpty() {
 		return trackList.isEmpty();
 	}
-	
+
 	public final void notifyPlayStopped() {
 		isPlaying = false;
 		dataChanged();
