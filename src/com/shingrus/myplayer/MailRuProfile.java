@@ -193,7 +193,6 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 							body.append(readed);
 						}
 						if (body.length() > 0) {
-							Log.d("shingrus", body.toString());
 							try {
 								// JSONArray authData = new
 								// JSONArray(body.toString());

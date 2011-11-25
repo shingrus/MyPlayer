@@ -24,9 +24,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private static final int NOTIFICATION_ID = 11;
+	private static final int UPDATE_PLAYING_STATUS_MS = 1000;
 	MediaPlayer mp;
 	TrackList trackList;
-	// MusicTrack currentTrack;
 	String currentTitle;
 	private final IBinder mBinder = new LocalBinder();
 	boolean isPaused = false;
@@ -39,6 +39,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	BroadcastReceiver audioReceiver;
 	MyPlayerPreferences mpf;
 	private PlayingEventsListener eventsListener = null;
+
+	NotifyPlayedThread notifyPlayedTimeThread = null;
 
 	// private Handler updatesHandler;
 
@@ -63,6 +65,45 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 	}
 
+	class NotifyPlayedThread extends Thread {
+
+		boolean doWork = true;
+
+		public void stopWork() {
+			doWork = false;
+			this.notifyAll();
+			this.interrupt();
+		}
+
+		@Override
+		public void run() {
+			int position = 0;
+			do {
+				while (doWork && MusicPlayerService.this.mp != null && MusicPlayerService.this.mp.isPlaying()) {
+					position = mp.getCurrentPosition();
+					if (MusicPlayerService.this.eventsListener != null) {
+						MusicPlayerService.this.eventsListener.onPlayedPosition(position);
+					}
+					try {
+						sleep(UPDATE_PLAYING_STATUS_MS);
+					} catch (InterruptedException e) {
+					}
+				}
+				synchronized (this) {
+					if (doWork && MusicPlayerService.this.mp != null && !MusicPlayerService.this.mp.isPlaying()) {
+						try {
+							Log.d("shingrus", "" + this + "gonna sleep");
+							this.wait();
+						} catch (InterruptedException e) {
+						}
+					}
+				}
+			} while (doWork);
+
+		}
+
+	}
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -71,6 +112,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public void onCreate() {
 		mp = new MediaPlayer();
+		notifyPlayedTimeThread = new NotifyPlayedThread();
+		notifyPlayedTimeThread.start();
 		currentTitle = "";
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		trackList = TrackList.getInstance();
@@ -129,8 +172,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			break;
 		}
 
-		
-//		Intent i = new Intent(this, MyPlayerActivity.class);
+		// Intent i = new Intent(this, MyPlayerActivity.class);
 		Intent i = new Intent(this, LauncherActivity.class);
 		// i.setFlags(Intent.FLAG_ACTIVITY_SIN
 		// GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -165,6 +207,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		if (tm != null)
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
 		unregisterReceiver(audioReceiver);
+		notifyPlayedTimeThread.stopWork();
 		super.onDestroy();
 	}
 
@@ -183,6 +226,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		isPaused = false;
 		isPausedDurinngCall = false;
 		updateNotification(NotificationStatus.Playing);
+		synchronized (this.notifyPlayedTimeThread) {
+			this.notifyPlayedTimeThread.notify();
+		}
+
 	}
 
 	/**
@@ -259,6 +306,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			updateNotification(NotificationStatus.Playing);
 			isPaused = false;
 			isPausedDurinngCall = false;
+			synchronized (this.notifyPlayedTimeThread) {
+				this.notifyPlayedTimeThread.notify();
+			}
 		}
 	}
 
@@ -283,4 +333,5 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void unsetEventsListener() {
 		this.eventsListener = null;
 	}
+
 }

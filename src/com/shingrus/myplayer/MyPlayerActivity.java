@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.opengl.Visibility;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -37,9 +39,10 @@ public class MyPlayerActivity extends Activity {
 	// final Handler hUpdate = new Handler();
 	final UpdateHandler updateHandler = new UpdateHandler();
 	MyPlayerPreferences mpf;
-	TrackListFetchingStatus updateStatus;
+	TrackListFetchingStatus lastUpdateStatus;
 	private ListView lv = null;
-	private ProgressBar pb = null;
+	private ProgressBar rCornerProgressBar = null;
+	private ImageView alarmImage;
 
 	Thread updateThread;
 
@@ -48,8 +51,19 @@ public class MyPlayerActivity extends Activity {
 		@Override
 		public void run() {
 			updateThread = null;
-			if (pb != null) {
-				pb.setVisibility(View.INVISIBLE);
+			if (MyPlayerActivity.this.rCornerProgressBar != null) {
+				MyPlayerActivity.this.rCornerProgressBar.setVisibility(View.INVISIBLE);
+			}
+			
+			if (alarmImage!=null){
+				int visibility = View.INVISIBLE;
+				//for future
+				switch(lastUpdateStatus) {
+				case NEEDREAUTH:
+					visibility = View.VISIBLE;
+					break;
+				};
+				alarmImage.setVisibility(visibility);
 			}
 		}
 	};
@@ -58,6 +72,7 @@ public class MyPlayerActivity extends Activity {
 
 		@Override
 		public void onAfterUpdate(TrackListFetchingStatus updateStatus) {
+			MyPlayerActivity.this.lastUpdateStatus = updateStatus;
 			runOnUiThread(resultUpdate);
 		}
 
@@ -66,8 +81,8 @@ public class MyPlayerActivity extends Activity {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (pb!=null) {
-						pb.setVisibility(View.VISIBLE);
+					if (rCornerProgressBar!=null) {
+						rCornerProgressBar.setVisibility(View.VISIBLE);
 					}					
 				}
 			});
@@ -108,10 +123,11 @@ public class MyPlayerActivity extends Activity {
 					}
 
 					@Override
-					public void onPlayedPosition(int playedDurationSecs) {
+					public void onPlayedPosition(final int playedDurationSecs) {
 						MyPlayerActivity.this.runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
+								Log.d("shingrus", "Current position: " +playedDurationSecs);
 							}
 						});
 					}
@@ -152,7 +168,15 @@ public class MyPlayerActivity extends Activity {
 			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.activetitle);
 		}
 
-		pb = (ProgressBar) findViewById(R.id.playerTitleProgressId);
+		rCornerProgressBar = (ProgressBar) findViewById(R.id.playerTitleProgressId);
+		alarmImage = (ImageView) findViewById(R.id.playerTitleImageId);
+		alarmImage.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Log.d("shigrus", "click on alarm image");
+			}
+		});
+		
 		lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
 		lv.setOnItemClickListener(new OnItemClickListener() {
@@ -204,7 +228,7 @@ public class MyPlayerActivity extends Activity {
 			updateThread = null;
 		}
 		lv = null;
-		pb = null;
+		rCornerProgressBar = null;
 		super.onDestroy();
 	}
 
