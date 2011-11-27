@@ -124,6 +124,7 @@ public class MyPlayerActivity extends Activity {
 
 					@Override
 					public void onPlayedPosition(final int playedDurationSecs) {
+						//create this task once?
 						MyPlayerActivity.this.runOnUiThread(new Runnable() {
 							@Override
 							public void run() {

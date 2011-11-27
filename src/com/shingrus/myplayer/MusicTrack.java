@@ -82,7 +82,7 @@ public final class MusicTrack {
 
 	@Override
 	public String toString() {
-		return this.artist + "-"+ this.title;	
+		return this.artist == null ?"":this.artist  + "-"+ this.title;	
 	}
 
 	

@@ -25,7 +25,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	private static final int NOTIFICATION_ID = 11;
 	private static final int UPDATE_PLAYING_STATUS_MS = 1000;
-	MediaPlayer mp;
+	MediaPlayer mPlayer;
 	TrackList trackList;
 	String currentTitle;
 	private final IBinder mBinder = new LocalBinder();
@@ -79,8 +79,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		public void run() {
 			int position = 0;
 			do {
-				while (doWork && MusicPlayerService.this.mp != null && MusicPlayerService.this.mp.isPlaying()) {
-					position = mp.getCurrentPosition();
+				while (doWork && mPlayer != null && mPlayer.isPlaying()) {
+					position = mPlayer.getCurrentPosition();
 					if (MusicPlayerService.this.eventsListener != null) {
 						MusicPlayerService.this.eventsListener.onPlayedPosition(position);
 					}
@@ -90,9 +90,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 					}
 				}
 				synchronized (this) {
-					if (doWork && MusicPlayerService.this.mp != null && !MusicPlayerService.this.mp.isPlaying()) {
+					if (doWork && MusicPlayerService.this.mPlayer != null && !MusicPlayerService.this.mPlayer.isPlaying()) {
 						try {
-							Log.d("shingrus", "" + this + "gonna sleep");
 							this.wait();
 						} catch (InterruptedException e) {
 						}
@@ -111,11 +110,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	@Override
 	public void onCreate() {
-		mp = new MediaPlayer();
+		mPlayer = new MediaPlayer();
 		notifyPlayedTimeThread = new NotifyPlayedThread();
 		notifyPlayedTimeThread.start();
 		currentTitle = "";
-		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+		mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		trackList = TrackList.getInstance();
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -199,10 +198,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		Log.d("shingrus", "Destroy: MusicPlayerService");
 		stopForeground(true);
 		nm.cancelAll();
-		if (mp != null) {
-			if (mp.isPlaying())
-				mp.stop();
-			mp.release();
+		if (mPlayer != null) {
+			if (mPlayer.isPlaying())
+				mPlayer.stop();
+			mPlayer.release();
 		}
 		if (tm != null)
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
@@ -244,16 +243,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	private void playMusic(MusicTrack mt) {
 		if (mt != null && mt.filename.length() > 0) {
-			mp.reset();
+			mPlayer.reset();
 			updateNotification(NotificationStatus.Stopped);
 			isPaused = false;
 			isPausedDurinngCall = false;
 			try {
-				mp.setDataSource(mt.filename);
+				mPlayer.setDataSource(mt.filename);
 				currentTitle = mt.getTitle();
-				mp.setOnPreparedListener(this);
-				mp.setOnCompletionListener(this);
-				mp.prepareAsync();
+				mPlayer.setOnPreparedListener(this);
+				mPlayer.setOnCompletionListener(this);
+				mPlayer.prepareAsync();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (IllegalStateException e) {
@@ -293,8 +292,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private void pause() {
-		if (mp.isPlaying()) {
-			mp.pause();
+		if (mPlayer.isPlaying()) {
+			mPlayer.pause();
 			updateNotification(NotificationStatus.Paused);
 			isPaused = true;
 		}
@@ -302,7 +301,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	private void playPaused() {
 		if (isPaused) {
-			mp.start();
+			mPlayer.start();
 			updateNotification(NotificationStatus.Playing);
 			isPaused = false;
 			isPausedDurinngCall = false;
@@ -313,14 +312,14 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	public void playPause() {
-		if (mp.isPlaying()) {
+		if (mPlayer.isPlaying()) {
 			pause();
 		} else
 			playPaused();
 	}
 
 	public void stopMusic() {
-		mp.stop();
+		mPlayer.stop();
 		updateNotification(NotificationStatus.Stopped);
 		isPaused = false;
 		isPausedDurinngCall = false;
