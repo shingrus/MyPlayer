@@ -120,8 +120,8 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	 * 
 	 * 
 	 */
-	private final AuhorizeStatus getTokens(GrantType grantType, String... strings) {
-		AuhorizeStatus result = AuhorizeStatus.UNKNOWN;
+	private final AuthorizeStatus getTokens(GrantType grantType, String... strings) {
+		AuthorizeStatus result = AuthorizeStatus.UNKNOWN;
 		if (grantType == GrantType.TOKEN) {
 			setAccessToken("", 0);
 		}
@@ -216,16 +216,18 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 									}
 									setAccessToken(accessToken, expires_in);
 									setUID(uid);
-									result = AuhorizeStatus.SUCCESS;
+									result = AuthorizeStatus.SUCCESS;
 								}
 
 							} catch (JSONException e) {
-								result = AuhorizeStatus.INVALID;
+								result = AuthorizeStatus.INVALID;
 
 							}
 						}
+					} else if (grantType == GrantType.TOKEN && sl.getStatusCode() == 400) {
+						result = AuthorizeStatus.INVALID;
 					} else if (grantType == GrantType.PASSWORD) {
-						result = AuhorizeStatus.INVALID;
+						result = AuthorizeStatus.INVALID;
 					}
 				}
 			} catch (UnsupportedEncodingException e) {
@@ -307,7 +309,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 									result = TrackListFetchingStatus.SUCCESS;
 									Log.d("shingrus", "Got track: " + artist + "-" + title + ":" + murl);
 									if (id != null && id.length() > 0 && title != null && title.length() > 0 && murl != null && murl.length() > 0) {
-										MusicTrack mt = new MusicTrack(id, artist ,title, murl, "");
+										MusicTrack mt = new MusicTrack(id, artist, title, murl, "");
 										tl.add(mt);
 									}
 								}
@@ -340,26 +342,31 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 		TrackListFetchingStatus result = TrackListFetchingStatus.UNKNOWN;
 		int attempts = 0;
 		do {
-			accessToken = getAccessToken();
-			attempts++;
-			if (accessToken != null && accessToken.length() == 32) {
-				List<MusicTrack> newTrackList = new LinkedList<MusicTrack>();
-				result = getTrackList(newTrackList, accessToken);
-				TrackList tl = TrackList.getInstance();
-				if (result == TrackListFetchingStatus.SUCCESS) {
-					for (MusicTrack mt : newTrackList) {
-						tl.addTrack(mt);
+			AuthorizeStatus status = getAccessToken();
+			if (status == AuthorizeStatus.SUCCESS) {
+				attempts++;
+				if (accessToken != null && accessToken.length() == 32) {
+					List<MusicTrack> newTrackList = new LinkedList<MusicTrack>();
+					result = getTrackList(newTrackList, accessToken);
+					TrackList tl = TrackList.getInstance();
+					if (result == TrackListFetchingStatus.SUCCESS) {
+						for (MusicTrack mt : newTrackList) {
+							tl.addTrack(mt);
+						}
 					}
+				} else {
+					result = TrackListFetchingStatus.UPDATEACCESSTOKEN;
 				}
-			} else {
-				result = TrackListFetchingStatus.UPDATEACCESSTOKEN;
+			}
+			else if (status == AuthorizeStatus.INVALID) {
+				result = TrackListFetchingStatus.NEEDREAUTH;
 			}
 		} while (result == TrackListFetchingStatus.UPDATEACCESSTOKEN && attempts < 2);
 		return result;
 	}
 
-	private void refreshAccessToken() {
-		getTokens(GrantType.TOKEN);
+	private AuthorizeStatus refreshAccessToken() {
+		return getTokens(GrantType.TOKEN);
 	}
 
 	@Override
@@ -378,12 +385,11 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 		this.isAccessTokenChanged = true;
 	}
 
-	private final String getAccessToken() {
-		String result = null;
+	private final AuthorizeStatus getAccessToken() {
+		AuthorizeStatus result = AuthorizeStatus.SUCCESS;
 		if (this.accessToken == null || this.accessToken.length() < 32 || accessTokenValidUntil == 0 || accessTokenValidUntil < System.currentTimeMillis()) {
-			refreshAccessToken();
+			result = refreshAccessToken();
 		}
-		result = this.accessToken;
 		return result;
 	}
 
@@ -444,16 +450,16 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 			editor.putString(PASSWORD_KEY, password);
 		}
 
-		//editor.apply();
+		// editor.apply();
 		editor.commit();
 		isAccessTokenChanged = isRefreshTokenChanged = isUidChanged = true;
 	}
 
 	@Override
-	public AuhorizeStatus authorize(String login, String password) {
-		AuhorizeStatus result = getTokens(GrantType.PASSWORD, login, password);
-		if (result == AuhorizeStatus.SUCCESS && refreshToken != null && refreshToken.length() == 32) {
-			result = AuhorizeStatus.SUCCESS;
+	public AuthorizeStatus authorize(String login, String password) {
+		AuthorizeStatus result = getTokens(GrantType.PASSWORD, login, password);
+		if (result == AuthorizeStatus.SUCCESS && refreshToken != null && refreshToken.length() == 32) {
+			result = AuthorizeStatus.SUCCESS;
 		}
 		return result;
 	}

@@ -11,7 +11,7 @@ public interface MyPlayerAccountProfile {
 		SUCCESS, ERROR, NEEDREAUTH, UPDATEACCESSTOKEN, UNKNOWN
 	}
 		
-	public enum AuhorizeStatus {
+	public enum AuthorizeStatus {
 		UNKNOWN, INVALID, SUCCESS 
 	}
 	
@@ -19,7 +19,7 @@ public interface MyPlayerAccountProfile {
 	public  TrackListFetchingStatus getTrackListFromInternet();
 	public String getOAuthURL();
 //	public String getTokens(String...strings);
-	public AuhorizeStatus authorize(String login, String password);
+	public AuthorizeStatus authorize(String login, String password);
 	public boolean downloadAudioFile(String url, File whereToDownload);
 	
 	public void loadPreferences(SharedPreferences preferences); 

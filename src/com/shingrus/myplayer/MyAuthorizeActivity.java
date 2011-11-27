@@ -1,6 +1,6 @@
 package com.shingrus.myplayer;
 
-import com.shingrus.myplayer.MyPlayerAccountProfile.AuhorizeStatus;
+import com.shingrus.myplayer.MyPlayerAccountProfile.AuthorizeStatus;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -19,7 +19,7 @@ public class MyAuthorizeActivity extends Activity {
 	private MailRuAuthorization mailAuthorize;
 	private boolean authorizationInProgress = false;
 
-	class MailRuAuthorization extends AsyncTask<String, Void, AuhorizeStatus> {
+	class MailRuAuthorization extends AsyncTask<String, Void, AuthorizeStatus> {
 
 		ProgressDialog progressDialog;
 		String login, password, refreshToken, accessToken;
@@ -45,23 +45,23 @@ public class MyAuthorizeActivity extends Activity {
 		}
 
 		@Override
-		protected AuhorizeStatus doInBackground(String... params) {
-			AuhorizeStatus result = AuhorizeStatus.UNKNOWN;
+		protected AuthorizeStatus doInBackground(String... params) {
+			AuthorizeStatus result = AuthorizeStatus.UNKNOWN;
 			login = params[0];
 			password = params[1];
 
 			result = mpf.getProfile().authorize(login, password);
 			
-			if (result == AuhorizeStatus.SUCCESS) {
+			if (result == AuthorizeStatus.SUCCESS) {
 				mpf.setHasProfile(true);
 			}
 			return result;
 		}
 
 		@Override
-		protected void onPostExecute(AuhorizeStatus result) {
+		protected void onPostExecute(AuthorizeStatus result) {
 			this.progressDialog.dismiss();
-			if (result == AuhorizeStatus.SUCCESS) {
+			if (result == AuthorizeStatus.SUCCESS) {
 				Intent service = new Intent(MyAuthorizeActivity.this, UpdateService.class);
 				service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_TIMER);
 				startService(service);
@@ -72,7 +72,7 @@ public class MyAuthorizeActivity extends Activity {
 			
 				finish();
 			}
-			else if (result == AuhorizeStatus.INVALID) {
+			else if (result == AuthorizeStatus.INVALID) {
 				TextView t = (TextView) findViewById(R.id.LoginPassword_ErrorMsg);
 				t.setVisibility(View.VISIBLE);
 			}
