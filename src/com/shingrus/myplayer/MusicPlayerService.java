@@ -24,7 +24,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private static final int NOTIFICATION_ID = 11;
-	private static final int UPDATE_PLAYING_STATUS_MS = 1000;
+	private static final int UPDATE_PLAYING_STATUS_MS = 1200;
 	MediaPlayer mPlayer;
 	TrackList trackList;
 	String currentTitle;
@@ -39,10 +39,26 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	BroadcastReceiver audioReceiver;
 	MyPlayerPreferences mpf;
 	private PlayingEventsListener eventsListener = null;
+	private Handler progressHandler = new Handler();
 
-	NotifyPlayedThread notifyPlayedTimeThread = null;
+	Runnable notifyAboutProgressJob = new Runnable() {
+		public void run() {
+			PlayingEventsListener listener = MusicPlayerService.this.eventsListener;
+			if (listener != null) {
+				if (mPlayer != null && mPlayer.isPlaying()) {
+					double curPos = mPlayer.getCurrentPosition();
+					double duration = mPlayer.getDuration();
 
-	// private Handler updatesHandler;
+					int position = (int) (curPos / duration * 100);
+					listener.onPlayedPositionProgress(position);
+					progressHandler.postDelayed(this, UPDATE_PLAYING_STATUS_MS);
+				}
+				else {
+					listener.onPlayedPositionProgress(0);
+				}
+			}
+		}
+	};
 
 	public class LocalBinder extends Binder {
 		MusicPlayerService getService() {
@@ -65,44 +81,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 	}
 
-	class NotifyPlayedThread extends Thread {
-
-		boolean doWork = true;
-
-		public void stopWork() {
-			doWork = false;
-			this.notifyAll();
-			this.interrupt();
-		}
-
-		@Override
-		public void run() {
-			int position = 0;
-			do {
-				while (doWork && mPlayer != null && mPlayer.isPlaying()) {
-					position = mPlayer.getCurrentPosition();
-					if (MusicPlayerService.this.eventsListener != null) {
-						MusicPlayerService.this.eventsListener.onPlayedPosition(position);
-					}
-					try {
-						sleep(UPDATE_PLAYING_STATUS_MS);
-					} catch (InterruptedException e) {
-					}
-				}
-				synchronized (this) {
-					if (doWork && MusicPlayerService.this.mPlayer != null && !MusicPlayerService.this.mPlayer.isPlaying()) {
-						try {
-							this.wait();
-						} catch (InterruptedException e) {
-						}
-					}
-				}
-			} while (doWork);
-
-		}
-
-	}
-
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -111,8 +89,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public void onCreate() {
 		mPlayer = new MediaPlayer();
-		notifyPlayedTimeThread = new NotifyPlayedThread();
-		notifyPlayedTimeThread.start();
 		currentTitle = "";
 		mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		trackList = TrackList.getInstance();
@@ -164,6 +140,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		case Playing:
 			nTitle = getText(R.string.NotificationTitle_Playing);
 			trackList.notifyPlayStarted();
+			progressHandler.postDelayed(notifyAboutProgressJob, MusicPlayerService.UPDATE_PLAYING_STATUS_MS);
 			break;
 		case Stopped:
 			nTitle = getText(R.string.NotificationTitle_Stopped);
@@ -206,7 +183,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		if (tm != null)
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
 		unregisterReceiver(audioReceiver);
-		notifyPlayedTimeThread.stopWork();
 		super.onDestroy();
 	}
 
@@ -225,9 +201,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		isPaused = false;
 		isPausedDurinngCall = false;
 		updateNotification(NotificationStatus.Playing);
-		synchronized (this.notifyPlayedTimeThread) {
-			this.notifyPlayedTimeThread.notify();
-		}
 
 	}
 
@@ -305,9 +278,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			updateNotification(NotificationStatus.Playing);
 			isPaused = false;
 			isPausedDurinngCall = false;
-			synchronized (this.notifyPlayedTimeThread) {
-				this.notifyPlayedTimeThread.notify();
-			}
+
 		}
 	}
 
@@ -327,10 +298,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	public void setEventsListener(PlayingEventsListener listener) {
 		this.eventsListener = listener;
+		progressHandler.postDelayed(notifyAboutProgressJob, UPDATE_PLAYING_STATUS_MS);
 	}
 
 	public void unsetEventsListener() {
 		this.eventsListener = null;
 	}
 
+	public int getCurrentPosition() {
+		int result = 0;
+		if (mPlayer != null && mPlayer.isPlaying())
+			result = (int) (mPlayer.getCurrentPosition() / mPlayer.getDuration());
+		return result;
+
+	}
 }

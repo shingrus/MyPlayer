@@ -9,5 +9,5 @@ public interface PlayingEventsListener {
 	 * 
 	 * @param playedDuration
 	 */
-	public void onPlayedPosition(int playedDurationSecs);
+	public void onPlayedPositionProgress(int playedProgress);
 }

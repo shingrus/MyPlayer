@@ -42,27 +42,29 @@ public class MyPlayerActivity extends Activity {
 	TrackListFetchingStatus lastUpdateStatus;
 	private ListView lv = null;
 	private ProgressBar rCornerProgressBar = null;
-	private ImageView alarmImage;
-
-	Thread updateThread;
+	private ImageView alarmImage = null;
+	SeekBar progressBar = null;
+	
+	Handler handleProgressUpdate = new Handler();
+	
 
 	final Runnable resultUpdate = new Runnable() {
 
 		@Override
 		public void run() {
-			updateThread = null;
 			if (MyPlayerActivity.this.rCornerProgressBar != null) {
 				MyPlayerActivity.this.rCornerProgressBar.setVisibility(View.INVISIBLE);
 			}
-			
-			if (alarmImage!=null){
+
+			if (alarmImage != null) {
 				int visibility = View.INVISIBLE;
-				//for future
-				switch(lastUpdateStatus) {
+				// for future
+				switch (lastUpdateStatus) {
 				case NEEDREAUTH:
 					visibility = View.VISIBLE;
 					break;
-				};
+				}
+				;
 				alarmImage.setVisibility(visibility);
 			}
 		}
@@ -81,9 +83,9 @@ public class MyPlayerActivity extends Activity {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (rCornerProgressBar!=null) {
+					if (rCornerProgressBar != null) {
 						rCornerProgressBar.setVisibility(View.VISIBLE);
-					}					
+					}
 				}
 			});
 		}
@@ -109,6 +111,7 @@ public class MyPlayerActivity extends Activity {
 
 					@Override
 					public void onPlay() {
+						
 					}
 
 					@Override
@@ -117,21 +120,19 @@ public class MyPlayerActivity extends Activity {
 
 					@Override
 					public void onChangePlayingItem(int position) {
-						// int pos = position - lv.getFirstVisiblePosition();
-						// pos /=2;
-						// lv.setSelection(pos);
 					}
 
 					@Override
-					public void onPlayedPosition(final int playedDurationSecs) {
-						//create this task once?
-						MyPlayerActivity.this.runOnUiThread(new Runnable() {
+					public void onPlayedPositionProgress(final int playedProgress) {
+						runOnUiThread(new Runnable() {	
 							@Override
 							public void run() {
-								Log.d("shingrus", "Current position: " +playedDurationSecs);
+								MyPlayerActivity.this.progressBar.setProgress(playedProgress);
+								Log.d("shingrus", "Got postion update: " + playedProgress);
 							}
 						});
 					}
+
 				});
 			}
 		};
@@ -177,7 +178,7 @@ public class MyPlayerActivity extends Activity {
 				Log.d("shigrus", "click on alarm image");
 			}
 		});
-		
+
 		lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
 		lv.setOnItemClickListener(new OnItemClickListener() {
@@ -191,14 +192,14 @@ public class MyPlayerActivity extends Activity {
 
 		Intent service = new Intent(this, UpdateService.class);
 		bindService(service, updateServiceConnection, Context.BIND_AUTO_CREATE);
-		// SeekBar sb = (SeekBar) findViewById(R.id.playingSeek);
-		// sb.setClickable(false);
-		// sb.setOnTouchListener(new View.OnTouchListener() {
-		// @Override
-		// public boolean onTouch(View v, MotionEvent event) {
-		// return true;
-		// }
-		// });
+		progressBar = (SeekBar) findViewById(R.id.playingSeek);
+		progressBar.setClickable(false);
+		progressBar.setOnTouchListener(new View.OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				return true;
+			}
+		});
 	}
 
 	@Override
@@ -224,10 +225,7 @@ public class MyPlayerActivity extends Activity {
 			unbindService(musicPlayerConnection);
 			musicPlayerConnection = null;
 		}
-		if (updateThread != null) {
-			updateThread.interrupt();
-			updateThread = null;
-		}
+
 		lv = null;
 		rCornerProgressBar = null;
 		super.onDestroy();
@@ -261,9 +259,9 @@ public class MyPlayerActivity extends Activity {
 	}
 
 	private void startUpdate() {
-			Intent service = new Intent(this, UpdateService.class);
-			service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_UPDATE);
-			startService(service);
+		Intent service = new Intent(this, UpdateService.class);
+		service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_UPDATE);
+		startService(service);
 	}
 
 	// Click Listeners

@@ -1,50 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="vertical"
-	android:layout_width="fill_parent"
-	android:layout_height="fill_parent"
-	android:weightSum="1">
-	<ListView
-		android:layout_width="match_parent"
-		android:layout_height="fill_parent"
-		android:layout_gravity="top"
-		android:id="@+id/playListView"
-		android:layout_weight="1.0"></ListView>
-	<LinearLayout
-		android:orientation="horizontal"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:weightSum="1"
-		android:gravity="center_horizontal">
-			<!-- <SeekBar
-		android:layout_width="match_parent"
-		android:id="@+id/playingSeek"
-		android:layout_height="wrap_content"
-		android:enabled="false" /> -->
-		<Button
-			android:text="@string/rewindButtonText"
-			android:layout_height="wrap_content"
-			android:layout_width="wrap_content"
-			android:onClick="onClickRewind"
-			android:layout_gravity="center_horizontal" />
-		<Button
-			android:text="@string/playButtonText"
-			android:layout_height="wrap_content"
-			android:layout_width="wrap_content"
-			android:onClick="onClickPlayPause"
-			android:layout_gravity="center_horizontal" />
-		<Button
-			android:text="@string/stopButtonText"
-			android:id="@+id/button1"
-			android:onClick="onClickStop"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"></Button>
-		<Button
-			android:text="@string/forwardButtonText"
-			android:layout_height="wrap_content"
-			android:layout_width="wrap_content"
-			android:onClick="onClickForward"
-			android:layout_gravity="center_horizontal" />
-	</LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:weightSum="1" >
+
+    <ListView
+        android:id="@+id/playListView"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="top"
+        android:layout_weight="1.0" >
+    </ListView>
+
+    <SeekBar
+        android:id="@+id/playingSeek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:enabled="false" 
+        style="@style/seekBar"/>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:weightSum="1" >
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:onClick="onClickRewind"
+            android:text="@string/rewindButtonText" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:onClick="onClickPlayPause"
+            android:text="@string/playButtonText" />
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClickStop"
+            android:text="@string/stopButtonText" >
+        </Button>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:onClick="onClickForward"
+            android:text="@string/forwardButtonText" />
+    </LinearLayout>
+
 </LinearLayout>

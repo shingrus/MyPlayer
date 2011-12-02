@@ -1,83 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">MyPlayer</string>
-	<string name="authorization_preferences_group">Данные авторизации</string>
 
-	<string name="preferences_activity_name">MyPlayerPreferences</string>
-	<string name="authorize_activity_name">MyPlayerAuthorize</string>
-	<string name="oauth_activity_name">MyPlayerAuthorize</string>
+    <string name="app_name">MyPlayer</string>
+    <string name="authorization_preferences_group">Данные авторизации</string>
+    <string name="preferences_activity_name">MyPlayerPreferences</string>
+    <string name="authorize_activity_name">MyPlayerAuthorize</string>
+    <string name="oauth_activity_name">MyPlayerAuthorize</string>
+    <string name="mailru_login_preference_key">mailru_email_preference</string>
+    <string name="title_mailru_email_preference">Mail.Ru E-mail</string>
+    <string name="summary_mailru_email_preference">Ваш почтовый ящик, например yermakov@mail.ru</string>
+    <string name="dialog_title_mailru_email_preference">Mail.Ru E-mail</string>
+    <string name="mailru_password_preference_key">mailru_password_preference</string>
+    <string name="title_mailru_password_preference">Mail.Ru Password</string>
+    <string name="summary_mailru_password_preference">Ваш пароль к почтовому ящику</string>
+    <string name="dialog_title_mailru_password_preference">Mail.Ru Password</string>
+    <string name="other_preferences_group">Другие настройки</string>
+    <string name="preferences_update_period_key">UpdatePeriod</string>
+    <string name="preferences_update_period_title">Частота обновления</string>
+    <string name="preferences_update_period_desc">С какой частотой обновлять список треков</string>
+    <string name="useWifiOnly_key">useWifiOnly</string>
+    <string name="use_wifi_only_preferences_title">Обновление только через WIFI</string>
+    <string name="use_wifi_only_preferences_desc">Новые треки будут скачиваться только через wi-fi</string>
+    <string name="pauseOnLoud_key">pauseOnLoud</string>
+    <string name="pause_on_loud_preferences_title">Пауза, если отключены наушники</string>
+    <string name="pause_on_loud_preferences_desc"></string>
+    <string name="pauseOnCall_key">pauseOnLoud</string>
+    <string name="pause_on_call_preferences_title">Ставить на паузу во время звонка.</string>
+    <string name="pause_on_call_preferences_desc"></string>
+    <string name="menu_preferences_item_name">Settings</string>
+    <string name="menu_update_item_name">Update</string>
+    <string name="menu_reauth_item_name">Re-Authorize</string>
+    <string name="forwardButtonText">Next</string>
+    <string name="rewindButtonText">Previous</string>
+    <string name="playButtonText">Play/Pause</string>
+    <string name="stopButtonText">Stop</string>
+    <string name="LoginPassword_LoginTitle">Login:</string>
+    <string name="LoginPassword_PasswordTitle">Password:</string>
+    <string name="LoginPassword_LoginIncorrectErrorText">Login and Password are incorrect!</string>
+    <string name="LoginPassword_ServiceSelectTitle">Service provider:</string>
+    <string name="LoginPassword_LoginButton">Login</string>
+    <string name="LoginPassword_SpinnerDialogText">Authorization in progress...</string>
+    <string name="NotificationTitle_Playing">Playing</string>
+    <string name="NotificationTitle_Paused">Paused</string>
+    <string name="NotificationTitle_Stopped">Stopped</string>
 
+    <style name="titleBarStyle">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:shadowColor">#FF000000</item>
+        <item name="android:shadowRadius">3</item>
+    </style>
+    <style name="seekBar">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:minHeight">20dip</item>
+        <item name="android:maxHeight">20dip</item>
+        <item name="android:thumbOffset">8px</item>
+        <item name="android:focusable">true</item>
+    </style>
 
-
-	<string name="mailru_login_preference_key">mailru_email_preference</string>
-	<string name="title_mailru_email_preference">Mail.Ru E-mail</string>
-	<string name="summary_mailru_email_preference">Ваш почтовый ящик, например yermakov@mail.ru</string>
-	<string name="dialog_title_mailru_email_preference">Mail.Ru E-mail</string>
-
-	<string name="mailru_password_preference_key">mailru_password_preference</string>
-	<string name="title_mailru_password_preference">Mail.Ru Password</string>
-	<string name="summary_mailru_password_preference">Ваш пароль к почтовому ящику</string>
-	<string name="dialog_title_mailru_password_preference">Mail.Ru Password</string>
-
-	<string name="other_preferences_group">Другие настройки</string>
-
-	<string name="preferences_update_period_key">UpdatePeriod</string>
-	<string name="preferences_update_period_title">Частота обновления</string>
-	<string name="preferences_update_period_desc">С какой частотой обновлять список треков</string>
-
-	<string name="useWifiOnly_key">useWifiOnly</string>
-
-	<string name="use_wifi_only_preferences_title">Обновление только через WIFI</string>
-	<string name="use_wifi_only_preferences_desc">Новые треки будут скачиваться только через wi-fi</string>
-
-
-	<string name="pauseOnLoud_key">pauseOnLoud</string>
-
-	<string name="pause_on_loud_preferences_title">Пауза, если отключены наушники</string>
-	<string name="pause_on_loud_preferences_desc"></string>
-
-	<string name="pauseOnCall_key">pauseOnLoud</string>
-
-	<string name="pause_on_call_preferences_title">Ставить на паузу во время звонка.</string>
-	<string name="pause_on_call_preferences_desc"></string>
-
-
-
-	<string name="menu_preferences_item_name">Settings</string>
-	<string name="menu_update_item_name">Update</string>
-	<string name="menu_reauth_item_name">Re-Authorize</string>
-
-	<string name="forwardButtonText">Next</string>
-	<string name="rewindButtonText">Previous</string>
-	<string name="playButtonText">Play/Pause</string>
-	<string name="stopButtonText">Stop</string>
-	<string name="LoginPassword_LoginTitle">Login:</string>
-	<string name="LoginPassword_PasswordTitle">Password:</string>
-	<string name="LoginPassword_LoginIncorrectErrorText">Login and Password are incorrect!</string>
-
-	<string name="LoginPassword_ServiceSelectTitle">Service provider:</string>
-	<string name="LoginPassword_LoginButton">Login</string>
-	<string name="LoginPassword_SpinnerDialogText">Authorization in progress...</string>
-
-
-	<string name="NotificationTitle_Playing">Playing</string>
-	<string name="NotificationTitle_Paused">Paused</string>
-	<string name="NotificationTitle_Stopped">Stopped</string>
-	<style name="titleBarStyle">
-		<item name="android:textStyle">bold</item>
-		<item name="android:textColor">#FFFFFFFF</item>
-		<item name="android:shadowColor">#FF000000</item>
-		<item name="android:shadowRadius">3</item>
-	</style>
-	<string-array name="preferences_update_period_names">
-		<item>12 часов</item>
-		<item>Раз в день</item>
-		<item>Никогда</item>
-	</string-array>
-	<string-array name="preferences_update_period_values">
-		<item>12</item>
-		<item>24</item>
-		<item>0</item>
-	</string-array>
+    <string-array name="preferences_update_period_names">
+        <item>12 часов</item>
+        <item>Раз в день</item>
+        <item>Никогда</item>
+    </string-array>
+    <string-array name="preferences_update_period_values">
+        <item>12</item>
+        <item>24</item>
+        <item>0</item>
+    </string-array>
 
 </resources>
