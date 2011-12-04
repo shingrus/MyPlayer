@@ -26,6 +26,8 @@ public class MyPlayerPreferences {
 	private boolean isProfileChanged = false;
 
 	public static final int CONNECTION_TIMEOUT = 15 * 1000;
+	
+	public static final int UPDATE_PLAYING_STATUS_MS = 1200;
 
 	public void storePreferences(Context ctx) {
 		if (ctx != null) {

@@ -5,9 +5,4 @@ public interface PlayingEventsListener {
 	public void onPause();
 	public void onStop();
 	public void onPlay();
-	/**
-	 * 
-	 * @param playedDuration
-	 */
-	public void onPlayedPositionProgress(int playedProgress);
 }

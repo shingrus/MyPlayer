@@ -24,7 +24,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private static final int NOTIFICATION_ID = 11;
-	private static final int UPDATE_PLAYING_STATUS_MS = 1200;
 	MediaPlayer mPlayer;
 	TrackList trackList;
 	String currentTitle;
@@ -39,26 +38,27 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	BroadcastReceiver audioReceiver;
 	MyPlayerPreferences mpf;
 	private PlayingEventsListener eventsListener = null;
-	private Handler progressHandler = new Handler();
 
-	Runnable notifyAboutProgressJob = new Runnable() {
-		public void run() {
-			PlayingEventsListener listener = MusicPlayerService.this.eventsListener;
-			if (listener != null) {
-				if (mPlayer != null && mPlayer.isPlaying()) {
-					double curPos = mPlayer.getCurrentPosition();
-					double duration = mPlayer.getDuration();
+	// private Handler progressHandler = new Handler();
 
-					int position = (int) (curPos / duration * 100);
-					listener.onPlayedPositionProgress(position);
-					progressHandler.postDelayed(this, UPDATE_PLAYING_STATUS_MS);
-				}
-				else {
-					listener.onPlayedPositionProgress(0);
-				}
-			}
-		}
-	};
+	// Runnable notifyAboutProgressJob = new Runnable() {
+	// public void run() {
+	// PlayingEventsListener listener = MusicPlayerService.this.eventsListener;
+	// if (listener != null) {
+	// if (mPlayer != null && mPlayer.isPlaying()) {
+	// double curPos = mPlayer.getCurrentPosition();
+	// double duration = mPlayer.getDuration();
+	//
+	// int position = (int) (curPos / duration * 100);
+	// listener.onPlayedPositionProgress(position);
+	// // progressHandler.postDelayed(this, UPDATE_PLAYING_STATUS_MS);
+	// }
+	// else {
+	// listener.onPlayedPositionProgress(0);
+	// }
+	// }
+	// }
+	// };
 
 	public class LocalBinder extends Binder {
 		MusicPlayerService getService() {
@@ -140,11 +140,14 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		case Playing:
 			nTitle = getText(R.string.NotificationTitle_Playing);
 			trackList.notifyPlayStarted();
-			progressHandler.postDelayed(notifyAboutProgressJob, MusicPlayerService.UPDATE_PLAYING_STATUS_MS);
+			if (eventsListener != null)
+				eventsListener.onPlay();
 			break;
 		case Stopped:
 			nTitle = getText(R.string.NotificationTitle_Stopped);
 			trackList.notifyPlayStopped();
+			if (eventsListener != null)
+				eventsListener.onStop();
 			break;
 		}
 
@@ -298,18 +301,37 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	public void setEventsListener(PlayingEventsListener listener) {
 		this.eventsListener = listener;
-		progressHandler.postDelayed(notifyAboutProgressJob, UPDATE_PLAYING_STATUS_MS);
+		// progressHandler.postDelayed(notifyAboutProgressJob,
+		// UPDATE_PLAYING_STATUS_MS);
 	}
 
 	public void unsetEventsListener() {
 		this.eventsListener = null;
 	}
 
+	public void setPosition(int percent) {
+		if (mPlayer !=null && mPlayer.isPlaying()) {
+			double mult = (double)percent / 100;
+			int msec = (int) (mPlayer.getDuration()*mult);
+			Log.d("shingrus", "New position: "+ msec);
+			mPlayer.seekTo(msec);
+		}
+	}
 	public int getCurrentPosition() {
 		int result = 0;
-		if (mPlayer != null && mPlayer.isPlaying())
-			result = (int) (mPlayer.getCurrentPosition() / mPlayer.getDuration());
+		if (mPlayer != null && mPlayer.isPlaying()) {
+			double currentPosition = mPlayer.getCurrentPosition();
+			double duration = mPlayer.getDuration();
+			if (duration != 0)
+				result = (int) (currentPosition / duration * 100);
+		}
 		return result;
 
+	}
+
+	public boolean isPlaying() {
+		if (mPlayer != null)
+			return mPlayer.isPlaying();
+		return false;
 	}
 }

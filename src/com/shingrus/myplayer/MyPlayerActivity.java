@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.provider.ContactsContract.CommonDataKinds.Event;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -36,7 +37,6 @@ public class MyPlayerActivity extends Activity {
 	ServiceConnection musicPlayerConnection, updateServiceConnection;
 	MusicPlayerService playerService = null;
 	UpdateService updateService = null;
-	// final Handler hUpdate = new Handler();
 	final UpdateHandler updateHandler = new UpdateHandler();
 	MyPlayerPreferences mpf;
 	TrackListFetchingStatus lastUpdateStatus;
@@ -44,9 +44,11 @@ public class MyPlayerActivity extends Activity {
 	private ProgressBar rCornerProgressBar = null;
 	private ImageView alarmImage = null;
 	SeekBar progressBar = null;
-	
-	Handler handleProgressUpdate = new Handler();
-	
+	boolean isPlaying = false;
+	boolean touchingProgress = false;
+	int newPosition = 0;
+
+	Handler handleProgressUpdate = null;
 
 	final Runnable resultUpdate = new Runnable() {
 
@@ -66,6 +68,21 @@ public class MyPlayerActivity extends Activity {
 				}
 				;
 				alarmImage.setVisibility(visibility);
+			}
+		}
+	};
+
+	final Runnable progressUpdateJob = new Runnable() {
+		@Override
+		public void run() {
+			if (playerService != null && progressBar != null) {
+				if (!touchingProgress) {
+					int playedProgress = playerService.getCurrentPosition();
+					progressBar.setProgress(playedProgress);
+//					Log.d("shingrus", "Got postion update: " + playedProgress);
+				}
+				if (isPlaying)
+					handleProgressUpdate.postDelayed(progressUpdateJob, MyPlayerPreferences.UPDATE_PLAYING_STATUS_MS);
 			}
 		}
 	};
@@ -107,11 +124,14 @@ public class MyPlayerActivity extends Activity {
 
 					@Override
 					public void onStop() {
+						isPlaying = false;
+						progressBar.setProgress(0);
 					}
 
 					@Override
 					public void onPlay() {
-						
+						isPlaying = true;
+						startProgressUpdate();
 					}
 
 					@Override
@@ -122,18 +142,10 @@ public class MyPlayerActivity extends Activity {
 					public void onChangePlayingItem(int position) {
 					}
 
-					@Override
-					public void onPlayedPositionProgress(final int playedProgress) {
-						runOnUiThread(new Runnable() {	
-							@Override
-							public void run() {
-								MyPlayerActivity.this.progressBar.setProgress(playedProgress);
-								Log.d("shingrus", "Got postion update: " + playedProgress);
-							}
-						});
-					}
-
 				});
+				if (playerService.isPlaying()) {
+
+				}
 			}
 		};
 		updateServiceConnection = new ServiceConnection() {
@@ -160,6 +172,9 @@ public class MyPlayerActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		handleProgressUpdate = new Handler();
+		isPlaying = false;
+		touchingProgress = false;
 		boolean isCustomTitileSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 		Log.d("shingrus", "Creating Player Activity");
 		Intent i = new Intent(this, MusicPlayerService.class);
@@ -194,10 +209,47 @@ public class MyPlayerActivity extends Activity {
 		bindService(service, updateServiceConnection, Context.BIND_AUTO_CREATE);
 		progressBar = (SeekBar) findViewById(R.id.playingSeek);
 		progressBar.setClickable(false);
+		progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				touchingProgress = false;
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+				touchingProgress = true;
+				newPosition = 0;
+			}
+
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				if (fromUser && playerService !=null) {
+//					Log.d("shingrus", "Gonna set position: " + progress);
+					newPosition = progress;
+				}
+			}
+		});
 		progressBar.setOnTouchListener(new View.OnTouchListener() {
 			@Override
-			public boolean onTouch(View v, MotionEvent event) {
-				return true;
+			public boolean onTouch(View v, MotionEvent motion) {
+				boolean result = true;
+				if (isPlaying) {
+					result = false;
+					switch (motion.getAction()) {
+					case MotionEvent.ACTION_DOWN:
+//						Log.d("shingrus", "ACTION_DOWN");
+						break;
+					case MotionEvent.ACTION_MOVE:
+//						Log.d("shingrus", "ACTION_MOVE: " + motion);
+						break;
+					case MotionEvent.ACTION_UP:
+//						Log.d("shingrus", "ACTION_UP");
+						playerService.setPosition(newPosition);
+						break;
+					}
+				}
+				return result;
 			}
 		});
 	}
@@ -213,15 +265,19 @@ public class MyPlayerActivity extends Activity {
 	@Override
 	protected void onDestroy() {
 		Log.i("shingrus", "Destroying Player activity");
+		isPlaying = false;
+		handleProgressUpdate.removeCallbacks(progressUpdateJob);
 		if (trackList != null)
 			trackList.dropAdapter();
 		if (updateService != null) {
 			unbindService(updateServiceConnection);
+			updateService = null;
 			updateServiceConnection = null;
 		}
 		if (musicPlayerConnection != null) {
 			if (playerService != null)
 				playerService.unsetEventsListener();
+			playerService = null;
 			unbindService(musicPlayerConnection);
 			musicPlayerConnection = null;
 		}
@@ -280,6 +336,10 @@ public class MyPlayerActivity extends Activity {
 
 	public void onClickStop(View v) {
 		playerService.stopMusic();
+	}
+
+	private void startProgressUpdate() {
+		handleProgressUpdate.postDelayed(progressUpdateJob, MyPlayerPreferences.UPDATE_PLAYING_STATUS_MS);
 	}
 
 }
