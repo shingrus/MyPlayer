@@ -136,6 +136,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		switch (nStatus) {
 		case Paused:
 			nTitle = getText(R.string.NotificationTitle_Paused);
+			if (eventsListener != null)
+				eventsListener.onPause();
 			break;
 		case Playing:
 			nTitle = getText(R.string.NotificationTitle_Playing);
@@ -319,11 +321,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 	public int getCurrentPosition() {
 		int result = 0;
-		if (mPlayer != null && mPlayer.isPlaying()) {
+		if (mPlayer != null && (isPaused ||  mPlayer.isPlaying())) {
 			double currentPosition = mPlayer.getCurrentPosition();
 			double duration = mPlayer.getDuration();
 			if (duration != 0)
-				result = (int) (currentPosition / duration * 100);
+				result = (int) (currentPosition / duration * 100)+1;
 		}
 		return result;
 

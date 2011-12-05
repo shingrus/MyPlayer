@@ -125,17 +125,19 @@ public class MyPlayerActivity extends Activity {
 					@Override
 					public void onStop() {
 						isPlaying = false;
-						progressBar.setProgress(0);
+//						progressBar.setProgress(0);
+						progressUpdate();
 					}
 
 					@Override
 					public void onPlay() {
 						isPlaying = true;
-						startProgressUpdate();
+						progressUpdate();
 					}
 
 					@Override
 					public void onPause() {
+						isPlaying=false;
 					}
 
 					@Override
@@ -144,7 +146,8 @@ public class MyPlayerActivity extends Activity {
 
 				});
 				if (playerService.isPlaying()) {
-
+					isPlaying = true;
+					progressUpdate();
 				}
 			}
 		};
@@ -338,7 +341,7 @@ public class MyPlayerActivity extends Activity {
 		playerService.stopMusic();
 	}
 
-	private void startProgressUpdate() {
+	private void progressUpdate() {
 		handleProgressUpdate.postDelayed(progressUpdateJob, MyPlayerPreferences.UPDATE_PLAYING_STATUS_MS);
 	}
 
