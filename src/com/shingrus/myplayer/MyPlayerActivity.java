@@ -180,7 +180,7 @@ public class MyPlayerActivity extends Activity {
 		touchingProgress = false;
 		boolean isCustomTitileSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 		Log.d("shingrus", "Creating Player Activity");
-		Intent i = new Intent(this, MusicPlayerService.class);
+		Intent i = new Intent(getApplicationContext(), MusicPlayerService.class);
 		this.bindService(i, musicPlayerConnection, Context.BIND_AUTO_CREATE);
 		setContentView(R.layout.playlist);
 
