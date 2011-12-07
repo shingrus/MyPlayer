@@ -177,7 +177,7 @@ public class TrackList {
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
-					trackList.add(mt);
+					trackList.add(0,mt);
 					if (dbHelper != null) {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
