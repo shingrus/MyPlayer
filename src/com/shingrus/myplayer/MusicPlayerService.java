@@ -94,7 +94,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		trackList = TrackList.getInstance();
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		notification = new Notification(R.drawable.ringtone, "", System.currentTimeMillis());
+		notification = new Notification(R.drawable.launcher, "", System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		updateNotification(NotificationStatus.Stopped);
 		audioReceiver = new AudioBroacastReciever();
