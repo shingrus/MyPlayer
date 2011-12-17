@@ -79,7 +79,8 @@ public class MyPlayerActivity extends Activity {
 				if (!touchingProgress) {
 					int playedProgress = playerService.getCurrentPosition();
 					progressBar.setProgress(playedProgress);
-//					Log.d("shingrus", "Got postion update: " + playedProgress);
+					// Log.d("shingrus", "Got postion update: " +
+					// playedProgress);
 				}
 				if (isPlaying)
 					handleProgressUpdate.postDelayed(progressUpdateJob, MyPlayerPreferences.UPDATE_PLAYING_STATUS_MS);
@@ -125,7 +126,7 @@ public class MyPlayerActivity extends Activity {
 					@Override
 					public void onStop() {
 						isPlaying = false;
-//						progressBar.setProgress(0);
+						// progressBar.setProgress(0);
 						progressUpdate();
 					}
 
@@ -137,11 +138,29 @@ public class MyPlayerActivity extends Activity {
 
 					@Override
 					public void onPause() {
-						isPlaying=false;
+						isPlaying = false;
 					}
 
 					@Override
 					public void onChangePlayingItem(int position) {
+						int toppos = lv.getFirstVisiblePosition();
+						int lastpos = lv.getLastVisiblePosition();
+						
+						if (position > lastpos || position < toppos) {// to scroll only if position is invisible
+							
+							int visibleCount = lastpos-toppos;
+							int halfVisible = visibleCount /2;
+							int newpos;
+							if (position <= halfVisible) 
+								newpos = 0;
+							else if (position > lv.getCount() -1 - halfVisible )
+								newpos = lv.getCount()-1 - visibleCount;
+							else 
+								newpos = position - halfVisible;
+							
+							Log.d("shingrus", "Set new position: " + newpos);
+							lv.setSelection(newpos);
+						}
 					}
 
 				});
@@ -227,8 +246,8 @@ public class MyPlayerActivity extends Activity {
 
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				if (fromUser && playerService !=null) {
-//					Log.d("shingrus", "Gonna set position: " + progress);
+				if (fromUser && playerService != null) {
+					// Log.d("shingrus", "Gonna set position: " + progress);
 					newPosition = progress;
 				}
 			}
@@ -240,14 +259,12 @@ public class MyPlayerActivity extends Activity {
 				if (isPlaying) {
 					result = false;
 					switch (motion.getAction()) {
-					case MotionEvent.ACTION_DOWN:
-//						Log.d("shingrus", "ACTION_DOWN");
-						break;
-					case MotionEvent.ACTION_MOVE:
-//						Log.d("shingrus", "ACTION_MOVE: " + motion);
-						break;
+					// case MotionEvent.ACTION_DOWN:
+					// break;
+					// case MotionEvent.ACTION_MOVE:
+					// break;
 					case MotionEvent.ACTION_UP:
-//						Log.d("shingrus", "ACTION_UP");
+						// Log.d("shingrus", "ACTION_UP");
 						playerService.setPosition(newPosition);
 						break;
 					}
