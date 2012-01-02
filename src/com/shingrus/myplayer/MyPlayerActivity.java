@@ -126,7 +126,6 @@ public class MyPlayerActivity extends Activity {
 					@Override
 					public void onStop() {
 						isPlaying = false;
-						// progressBar.setProgress(0);
 						progressUpdate();
 					}
 

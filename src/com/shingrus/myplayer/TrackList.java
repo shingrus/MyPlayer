@@ -44,8 +44,10 @@ public class TrackList {
 	private static final String TRACK_ID = "Id";
 	private static final String TRACK_URL = "Url";
 	private static final String TRACK_FLAGS = "Flags";
+	private static final String TRACK_POSITION = "Position";
 	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " CHAR PRIMARY KEY NOT NULL UNIQUE ," + TRACK_ARTIST
-			+ " TEXT not null," + TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL, "+TRACK_FLAGS+" INT DEFAULT 0)";
+			+ " TEXT not null," + TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL, " + TRACK_FLAGS
+			+ " INT DEFAULT 0, "+TRACK_POSITION+" INT DEFAULT 0)";
 	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ID + "," + TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL
 			+ "," + TRACK_FILENAME + ") VALUES (?, ?, ?, ?, ?)";
 
@@ -144,8 +146,8 @@ public class TrackList {
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, TRACK_FLAGS, }, null, new String[] {}, null,
-						null, null);
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, TRACK_FLAGS, }, null,
+						new String[] {}, null, null, null);
 				if (c != null) {
 					if (c.moveToFirst()) {
 						do {
@@ -177,7 +179,7 @@ public class TrackList {
 			Runnable r = new Runnable() {
 				@Override
 				public void run() {
-					trackList.add(0,mt);
+					trackList.add(0, mt);
 					if (dbHelper != null) {
 						SQLiteDatabase db = dbHelper.getWritableDatabase();
 						if (db != null) {
@@ -283,12 +285,11 @@ public class TrackList {
 				iteratePosition++;
 				if (iteratePosition >= trackList.size())
 					iteratePosition = 0;
-			} else {
+			} else if (direction == Direction.PREVIOUS) {
 				--iteratePosition;
 				if (iteratePosition < 0)
 					iteratePosition = trackList.size() - 1;
 			}
-
 			if (trackList.get(iteratePosition).filename.length() > 0) {
 				mt = trackList.get(iteratePosition);
 				break;
