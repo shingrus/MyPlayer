@@ -1,5 +1,7 @@
 package com.shingrus.myplayer;
 
+import javax.xml.datatype.Duration;
+
 
 public final class MusicTrack {
 
@@ -11,8 +13,7 @@ public final class MusicTrack {
 	};
 	
 	public String title, id, url, filename, artist;
-	private int Duration = 0;
-//	private MusicTrackStatus status = MusicTrackStatus.NEW;
+	private int duration = 0;
 	
 	public String getTitle() {
 		return title;
@@ -32,12 +33,13 @@ public final class MusicTrack {
 	 * @param url - String Track URL
 	 * @param filename - String
 	 */
-	public MusicTrack(String id, String artist, String title, String url, String filename) {
+	public MusicTrack(String id, String artist, String title, String url, String filename, int duration) {
 		this.artist = artist;
 		this.title = title;
 		this.id = id;
 		this.url = url;
 		this.filename = filename;
+		this.duration = duration;
 	}
 
 	public void setTitle(String title) {
@@ -46,11 +48,11 @@ public final class MusicTrack {
 	}
 
 	public int getDuration() {
-		return Duration;
+		return duration;
 	}
 
 	public void setDuration(int duration) {
-		Duration = duration;
+		this.duration = duration;
 	}
 
 	public String getId() {
@@ -59,7 +61,6 @@ public final class MusicTrack {
 
 	public void setId(String id) {
 		this.id = id;
-//		Log.i("shingrus", "MT: Setted new id: " + this.id);
 	}
 
 	public String getUrl() {
@@ -78,6 +79,7 @@ public final class MusicTrack {
 
 	public void setFilename(String filename) {
 		this.filename = filename;
+		//good place for loading duration
 	}
 
 	@Override

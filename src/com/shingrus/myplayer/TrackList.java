@@ -36,7 +36,7 @@ public class TrackList {
 
 	public static final int LIMIT_TRACKS = 1024;
 	public static final String DATABASE_NAME = "TrackList";
-	public static final int DATABASE_VERSION = 1;
+	public static final int DATABASE_VERSION = 3;
 	public static final String TABLE_NAME = "track";
 	private static final String TRACK_ARTIST = "Artist";
 	private static final String TRACK_TITLE = "Title";
@@ -45,12 +45,12 @@ public class TrackList {
 	private static final String TRACK_URL = "Url";
 	private static final String TRACK_FLAGS = "Flags";
 	private static final String TRACK_POSITION = "Position";
+	private static final String TRACK_DURATION = "Duration";
 	private static final String CREATE_DB = "CREATE TABLE " + TABLE_NAME + "(" + TRACK_ID + " CHAR PRIMARY KEY NOT NULL UNIQUE ," + TRACK_ARTIST
 			+ " TEXT not null," + TRACK_TITLE + " TEXT not null, " + TRACK_FILENAME + " TEXT , " + TRACK_URL + " TEXT NOT NULL, " + TRACK_FLAGS
-			+ " INT DEFAULT 0, "+TRACK_POSITION+" INT DEFAULT 0)";
+			+ " INT DEFAULT 0, " + TRACK_DURATION + " INT DEFAULT 0," + TRACK_POSITION + " INT DEFAULT 0)";
 	private static final String TRACK_INSERT_STMNT = "INSERT INTO " + TABLE_NAME + " (" + TRACK_ID + "," + TRACK_ARTIST + "," + TRACK_TITLE + "," + TRACK_URL
 			+ "," + TRACK_FILENAME + ") VALUES (?, ?, ?, ?, ?)";
-
 	private static TrackList trackListInstance;
 	private TrackListAdapter adapter;
 	DBHelper dbHelper;
@@ -100,7 +100,15 @@ public class TrackList {
 				text.setTextColor(0xAAFF0000);
 			}
 			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
-			text.setText(mt.getFilename().length() > 0 ? "+" : "-");
+			int duration =mt.getDuration();
+			if (duration > 0 ){
+				duration /=1000;
+				int minutes = duration /60;
+				int sec = duration - (minutes*60);
+				text.setText(""+minutes +(sec<10?":0":":")+sec);
+			}
+			else 
+				text.setText(mt.getFilename().length() > 0 ? "+" : "-");
 			return rowView;
 		}
 
@@ -132,10 +140,6 @@ public class TrackList {
 		}
 	}
 
-	// public class TrackListHandler extends Handler {
-	//
-	// }
-
 	/**
 	 * Loads track list from internal storage
 	 */
@@ -146,7 +150,7 @@ public class TrackList {
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, TRACK_FLAGS, }, null,
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, TRACK_FLAGS, TRACK_DURATION, }, null,
 						new String[] {}, null, null, null);
 				if (c != null) {
 					if (c.moveToFirst()) {
@@ -155,7 +159,7 @@ public class TrackList {
 							File f = new File(Uri.parse(filename).getPath());
 							if (!f.exists())
 								filename = "";
-							MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3), filename);
+							MusicTrack mt = new MusicTrack(c.getString(0), c.getString(1), c.getString(2), c.getString(3), filename, c.getInt(6));
 							trackList.add(mt);
 							Log.d("shingrus", "Add music track: " + mt.getFilename() + " was:" + filename);
 						} while (c.moveToNext());
@@ -204,23 +208,16 @@ public class TrackList {
 		}
 	}
 
-	public synchronized void setFileName(MusicTrack mt, String filename) {
-		for (MusicTrack track : trackList) {
-			if (track.equals(mt)) {
-				track.setFilename(filename);
-				if (dbHelper != null) {
-					SQLiteDatabase db = dbHelper.getWritableDatabase();
-					if (db != null) {
-						ContentValues values = new ContentValues();
-						values.put(this.TRACK_FILENAME, filename);
-						db.update(TABLE_NAME, values, TRACK_ID + "=?", new String[] { mt.getId() });
-					}
-				}
+	private final void storeTrackAttributeToStorage(MusicTrack mt, ContentValues values) {
+		if (dbHelper != null) {
+			SQLiteDatabase db = dbHelper.getWritableDatabase();
+			if (db != null) {
+				db.update(TABLE_NAME, values, TRACK_ID + "=?", new String[] { mt.getId() });
 			}
+			db.close();
 		}
-		// TODO: store into storage
-		Runnable r = new Runnable() {
 
+		Runnable r = new Runnable() {
 			@Override
 			public void run() {
 				dataChanged();
@@ -230,6 +227,30 @@ public class TrackList {
 			this.adapter.activity.runOnUiThread(r);
 		} else
 			r.run();
+	}
+
+	public synchronized void setFileName(MusicTrack mt, String filename) {
+		for (MusicTrack track : trackList) {
+			if (track.equals(mt)) {
+				track.setFilename(filename);
+				ContentValues values = new ContentValues();
+				values.put(TRACK_FILENAME, filename);
+				storeTrackAttributeToStorage(mt, values);
+				break;
+			}
+		}
+	}
+
+	public synchronized void setTrackDuration(MusicTrack mt, int duration) {
+		for (MusicTrack track : trackList) {
+			if (track.equals(mt)) {
+				track.setDuration(duration);
+				ContentValues values = new ContentValues();
+				values.put(TRACK_DURATION, duration);
+				storeTrackAttributeToStorage(mt, values);
+				break;
+			}
+		}
 	}
 
 	public synchronized boolean contains(MusicTrack mt) {

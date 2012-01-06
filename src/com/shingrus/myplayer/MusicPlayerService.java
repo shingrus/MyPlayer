@@ -208,7 +208,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onPrepared(MediaPlayer mp) {
 		if (state.playedProgress != 0)
 			mp.seekTo(state.playedProgress);
-		state.duration = mp.getDuration();
+		if (state.currentTrack.getDuration() <= 0 ) {
+			state.duration = mp.getDuration();
+			trackList.setTrackDuration(state.currentTrack, state.duration);
+		}
+		else { 
+			state.duration = state.currentTrack.getDuration();
+		}
 		mp.start();
 		state.currentStatus = PlayingStatus.Playing;
 		isPausedDurinngCall = false;

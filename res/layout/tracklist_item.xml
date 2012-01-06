@@ -15,7 +15,7 @@
 		android:gravity="right"
 		android:layout_width="wrap_content"
 		android:layout_height="match_parent"
-		android:width="10dp"
+		android:width="40dp"
 		android:layout_alignParentRight="true"
 		android:id="@+id/trackrow_statusid"></TextView>
 </RelativeLayout>
