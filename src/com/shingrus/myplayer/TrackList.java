@@ -101,7 +101,7 @@ public class TrackList {
 			}
 			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
 			int duration =mt.getDuration();
-			if (duration > 0 ){
+			if (duration > 0 && mt.getFilename().length()>0){
 				duration /=1000;
 				int minutes = duration /60;
 				int sec = duration - (minutes*60);
