@@ -165,8 +165,8 @@ public class MyPlayerActivity extends Activity {
 				});
 				if (playerService.isPlaying()) {
 					isPlaying = true;
-					progressUpdate();
 				}
+				progressUpdate();
 			}
 		};
 		updateServiceConnection = new ServiceConnection() {

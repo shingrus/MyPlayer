@@ -352,9 +352,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	public int getCurrentPosition() {
 		int result = 0;
-		if (mPlayer != null && (state.currentStatus == PlayingStatus.Playing || mPlayer.isPlaying())) {
-			state.playedProgress = mPlayer.getCurrentPosition();
-			
+		switch (state.currentStatus) {
+		case Playing:
+			if (mPlayer != null ) {
+				state.playedProgress = mPlayer.getCurrentPosition();
+			}
+			break;
+		case Stopped:
+		case Paused:
+			//do nothing and use state progress
+			break;
 		}
 		if (state.duration != 0) {
 			double duration = state.duration;
