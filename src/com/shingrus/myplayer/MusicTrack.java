@@ -34,8 +34,8 @@ public final class MusicTrack {
 	 * @param filename - String
 	 */
 	public MusicTrack(String id, String artist, String title, String url, String filename, int duration) {
-		this.artist = artist;
-		this.title = title;
+		this.artist = (artist==null) ? "": artist;
+		this.title = (title ==null) ? "": title;
 		this.id = id;
 		this.url = url;
 		this.filename = filename;

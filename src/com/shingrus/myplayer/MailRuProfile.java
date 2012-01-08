@@ -305,6 +305,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 									id = trackDescription.getString(JSON_MUSIC_ID);
 									title = trackDescription.getString(JSON_MUSIC_TITLE);
 									murl = trackDescription.getString(JSON_MUSIC_URL);
+									//TODO: artist here could be reterned as "null string" - need additional check
 									artist = trackDescription.getString(JSON_MUSIC_ARTIST);
 									result = TrackListFetchingStatus.SUCCESS;
 									Log.d("shingrus", "Got track: " + artist + "-" + title + ":" + murl);

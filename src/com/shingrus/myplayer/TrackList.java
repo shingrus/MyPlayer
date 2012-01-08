@@ -17,6 +17,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
@@ -26,6 +27,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TableLayout;
 import android.widget.TextView;
 
 public class TrackList {
@@ -36,7 +38,7 @@ public class TrackList {
 
 	public static final int LIMIT_TRACKS = 1024;
 	public static final String DATABASE_NAME = "TrackList";
-	public static final int DATABASE_VERSION = 3;
+	public static final int DATABASE_VERSION = 5;
 	public static final String TABLE_NAME = "track";
 	private static final String TRACK_ARTIST = "Artist";
 	private static final String TRACK_TITLE = "Title";
@@ -90,25 +92,29 @@ public class TrackList {
 
 		@Override
 		public synchronized View getView(int position, View convertView, ViewGroup parent) {
-			LayoutInflater inflater = this.activity.getLayoutInflater();
-			RelativeLayout rowView = (RelativeLayout) inflater.inflate(R.layout.tracklist_item, null, true);
-			TextView text = (TextView) rowView.findViewById(R.id.trackrow_textid);
-			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
 			MusicTrack mt = trackList.get(position);
-			text.setText(mt.toString());
+			LayoutInflater inflater = this.activity.getLayoutInflater();
+			TableLayout rowView = (TableLayout) inflater.inflate(R.layout.tracklist_item, null, true);
+			int resourceId = (mt.getFilename().length()>0)?R.drawable.list_item_active_bg:R.drawable.list_item_inactive_bg; 
+			rowView.setBackgroundDrawable(parent.getResources().getDrawable(resourceId));
+			TextView text = (TextView) rowView.findViewById(R.id.trackrow_titleid);
+			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
+			text.setText(mt.getTitle());
 			if (isPlaying && position == iteratePosition) {
-				text.setTextColor(0xAAFF0000);
+				View v = rowView.findViewById(R.id.trackrow_playinSignId);
+				v.setVisibility(View.VISIBLE);
 			}
-			text = (TextView) rowView.findViewById(R.id.trackrow_statusid);
-			int duration =mt.getDuration();
-			if (duration > 0 && mt.getFilename().length()>0){
-				duration /=1000;
-				int minutes = duration /60;
-				int sec = duration - (minutes*60);
-				text.setText(""+minutes +(sec<10?":0":":")+sec);
-			}
-			else 
-				text.setText(mt.getFilename().length() > 0 ? "+" : "-");
+			text = (TextView) rowView.findViewById(R.id.trackrow_artistid);
+			text.setText(mt.getArtist());
+//			int duration =mt.getDuration();
+//			if (duration > 0 && mt.getFilename().length()>0){
+//				duration /=1000;
+//				int minutes = duration /60;
+//				int sec = duration - (minutes*60);
+//				text.setText(""+minutes +(sec<10?":0":":")+sec);
+//			}
+//			else 
+//				text.setText(mt.getFilename().length() > 0 ? "+" : "-");
 			return rowView;
 		}
 
