@@ -110,16 +110,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 					switch (state) {
 					case TelephonyManager.CALL_STATE_IDLE:
 						if (isPausedDurinngCall)
-							stopMusic();
+							playMusic();
 						break;
 					case TelephonyManager.CALL_STATE_OFFHOOK:
-						if (MusicPlayerService.this.state.currentStatus != PlayingStatus.Paused) {
+						if (MusicPlayerService.this.state.currentStatus == PlayingStatus.Playing) {
 							stopMusic();
 							isPausedDurinngCall = true;
 						}
 						break;
 					case TelephonyManager.CALL_STATE_RINGING:
-						if (MusicPlayerService.this.state.currentStatus != PlayingStatus.Paused) {
+						if (MusicPlayerService.this.state.currentStatus == PlayingStatus.Playing) {
 							stopMusic();
 							isPausedDurinngCall = true;
 						}
