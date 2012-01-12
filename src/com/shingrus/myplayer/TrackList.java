@@ -106,15 +106,16 @@ public class TrackList {
 			}
 			text = (TextView) rowView.findViewById(R.id.trackrow_artistid);
 			text.setText(mt.getArtist());
-//			int duration =mt.getDuration();
-//			if (duration > 0 && mt.getFilename().length()>0){
-//				duration /=1000;
-//				int minutes = duration /60;
-//				int sec = duration - (minutes*60);
-//				text.setText(""+minutes +(sec<10?":0":":")+sec);
-//			}
-//			else 
-//				text.setText(mt.getFilename().length() > 0 ? "+" : "-");
+			text = (TextView) rowView.findViewById(R.id.trackrow_durationid);
+			
+			int duration =mt.getDuration();
+			if (duration > 0 && mt.getFilename().length()>0){
+				duration /=1000;
+				int minutes = duration /60;
+				int sec = duration - (minutes*60);
+				text.setText(""+minutes +(sec<10?":0":":")+sec);
+			}
+			
 			return rowView;
 		}
 
