@@ -2,6 +2,8 @@ package com.shingrus.myplayer;
 
 import javax.xml.datatype.Duration;
 
+import android.graphics.Shader.TileMode;
+
 
 public final class MusicTrack {
 
@@ -34,7 +36,13 @@ public final class MusicTrack {
 	 * @param filename - String
 	 */
 	public MusicTrack(String id, String artist, String title, String url, String filename, int duration) {
-		this.artist = (artist==null) ? "": artist;
+		if (artist!=null && title!=null) {
+			if (title.startsWith(artist)) {
+				title = title.substring(artist.length(), title.length());
+				title = title.replaceFirst("\\s*\\-\\s*", "");
+			}
+		}
+		this.artist = (artist==null || artist.equals("null")) ? "": artist;
 		this.title = (title ==null) ? "": title;
 		this.id = id;
 		this.url = url;
