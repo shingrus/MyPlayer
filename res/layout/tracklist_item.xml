@@ -2,7 +2,8 @@
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:stretchColumns="1" >
+    android:stretchColumns="1"
+    android:shrinkColumns="1" >
 
     <TableRow >
 
@@ -23,18 +24,25 @@
                 android:layout_height="match_parent"
                 android:fadingEdge="horizontal"
                 android:maxLines="1"
+                android:gravity="top"
                 android:orientation="horizontal" 
                 />
             <TextView
                 android:id="@+id/trackrow_artistid"
-                style="@style/TrackArtisiStyle"
+                style="@style/TrackArtistStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_below="@id/trackrow_titleid"
+                android:gravity="bottom"
                 android:fadingEdge="horizontal"
                 android:maxLines="1"
                 android:orientation="horizontal" />
         </RelativeLayout>
+        <TextView android:id="@+id/trackrow_durationid" style="@style/TrackDurationStyle"
+		android:layout_gravity="left"
+		android:layout_width="wrap_content" 
+		android:layout_height="fill_parent"
+            />
     </TableRow>
 
 </TableLayout><!--
