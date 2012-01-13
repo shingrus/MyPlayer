@@ -12,7 +12,7 @@
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/playing_sign"
+            android:src="@drawable/play"
             android:visibility="invisible" />
 
         <RelativeLayout >

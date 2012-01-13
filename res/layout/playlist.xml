@@ -25,21 +25,24 @@
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
+        android:background="@drawable/panel_background"
         android:weightSum="1" >
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:onClick="onClickRewind"
-            android:text="@string/rewindButtonText" />
+            android:background="@drawable/leftbuttonstates"
+            android:src="@drawable/rewind" />
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:onClick="onClickPlayPause"
-            android:text="@string/playButtonText" />
+            android:background="@drawable/playbuttonstates"
+            android:src="@drawable/playing_sign"/>
 
         <!-- <Button
             android:id="@+id/button1"
@@ -49,12 +52,13 @@
             android:text="@string/stopButtonText" >
         </Button> -->
 
-        <Button
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:onClick="onClickForward"
-            android:text="@string/forwardButtonText" />
+            android:background="@drawable/rightbuttonstates"
+            android:src="@drawable/forward"/>
     </LinearLayout>
 
 </LinearLayout>
