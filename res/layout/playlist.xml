@@ -37,12 +37,13 @@
             android:src="@drawable/rewind" />
 
         <ImageButton
+            android:id="@+id/playButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:onClick="onClickPlayPause"
-            android:background="@drawable/playbuttonstates"
-            android:src="@drawable/playing_sign"/>
+            android:background="@drawable/playbutton_stopped_states"
+            android:src="@drawable/play"/>
 
         <!-- <Button
             android:id="@+id/button1"
@@ -55,9 +56,8 @@
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:onClick="onClickForward"
-            android:background="@drawable/rightbuttonstates"
+            android:background="@drawable/rightbuttonstates"            
             android:src="@drawable/forward"/>
     </LinearLayout>
 
