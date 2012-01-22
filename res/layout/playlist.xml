@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:background="@drawable/panel_background"
     android:orientation="vertical"
     android:weightSum="1" >
 
@@ -10,22 +11,32 @@
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
         android:layout_gravity="top"
-        android:layout_weight="1.0" >
+        android:layout_weight="1.0"
+        android:divider=""
+        android:fadingEdge="none" >
     </ListView>
 
+        <View android:background="@drawable/playlist_divider_background"
+            android:layout_width="fill_parent"
+            android:layout_height="8px"/>
+        <View android:background="#000"
+            android:layout_width="fill_parent"
+            android:layout_height="1px"/>
+        
     <SeekBar
         android:id="@+id/playingSeek"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:enabled="false" 
-        style="@style/seekBar"/>
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        style="@style/ProgressSeekBarStyle"/>
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="horizontal"
-        android:background="@drawable/panel_background"
         android:weightSum="1" >
 
         <ImageButton
@@ -34,6 +45,8 @@
             android:layout_gravity="center_horizontal"
             android:onClick="onClickRewind"
             android:background="@drawable/leftbuttonstates"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
             android:src="@drawable/rewind" />
 
         <ImageButton
@@ -43,21 +56,18 @@
             android:layout_gravity="center_horizontal"
             android:onClick="onClickPlayPause"
             android:background="@drawable/playbutton_stopped_states"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
             android:src="@drawable/play"/>
-
-        <!-- <Button
-            android:id="@+id/button1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onClickStop"
-            android:text="@string/stopButtonText" >
-        </Button> -->
-
+        
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:onClick="onClickForward"
             android:background="@drawable/rightbuttonstates"            
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
             android:src="@drawable/forward"/>
     </LinearLayout>
 
