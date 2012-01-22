@@ -14,6 +14,7 @@
             android:layout_gravity="center_vertical"
             android:src="@drawable/playing_sign"
             android:paddingLeft="4dp"
+            android:paddingRight="4dp"
             android:visibility="invisible" />
 
         <RelativeLayout >
