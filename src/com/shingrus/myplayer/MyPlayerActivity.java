@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -44,6 +45,7 @@ public class MyPlayerActivity extends Activity {
 	private ProgressBar rCornerProgressBar = null;
 	private ImageView alarmImage = null;
 	SeekBar progressBar = null;
+	ImageButton playButton = null;
 	boolean isPlaying = false;
 	boolean touchingProgress = false;
 	int newPosition = 0;
@@ -126,18 +128,24 @@ public class MyPlayerActivity extends Activity {
 					@Override
 					public void onStop() {
 						isPlaying = false;
+//						playButton.setBackgroundResource(R.drawable.playbutton_stopped_states);
+						changePlayButton();
 						progressUpdate();
 					}
 
 					@Override
 					public void onPlay() {
 						isPlaying = true;
+//						playButton.setBackgroundResource(R.drawable.playbutton_playing_states);
+						changePlayButton();
 						progressUpdate();
 					}
 
 					@Override
 					public void onPause() {
+						//playButton.setBackgroundResource(R.drawable.playbutton_stopped_states);
 						isPlaying = false;
+						changePlayButton();
 					}
 
 					@Override
@@ -165,6 +173,8 @@ public class MyPlayerActivity extends Activity {
 				});
 				if (playerService.isPlaying()) {
 					isPlaying = true;
+//					playButton.setBackgroundResource(R.drawable.playbutton_playing_states);
+					changePlayButton();
 				}
 				progressUpdate();
 			}
@@ -271,6 +281,8 @@ public class MyPlayerActivity extends Activity {
 				return result;
 			}
 		});
+		playButton = (ImageButton) findViewById(R.id.playButton);
+		
 	}
 
 	@Override
@@ -303,6 +315,9 @@ public class MyPlayerActivity extends Activity {
 
 		lv = null;
 		rCornerProgressBar = null;
+		playButton = null;
+		progressBar = null;
+		
 		super.onDestroy();
 	}
 
@@ -339,6 +354,19 @@ public class MyPlayerActivity extends Activity {
 		startService(service);
 	}
 
+	private void changePlayButton() {
+		//fuckin shit. i do need to change it
+		int top = playButton.getPaddingTop();
+		int left = playButton.getPaddingLeft();
+		int right = playButton.getPaddingRight();
+		int bottom = playButton.getPaddingBottom();
+		if (isPlaying) 
+			playButton.setBackgroundResource(R.drawable.playbutton_playing_states);
+		else
+			playButton.setBackgroundResource(R.drawable.playbutton_stopped_states);
+		playButton.setPadding(left, top, right, bottom);
+		
+	}
 	// Click Listeners
 	public void onClickPlayPause(View v) {
 		playerService.playPause();
