@@ -59,6 +59,7 @@
             android:background="@drawable/playbutton_stopped_states"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
+            android:layout_marginLeft="4dp"
             android:src="@drawable/play"/>
         
         <ImageButton
@@ -69,6 +70,7 @@
             android:background="@drawable/rightbuttonstates"            
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
+            android:layout_marginLeft="4dp"
             android:src="@drawable/forward"/>
     </LinearLayout>
 
