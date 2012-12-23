@@ -1,24 +1,13 @@
 package com.shingrus.myplayer;
 
-import java.net.URI;
-import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.utils.URLEncodedUtils;
-
 import android.app.Activity;
-import android.app.LauncherActivity.IconResizer;
 import android.content.Intent;
-import android.net.MailTo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
