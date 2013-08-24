@@ -16,6 +16,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.ContactsContract.CommonDataKinds.Event;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,6 +26,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -235,6 +238,7 @@ public class MyPlayerActivity extends Activity {
 				}
 			}
 		});
+		registerForContextMenu(lv);
 
 		Intent service = new Intent(this, UpdateService.class);
 		bindService(service, updateServiceConnection, Context.BIND_AUTO_CREATE);
@@ -312,7 +316,9 @@ public class MyPlayerActivity extends Activity {
 			unbindService(musicPlayerConnection);
 			musicPlayerConnection = null;
 		}
-
+		if (lv!=null)
+			unregisterForContextMenu(lv);
+		
 		lv = null;
 		rCornerProgressBar = null;
 		playButton = null;
@@ -326,6 +332,28 @@ public class MyPlayerActivity extends Activity {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.optionmenu, menu);
 		return true;
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.playlistcontextmenu,menu);		
+	}
+	
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+	    switch (item.getItemId()) {
+	        case R.id.PlaylistContextMenuSetAsRingtone:
+	        	//TODO: to add set as ringtone method
+				Log.d("shingrus", "Context menu item: " + item);
+
+	            return true;
+	        default:
+	            return super.onContextItemSelected(item);
+	    }
 	}
 
 	@Override

@@ -43,7 +43,7 @@
     <string name="NotificationTitle_Playing">Playing</string>
     <string name="NotificationTitle_Paused">Paused</string>
     <string name="NotificationTitle_Stopped">Stopped</string>
-
+	<string name="SetAsRingtoneTitle">Set as ringtone</string>	
     <style name="titleBarStyle">
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">#FFFFFFFF</item>
