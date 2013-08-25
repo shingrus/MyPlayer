@@ -1,8 +1,5 @@
 package com.shingrus.myplayer;
 
-import javax.xml.datatype.Duration;
-
-import android.graphics.Shader.TileMode;
 
 
 public final class MusicTrack {
@@ -123,5 +120,5 @@ public final class MusicTrack {
 	public String getArtist() {
 		return this.artist;
 	}
-
+	
 }

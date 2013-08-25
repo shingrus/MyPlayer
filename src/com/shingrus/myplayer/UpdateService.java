@@ -1,33 +1,11 @@
 package com.shingrus.myplayer;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Date;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.AbstractHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreConnectionPNames;
-
-import com.shingrus.myplayer.MusicPlayerService.LocalBinder;
-import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-//import android.app.DownloadManager;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -39,6 +17,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
+
+import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 
 public class UpdateService extends Service {
 
@@ -109,7 +89,6 @@ public class UpdateService extends Service {
 			boolean doNotSleepInNextIteration = false;
 			MyPlayerPreferences prefs = MyPlayerPreferences.getInstance(null);
 			ConnectivityManager conMan = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-			NetworkInfo network;
 			while (UpdateService.this.continueWorking) {
 				Thread.yield();
 				doNotSleepInNextIteration = false;

@@ -1,7 +1,6 @@
 package com.shingrus.myplayer;
 
 import java.io.File;
-import java.util.List;
 
 import android.content.SharedPreferences;
 

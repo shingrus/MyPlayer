@@ -1,20 +1,13 @@
 package com.shingrus.myplayer;
 
-import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
-import com.shingrus.myplayer.R;
-import com.shingrus.myplayer.UpdateService.UpdatesHandler;
-
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.opengl.Visibility;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.ContactsContract.CommonDataKinds.Event;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -24,16 +17,17 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
-import android.widget.TextView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
+
+import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
+import com.shingrus.myplayer.UpdateService.UpdatesHandler;
 
 public class MyPlayerActivity extends Activity {
 
@@ -278,7 +272,8 @@ public class MyPlayerActivity extends Activity {
 					// break;
 					case MotionEvent.ACTION_UP:
 						// Log.d("shingrus", "ACTION_UP");
-						playerService.setPosition(newPosition);
+						if (playerService!=null)
+							playerService.setPosition(newPosition);
 						break;
 					}
 				}
@@ -348,8 +343,7 @@ public class MyPlayerActivity extends Activity {
 	    switch (item.getItemId()) {
 	        case R.id.PlaylistContextMenuSetAsRingtone:
 	        	//TODO: to add set as ringtone method
-				Log.d("shingrus", "Context menu item: " + item);
-
+				trackList.setAsRingtone(this, info.position);
 	            return true;
 	        default:
 	            return super.onContextItemSelected(item);
@@ -416,5 +410,7 @@ public class MyPlayerActivity extends Activity {
 	private void progressUpdate() {
 		handleProgressUpdate.postDelayed(progressUpdateJob, MyPlayerPreferences.UPDATE_PLAYING_STATUS_MS);
 	}
+	
+	
 
 }

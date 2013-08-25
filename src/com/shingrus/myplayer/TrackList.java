@@ -1,32 +1,25 @@
 package com.shingrus.myplayer;
 
-import com.shingrus.myplayer.R;
-
 import java.io.File;
-import java.lang.annotation.Target;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-import android.graphics.drawable.Drawable;
+import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Handler;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
@@ -95,7 +88,7 @@ public class TrackList {
 			MusicTrack mt = trackList.get(position);
 			LayoutInflater inflater = this.activity.getLayoutInflater();
 			TableLayout rowView = (TableLayout) inflater.inflate(R.layout.tracklist_item, null, true);
-			int resourceId = (mt.getFilename().length()>0)?R.drawable.list_item_active_bg:R.drawable.list_item_inactive_bg; 
+			int resourceId = (mt.getFilename().length() > 0) ? R.drawable.list_item_active_bg : R.drawable.list_item_inactive_bg;
 			rowView.setBackgroundDrawable(parent.getResources().getDrawable(resourceId));
 			TextView text = (TextView) rowView.findViewById(R.id.trackrow_titleid);
 			// (TextView) inflater.inflate(R.layout.tracklist_item, null, true);
@@ -107,15 +100,15 @@ public class TrackList {
 			text = (TextView) rowView.findViewById(R.id.trackrow_artistid);
 			text.setText(mt.getArtist());
 			text = (TextView) rowView.findViewById(R.id.trackrow_durationid);
-			
-			int duration =mt.getDuration();
-			if (duration > 0 && mt.getFilename().length()>0){
-				duration /=1000;
-				int minutes = duration /60;
-				int sec = duration - (minutes*60);
-				text.setText(""+minutes +(sec<10?":0":":")+sec);
+
+			int duration = mt.getDuration();
+			if (duration > 0 && mt.getFilename().length() > 0) {
+				duration /= 1000;
+				int minutes = duration / 60;
+				int sec = duration - (minutes * 60);
+				text.setText("" + minutes + (sec < 10 ? ":0" : ":") + sec);
 			}
-			
+
 			return rowView;
 		}
 
@@ -157,8 +150,8 @@ public class TrackList {
 			// Because of ctx we have some warranty it's main thread
 			SQLiteDatabase db = dbHelper.getWritableDatabase();
 			if (db != null) {
-				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, TRACK_FLAGS, TRACK_DURATION, }, null,
-						new String[] {}, null, null, null);
+				Cursor c = db.query(TABLE_NAME, new String[] { TRACK_ID, TRACK_ARTIST, TRACK_TITLE, TRACK_URL, TRACK_FILENAME, TRACK_FLAGS, TRACK_DURATION, },
+						null, new String[] {}, null, null, null);
 				if (c != null) {
 					if (c.moveToFirst()) {
 						do {
@@ -370,6 +363,34 @@ public class TrackList {
 	private synchronized void dataChanged() {
 		if (adapter != null) {
 			adapter.notifyDataSetChanged();
+		}
+	}
+
+	public final void setAsRingtone(Context ctx, int location) {
+		MusicTrack mt = trackList.get(location);
+		if (mt != null) {
+			File k = new File(trackList.get(location).getFilename());
+
+			Log.d("shingrus", "Gonna set '" + mt + "' as ringtone");
+			ContentValues values = new ContentValues();
+			values.put(MediaStore.MediaColumns.DATA, k.getAbsolutePath());
+			values.put(MediaStore.MediaColumns.TITLE, mt.getTitle());
+			values.put(MediaStore.MediaColumns.SIZE, 215454);
+			values.put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3");
+			values.put(MediaStore.Audio.Media.ARTIST, mt.getArtist());
+			values.put(MediaStore.Audio.Media.DURATION, 230);
+			values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
+			values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
+			values.put(MediaStore.Audio.Media.IS_ALARM, false);
+			values.put(MediaStore.Audio.Media.IS_MUSIC, false);
+
+			// Insert it into the database
+			
+			Uri uri = MediaStore.Audio.Media.getContentUriForPath(k.getAbsolutePath());
+			ContentResolver crl = ctx.getContentResolver(); 
+			Uri newUri = crl.insert(uri, values);
+			crl.delete(uri, MediaStore.MediaColumns.DATA + "=\"" + k.getAbsolutePath() + "\"", null);
+			RingtoneManager.setActualDefaultRingtoneUri(ctx, RingtoneManager.TYPE_RINGTONE, newUri);
 		}
 	}
 

@@ -9,12 +9,10 @@ import android.app.Service;
 import android.content.*;
 import android.media.MediaPlayer;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.widget.MediaController.MediaPlayerControl;
 import android.media.*;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
@@ -302,23 +300,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	}
 
-	// private void pause() {
-	// if (mPlayer.isPlaying()) {
-	// mPlayer.pause();
-	// updateNotification(NotificationStatus.Paused);
-	// state.currentStatus = PlayingStatus.Paused;
-	// }
-	// }
-
-	// private void play() {
-	// if (state.currentStatus == PlayingStatus.Paused) {
-	// mPlayer.start();
-	// updateNotification(NotificationStatus.Playing);
-	// state.currentStatus = PlayingStatus.Playing;
-	// isPausedDurinngCall = false;
-	//
-	// }
-	// }
 
 	public void stopMusic() {
 		if (mPlayer.isPlaying()) {
@@ -380,4 +361,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			return mPlayer.isPlaying();
 		return false;
 	}
+	
+	
+	
 }

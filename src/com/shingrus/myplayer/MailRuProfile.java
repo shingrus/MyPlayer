@@ -80,7 +80,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	private static final String JSON_MUSIC_ID = "mid";
 	private static final String JSON_MUSIC_TITLE = "title";
 	private static final String JSON_MUSIC_URL = "link";
-	private static final String JSON_MUSIC_DURATION = "duration";
+//	private static final String JSON_MUSIC_DURATION = "duration";
 	private static final String JSON_MUSIC_ARTIST = "artist";
 
 	public static final String MAILRU_COOKIE_NAME = "Mpop";

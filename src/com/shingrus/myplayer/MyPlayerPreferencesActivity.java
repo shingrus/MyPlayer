@@ -3,8 +3,6 @@ package com.shingrus.myplayer;
 import com.shingrus.myplayer.R;
 
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
 import android.preference.PreferenceActivity;
 
 public class MyPlayerPreferencesActivity extends PreferenceActivity {

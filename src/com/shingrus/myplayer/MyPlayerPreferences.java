@@ -9,7 +9,7 @@ import android.preference.PreferenceManager;
 
 public class MyPlayerPreferences {
 
-	private static final String MPOPCOOKIE_KEY = "mpop_cookie";
+//	private static final String MPOPCOOKIE_KEY = "mpop_cookie";
 	public static final String OAUTH_URL = "openauthurl";
 	private final String FILENAMECOUNTER_KEY = "filename_counter";
 	private boolean useOnlyWifi, pauseOnLoud, pauseOnCall;
