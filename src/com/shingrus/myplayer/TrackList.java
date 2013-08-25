@@ -368,17 +368,17 @@ public class TrackList {
 
 	public final void setAsRingtone(Context ctx, int location) {
 		MusicTrack mt = trackList.get(location);
-		if (mt != null) {
+		if (mt != null && mt.isComplete()) {
 			File k = new File(trackList.get(location).getFilename());
 
 			Log.d("shingrus", "Gonna set '" + mt + "' as ringtone");
 			ContentValues values = new ContentValues();
 			values.put(MediaStore.MediaColumns.DATA, k.getAbsolutePath());
 			values.put(MediaStore.MediaColumns.TITLE, mt.getTitle());
-			values.put(MediaStore.MediaColumns.SIZE, 215454);
+			//values.put(MediaStore.MediaColumns.SIZE,);
 			values.put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3");
 			values.put(MediaStore.Audio.Media.ARTIST, mt.getArtist());
-			values.put(MediaStore.Audio.Media.DURATION, 230);
+			values.put(MediaStore.Audio.Media.DURATION, mt.getDuration());
 			values.put(MediaStore.Audio.Media.IS_RINGTONE, true);
 			values.put(MediaStore.Audio.Media.IS_NOTIFICATION, false);
 			values.put(MediaStore.Audio.Media.IS_ALARM, false);
@@ -389,7 +389,7 @@ public class TrackList {
 			Uri uri = MediaStore.Audio.Media.getContentUriForPath(k.getAbsolutePath());
 			ContentResolver crl = ctx.getContentResolver(); 
 			Uri newUri = crl.insert(uri, values);
-			crl.delete(uri, MediaStore.MediaColumns.DATA + "=\"" + k.getAbsolutePath() + "\"", null);
+		//	crl.delete(newUri, MediaStore.MediaColumns.DATA + "=\"" + k.getAbsolutePath() + "\"", null);
 			RingtoneManager.setActualDefaultRingtoneUri(ctx, RingtoneManager.TYPE_RINGTONE, newUri);
 		}
 	}
