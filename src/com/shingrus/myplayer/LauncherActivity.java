@@ -17,8 +17,8 @@ public class LauncherActivity extends Activity {
 			startService(service);
 			i = new Intent(this, MyPlayerActivity.class);
 		} else {
-			i = new Intent(this, MyAuthorizeActivity.class);
-//			i = new Intent(this, OAuthWebAuthorization.class);
+//			i = new Intent(this, MyAuthorizeActivity.class);
+			i = new Intent(this, OAuthWebAuthorization.class);
 			i.putExtra(MyPlayerPreferences.OAUTH_URL, MailRuProfile.OAUTH_URL);
 		}
 		startActivity(i);

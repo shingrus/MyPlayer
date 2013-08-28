@@ -112,7 +112,7 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	}
 
 	/**
-	 * @param Strins
+	 * @param Strings
 	 *            {@link GrantType} grantType if grantType is
 	 *            GrantType.PASSWORD, you should set login, password as strings
 	 * 
@@ -516,23 +516,27 @@ public class MailRuProfile implements MyPlayerAccountProfile {
 	public boolean downloadAudioFile(String url, File whereToDownload) {
 		boolean result = false;
 
-		if (mpopCookie == null || mpopCookie.length() < 10) {
-			getMpopCookie();
-		}
+//		if (mpopCookie == null || mpopCookie.length() < 10) {
+//			getMpopCookie();
+//		}
 
-		if (mpopCookie != null && mpopCookie.length() > 0) {
+		//if (mpopCookie != null && mpopCookie.length() > 0) {
+		
+		//TODO check and renew for the new access token
+		
+		if (accessToken != null && accessToken.length() > 0) {
 			BasicHttpParams httpParams = new BasicHttpParams();
 			httpParams.setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
 			httpParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, MyPlayerPreferences.CONNECTION_TIMEOUT);
 
 			AbstractHttpClient httpClient = new DefaultHttpClient(httpParams);
-			HttpGet httpGet = new HttpGet(url);
+			HttpGet httpGet = new HttpGet(url + "?session_key=" + accessToken);
 
-			BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, mpopCookie);
-			cookie.setDomain(".mail.ru");
-			cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
-			cookie.setPath("/");
-			httpClient.getCookieStore().addCookie(cookie);
+			//BasicClientCookie cookie = new BasicClientCookie(MailRuProfile.MAILRU_COOKIE_NAME, mpopCookie);
+			//cookie.setDomain(".mail.ru");
+			//cookie.setExpiryDate(new Date(2039, 1, 1, 0, 0));
+			//cookie.setPath("/");
+			//httpClient.getCookieStore().addCookie(cookie);
 			try {
 				HttpResponse resp = httpClient.execute(httpGet);
 				StatusLine status = resp.getStatusLine();

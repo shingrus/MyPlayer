@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,14 +17,25 @@ public class OAuthWebAuthorization extends Activity {
 	WebView mWebView;
 
 	private class HelloWebViewClient extends WebViewClient {
+
+//		@Override
+//		public void onPageFinished(WebView view, String url) {
+//			Log.d("shingrus", "URL finished: " + url);
+//			super.onPageFinished(view, url);
+//		}
+
 		@Override
-		
-		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			Log.d("shingrus", "Loading url: " + url);
+		public void onPageStarted(WebView view, String url, Bitmap favicon) {
+			Log.d("shingrus", "URL started: " + url);
+			parseAuthResult(url);
+		}
+
+		private boolean parseAuthResult(String url) {
+			boolean result = false;
 			if (url.startsWith(MailRuProfile.SUCCESS_OATH_PREFIX)) {
 				// seems that we've got auth
 				String fragment, accessToken = null, refreshToken = null, uid = null;
-				int refresh_in =0;
+				int refresh_in = 0;
 				Uri uri = Uri.parse(url);
 				if (uri != null && (fragment = uri.getEncodedFragment()) != null) {
 					Scanner sc = new Scanner(fragment);
@@ -40,18 +52,16 @@ public class OAuthWebAuthorization extends Activity {
 								refreshToken = nameValue[1];
 							else if (name.equals(MailRuProfile.UID_RESPONSE_NAME) && nameValue[1].length() > 2)
 								uid = nameValue[1];
-							else if (name.equals(MailRuProfile.EXPIRES_IN_RESPONSE_NAME) && nameValue[1].length()>0)
+							else if (name.equals(MailRuProfile.EXPIRES_IN_RESPONSE_NAME) && nameValue[1].length() > 0)
 								refresh_in = Integer.getInteger(nameValue[1], 0);
 						}
 					}
 				}
 				if (accessToken != null && refreshToken != null && uid != null) {
-					// TODO: store data in preferences, launch player activity,
-					// finish this activity
 					MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
 
 					MyPlayerAccountProfile mpp = mpf.getProfile();
-					mpp.setAccessToken(accessToken,refresh_in);
+					mpp.setAccessToken(accessToken, refresh_in);
 					mpp.setRefreshToken(refreshToken);
 					mpp.setUID(uid);
 					mpf.storePreferences(OAuthWebAuthorization.this);
@@ -59,12 +69,12 @@ public class OAuthWebAuthorization extends Activity {
 					Intent i = new Intent(OAuthWebAuthorization.this, MyPlayerActivity.class);
 					startActivity(i);
 					OAuthWebAuthorization.this.finish();
-					return true;
+					result = true;;
 				}
 			}
-			view.loadUrl(url);
-			return false;
+			return result;
 		}
+
 	}
 
 	@Override
@@ -77,9 +87,9 @@ public class OAuthWebAuthorization extends Activity {
 			url = b.getString(MyPlayerPreferences.OAUTH_URL);
 		}
 		mWebView = (WebView) findViewById(R.id.oauthWebView);
-//		CookieSyncManager.createInstance(this);
-//		CookieManager cm = CookieManager.getInstance();
-//		cm.removeAllCookie();
+		// CookieSyncManager.createInstance(this);
+		// CookieManager cm = CookieManager.getInstance();
+		// cm.removeAllCookie();
 
 		mWebView.getSettings().setJavaScriptEnabled(true);
 		mWebView.setWebViewClient(new HelloWebViewClient());
