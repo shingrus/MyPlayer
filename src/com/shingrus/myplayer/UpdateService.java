@@ -154,7 +154,10 @@ public class UpdateService extends Service {
 			try {
 				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
 				TrackListFetchingStatus updateStatus = mpf.getProfile().getTrackListFromInternet();
-
+				if (updateStatus == TrackListFetchingStatus.SUCCESS) {
+					//TODO to wake up DownloadThread
+					
+				}
 				for (UpdatesHandler h : updatesHandlers) {
 					h.onAfterUpdate(updateStatus);
 				}

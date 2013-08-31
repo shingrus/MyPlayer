@@ -2,6 +2,8 @@ package com.shingrus.myplayer;
 
 import java.util.Scanner;
 
+import com.shingrus.myplayer.MyPlayerAccountProfile.AuthorizeStatus;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -63,6 +65,7 @@ public class OAuthWebAuthorization extends Activity {
 					MyPlayerAccountProfile mpp = mpf.getProfile();
 					mpp.setAccessToken(accessToken, refresh_in);
 					mpp.setRefreshToken(refreshToken);
+					mpf.setHasProfile(true);
 					mpp.setUID(uid);
 					mpf.storePreferences(OAuthWebAuthorization.this);
 
