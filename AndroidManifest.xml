@@ -1,55 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	package="com.shingrus.myplayer"
-	android:versionCode="32"
-	android:versionName="Myplayer v 0.75">
-	<uses-sdk android:minSdkVersion="8"/>
-	<uses-permission
-		android:name="android.permission.INTERNET" />
-	<uses-permission
-		android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-	<uses-permission
-		android:name="android.permission.ACCESS_WIFI_STATE" />
-	<uses-permission
-		android:name="android.permission.ACCESS_NETWORK_STATE" />
-		<uses-permission android:name="android.permission.READ_PHONE_STATE" />
-	<application
-		android:label="@string/app_name"
-		android:name="MyPlayerApplication"
-		android:allowBackup="true"
-		android:icon="@drawable/launcher">
-		<activity
-			android:name="LauncherActivity"
-			android:label="@string/app_name">
-			<intent-filter>
-				<category
-					android:name="android.intent.category.LAUNCHER"></category>
-				<action
-					android:name="android.intent.action.MAIN"></action>
-			</intent-filter>
-		</activity>
-		<activity
-			android:name="MyAuthorizeActivity"
-			android:label="@string/authorize_activity_name">
-		</activity>
-		<activity
-			android:name="MyPlayerActivity"
-			android:label="@string/app_name"
-			android:launchMode="singleTask">
-		</activity>
-		<activity
-			android:name="MyPlayerPreferencesActivity"
-			android:label="@string/preferences_activity_name">
-		</activity>
-		<activity
-			android:name="OAuthWebAuthorization"
-			android:label="@string/oauth_activity_name">
-		</activity>
-		<service
-			android:name=".UpdateService"
-			android:enabled="true"></service>
-		<service
-			android:name=".MusicPlayerService"></service>
-	</application>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.shingrus.myplayer"
+    android:versionCode="32"
+    android:versionName="Myplayer v 0.75" >
+
+    <uses-sdk android:minSdkVersion="8" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <application
+        android:name="MyPlayerApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/launcher"
+        android:label="@string/app_name" >
+        <activity
+            android:name="LauncherActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <category android:name="android.intent.category.LAUNCHER" >
+                </category>
+
+                <action android:name="android.intent.action.MAIN" >
+                </action>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="MyAuthorizeActivity"
+            android:label="@string/authorize_activity_name" >
+        </activity>
+        <activity
+            android:name="MyPlayerActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTask" >
+        </activity>
+        <activity
+            android:name="MyPlayerPreferencesActivity"
+            android:label="@string/preferences_activity_name" >
+        </activity>
+        <activity
+            android:name="OAuthWebAuthorization"
+            android:label="@string/oauth_activity_name" >
+        </activity>
+
+        <service
+            android:name=".UpdateService"
+            android:enabled="true" >
+        </service>
+        <service android:name=".MusicPlayerService" >
+        </service>
+
+        <receiver android:name=".RemoteControlReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+    </application>
+
 </manifest>

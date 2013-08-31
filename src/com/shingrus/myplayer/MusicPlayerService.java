@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.media.*;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
@@ -26,17 +27,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private static final int NOTIFICATION_ID = 11;
-	MediaPlayer mPlayer =null;
+	MediaPlayer mPlayer = null;
 	TrackList trackList;
 	private final IBinder mBinder = new LocalBinder();
 	// boolean isPaused = false;
 	boolean isPausedDurinngCall = false;
 	NotificationManager nm;
 	TelephonyManager tm;
+	AudioManager am;
 	PhoneStateListener mPhoneListener;
 	Notification notification;
 	String currentStatusDesc;
 	BroadcastReceiver audioReceiver;
+	ComponentName mediaButtonReciever;
 	MyPlayerPreferences mpf;
 	PlayingEventsListener eventsListener = null;
 	// String currentTitle;
@@ -55,11 +58,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		public PlayingStatus currentStatus = PlayingStatus.Stopped;
 
 		public final void setNewTrack(MusicTrack mt) {
-			playedProgress =0;
+			playedProgress = 0;
 			currentTrack = mt;
 			currentStatus = PlayingStatus.Stopped;
 			duration = 0;
-			
+
 		}
 
 	}
@@ -75,6 +78,32 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		public void onReceive(Context context, Intent intent) {
 			if (mpf.doPauseOnLoud() && intent.getAction().equals(AudioManager.ACTION_AUDIO_BECOMING_NOISY)) {
 				stopMusic();
+			}
+		}
+	}
+
+	public class MediaButtonReciever extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			final KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+			if (event.getAction() != KeyEvent.ACTION_DOWN)
+				return;
+
+			switch (event.getKeyCode()) {
+			case KeyEvent.KEYCODE_MEDIA_STOP:
+				MusicPlayerService.this.stopMusic();
+				break;
+			case KeyEvent.KEYCODE_HEADSETHOOK:
+			case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+				MusicPlayerService.this.playPause();
+				break;
+			case KeyEvent.KEYCODE_MEDIA_NEXT:
+				MusicPlayerService.this.playNext();
+				break;
+			case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+				MusicPlayerService.this.playPrevious();
+				break;
 			}
 		}
 	}
@@ -95,6 +124,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		trackList = TrackList.getInstance();
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
 		notification = new Notification(R.drawable.status, "", System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_FOREGROUND_SERVICE;
 		updateNotification(NotificationStatus.Stopped);
@@ -129,6 +160,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		};
 		tm.listen(mPhoneListener, PhoneStateListener.LISTEN_CALL_STATE);
 		registerReceiver(audioReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+
+		mediaButtonReciever = new ComponentName(getPackageName(), MediaButtonReciever.class.getName());
+
+		am.registerMediaButtonEventReceiver(mediaButtonReciever);
 		super.onCreate();
 	}
 
@@ -187,9 +222,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				mPlayer.stop();
 			mPlayer.release();
 		}
-		if (tm != null)
+		if (tm != null) {
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
+		}
 		unregisterReceiver(audioReceiver);
+		am.unregisterMediaButtonEventReceiver(mediaButtonReciever);
 		super.onDestroy();
 	}
 
@@ -206,11 +243,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public void onPrepared(MediaPlayer mp) {
 		if (state.playedProgress != 0)
 			mp.seekTo(state.playedProgress);
-		if (state.currentTrack.getDuration() <= 0 ) {
+		if (state.currentTrack.getDuration() <= 0) {
 			state.duration = mp.getDuration();
 			trackList.setTrackDuration(state.currentTrack, state.duration);
-		}
-		else { 
+		} else {
 			state.duration = state.currentTrack.getDuration();
 		}
 		mp.start();
@@ -267,7 +303,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		switch (state.currentStatus) {
 		case Stopped: // here we start to play music
 			if (state.currentTrack == null) { // first attempt - we are starting
-				state.setNewTrack(trackList.startIterateFrom(0)); 
+				state.setNewTrack(trackList.startIterateFrom(0));
 				playMusic();
 			} else { // start from previous state
 			}
@@ -300,11 +336,11 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	}
 
-
 	public void stopMusic() {
 		if (mPlayer.isPlaying()) {
 			mPlayer.pause();
-			state.playedProgress = mPlayer.getCurrentPosition();;
+			state.playedProgress = mPlayer.getCurrentPosition();
+			;
 		}
 		mPlayer.stop();
 		updateNotification(NotificationStatus.Stopped);
@@ -335,13 +371,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		int result = 0;
 		switch (state.currentStatus) {
 		case Playing:
-			if (mPlayer != null ) {
+			if (mPlayer != null) {
 				state.playedProgress = mPlayer.getCurrentPosition();
 			}
 			break;
 		case Stopped:
 		case Paused:
-			//do nothing and use state progress
+			// do nothing and use state progress
 			break;
 		}
 		if (state.duration != 0) {
@@ -361,7 +397,5 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			return mPlayer.isPlaying();
 		return false;
 	}
-	
-	
-	
+
 }

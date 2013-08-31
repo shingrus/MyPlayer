@@ -217,7 +217,6 @@ public class UpdateService extends Service {
 		MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
 		if (mpf.getUpdatePeriodInMS() >0) {
 			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+mpf.getUpdatePeriodInMS(), mpf.getUpdatePeriodInMS(), operation);
-//			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+3000, UPDATE_PERIOD_MS, operation);
 		}
 		else if (mpf.getUpdatePeriodInMS() == 0 && operation != null){
 			alarmManager.cancel(operation);
