@@ -50,10 +50,13 @@
             android:name=".UpdateService"
             android:enabled="true" >
         </service>
-        <service android:name=".MusicPlayerService" >
+        <service android:name=".MusicPlayerService" 
+            android:exported="false"
+            android:enabled="true">
+            
         </service>
 
-        <receiver android:name=".RemoteControlReceiver" >
+        <receiver android:name=".MediaButtonBroadcastReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>

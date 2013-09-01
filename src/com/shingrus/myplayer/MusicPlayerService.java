@@ -27,6 +27,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private static final int NOTIFICATION_ID = 11;
+
+	public static final String CMD_SERVICEACTION = "com.shingrus.myplayer.musicplayerservice";
+	public static final String CMD_NAME = "command";
+
+	public static final int CMD_PLAY = 1;
+	public static final int CMD_PREV = 2;
+	public static final int CMD_NEXT = 3;
+	public static final int CMD_STOP = 4;
+	public static final int CMD_ERROR = -11;
+
 	MediaPlayer mPlayer = null;
 	TrackList trackList;
 	private final IBinder mBinder = new LocalBinder();
@@ -82,31 +92,32 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 	}
 
-	public class MediaButtonReciever extends BroadcastReceiver {
+	BroadcastReceiver intentReceiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			final KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
-			if (event.getAction() != KeyEvent.ACTION_DOWN)
-				return;
-
-			switch (event.getKeyCode()) {
-			case KeyEvent.KEYCODE_MEDIA_STOP:
-				MusicPlayerService.this.stopMusic();
-				break;
-			case KeyEvent.KEYCODE_HEADSETHOOK:
-			case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-				MusicPlayerService.this.playPause();
-				break;
-			case KeyEvent.KEYCODE_MEDIA_NEXT:
-				MusicPlayerService.this.playNext();
-				break;
-			case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-				MusicPlayerService.this.playPrevious();
-				break;
+			if (intent != null) {
+				switch (intent.getIntExtra(CMD_NAME, CMD_ERROR)) {
+				case CMD_NEXT:
+					Log.d("shingrus", "Next command to MusicService");
+					playNext();
+					break;
+				case CMD_PLAY:
+					Log.d("shingrus", "Play command to MusicService");
+					playPause();
+					break;
+				case CMD_STOP:
+					Log.d("shingrus", "Stop command to MusicService");
+					stopMusic();
+					break;
+				case CMD_PREV:
+					Log.d("shingrus", "Prev command to MusicService");
+					playPrevious();
+					break;
+				}
 			}
 		}
-	}
+	};
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -161,9 +172,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		tm.listen(mPhoneListener, PhoneStateListener.LISTEN_CALL_STATE);
 		registerReceiver(audioReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
 
-		mediaButtonReciever = new ComponentName(getPackageName(), MediaButtonReciever.class.getName());
+		IntentFilter commandFilter = new IntentFilter();
+		commandFilter.addAction(CMD_SERVICEACTION);
+		registerReceiver(intentReceiver, commandFilter);
 
+		mediaButtonReciever = new ComponentName(getPackageName(), MediaButtonBroadcastReceiver.class.getName());
 		am.registerMediaButtonEventReceiver(mediaButtonReciever);
+
+		// TODO set media info to media remote controller
+		// http://developer.android.com/reference/android/media/AudioManager.html#registerRemoteControlClient%28android.media.RemoteControlClient%29
+
 		super.onCreate();
 	}
 
@@ -189,10 +207,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			break;
 		}
 
-		// Intent i = new Intent(this, MyPlayerActivity.class);
 		Intent i = new Intent(this, LauncherActivity.class);
-		// i.setFlags(Intent.FLAG_ACTIVITY_SIN
-		// GLE_TOP|Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 		String trackTitle = state.currentTrack == null ? "" : state.currentTrack.toString();
 		notification.setLatestEventInfo(this, "MyPlayer - " + nTitle, trackTitle, pi);
@@ -226,6 +241,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			tm.listen(mPhoneListener, PhoneStateListener.LISTEN_NONE);
 		}
 		unregisterReceiver(audioReceiver);
+		unregisterReceiver(intentReceiver);
 		am.unregisterMediaButtonEventReceiver(mediaButtonReciever);
 		super.onDestroy();
 	}
@@ -233,6 +249,29 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		nm.cancel(NOTIFICATION_ID);
+		if (intent != null) {
+			if (CMD_SERVICEACTION.equals(intent.getAction())){
+				Log.d("shingrus", "Got onStart");
+				switch (intent.getIntExtra(CMD_NAME, CMD_ERROR)) {
+				case CMD_NEXT:
+					Log.d("shingrus", "Next command to MusicService");
+					this.playNext();
+					break;
+				case CMD_PLAY:
+					Log.d("shingrus", "Play command to MusicService");
+					this.playPause();
+					break;
+				case CMD_STOP:
+					Log.d("shingrus", "Stop command to MusicService");
+					stopMusic();
+					break;
+				case CMD_PREV:
+					Log.d("shingrus", "Prev command to MusicService");
+					playPrevious();
+					break;
+				}
+			}
+		}
 		return Service.START_NOT_STICKY;
 	}
 
