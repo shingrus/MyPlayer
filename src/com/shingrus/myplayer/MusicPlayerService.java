@@ -35,6 +35,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public static final int CMD_PREV = 2;
 	public static final int CMD_NEXT = 3;
 	public static final int CMD_STOP = 4;
+	public static final int CMD_VOLUME_UP = 5;
+	public static final int CMD_VOLUME_DOWN = 6;
 	public static final int CMD_ERROR = -11;
 
 	MediaPlayer mPlayer = null;
@@ -99,20 +101,22 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			if (intent != null) {
 				switch (intent.getIntExtra(CMD_NAME, CMD_ERROR)) {
 				case CMD_NEXT:
-					Log.d("shingrus", "Next command to MusicService");
 					playNext();
 					break;
 				case CMD_PLAY:
-					Log.d("shingrus", "Play command to MusicService");
 					playPause();
 					break;
 				case CMD_STOP:
-					Log.d("shingrus", "Stop command to MusicService");
 					stopMusic();
 					break;
 				case CMD_PREV:
-					Log.d("shingrus", "Prev command to MusicService");
 					playPrevious();
+					break;
+				case CMD_VOLUME_UP:
+					setVolume(true);
+					break;
+				case CMD_VOLUME_DOWN:
+					setVolume(false);
 					break;
 				}
 			}
@@ -250,24 +254,26 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		nm.cancel(NOTIFICATION_ID);
 		if (intent != null) {
-			if (CMD_SERVICEACTION.equals(intent.getAction())){
+			if (CMD_SERVICEACTION.equals(intent.getAction())) {
 				Log.d("shingrus", "Got onStart");
 				switch (intent.getIntExtra(CMD_NAME, CMD_ERROR)) {
 				case CMD_NEXT:
-					Log.d("shingrus", "Next command to MusicService");
 					this.playNext();
 					break;
 				case CMD_PLAY:
-					Log.d("shingrus", "Play command to MusicService");
 					this.playPause();
 					break;
 				case CMD_STOP:
-					Log.d("shingrus", "Stop command to MusicService");
 					stopMusic();
 					break;
 				case CMD_PREV:
-					Log.d("shingrus", "Prev command to MusicService");
 					playPrevious();
+					break;
+				case CMD_VOLUME_UP:
+					setVolume(true);
+					break;
+				case CMD_VOLUME_DOWN:
+					setVolume(false);
 					break;
 				}
 			}
@@ -359,6 +365,23 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		state.setNewTrack(trackList.startIterateFrom(position));
 		playMusic();
 
+	}
+
+	private void setVolume(boolean up) {
+		int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		int  current = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		int  step = Math.round(maxVol / 12);
+		if (up) {
+			current += step;
+			if (current > maxVol) 
+				current = maxVol;
+			
+		}
+		else {
+			current -= step;
+			if (current < 0) current =0;
+		}
+		am.setStreamVolume(AudioManager.STREAM_MUSIC, Math.round(current), AudioManager.FLAG_SHOW_UI);
 	}
 
 	public void playNext() {
