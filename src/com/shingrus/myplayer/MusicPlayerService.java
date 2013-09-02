@@ -2,6 +2,7 @@ package com.shingrus.myplayer;
 
 import java.io.IOException;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -9,6 +10,7 @@ import android.app.Service;
 import android.content.*;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -54,8 +56,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	ComponentName mediaButtonReciever;
 	MyPlayerPreferences mpf;
 	PlayingEventsListener eventsListener = null;
-	// String currentTitle;
 	CurrentState state = new CurrentState();
+	RemoteControlClient rcClient;
 
 	public class LocalBinder extends Binder {
 		MusicPlayerService getService() {
@@ -64,7 +66,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	private class CurrentState {
-		public MusicTrack currentTrack = null;
+		private MusicTrack currentTrack = null;
 		public int playedProgress = 0;
 		public int duration;
 		public PlayingStatus currentStatus = PlayingStatus.Stopped;
@@ -75,6 +77,18 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			currentStatus = PlayingStatus.Stopped;
 			duration = 0;
 
+		}
+
+		public final String getTrackTitle() {
+			if (currentTrack != null)
+				return currentTrack.getTitle();
+			return "";
+		}
+
+		public final String getTrackArtist() {
+			if (currentTrack != null)
+				return currentTrack.getArtist();
+			return "";
 		}
 
 	}
@@ -129,6 +143,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	}
 
 	@Override
+	@TargetApi(14)
 	public void onCreate() {
 		mPlayer = new MediaPlayer();
 		mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -185,10 +200,19 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 		// TODO set media info to media remote controller
 		// http://developer.android.com/reference/android/media/AudioManager.html#registerRemoteControlClient%28android.media.RemoteControlClient%29
+		Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+		mediaButtonIntent.setComponent(mediaButtonReciever);
+		PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, mediaButtonIntent, 0);
 
+		if (Build.VERSION.SDK_INT >= 14) {
+
+			rcClient = new RemoteControlClient(mediaPendingIntent);
+			am.registerRemoteControlClient(rcClient);
+		}
 		super.onCreate();
 	}
 
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private final void updateNotification(NotificationStatus nStatus) {
 		CharSequence nTitle = "";
 		switch (nStatus) {
@@ -219,18 +243,27 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		switch (nStatus) {
 		case Paused:
 		case Playing:
-			// TODO remove this strange notify throw tracklist scheme
+			// TODO remove this strange notify threw tracklist scheme
 			trackList.notifyPlayStarted();
 			if (this.eventsListener != null) {
 				eventsListener.onChangePlayingItem(trackList.getIteratePosition());
+				if (rcClient != null && Build.VERSION.SDK_INT >= 14) {
+					RemoteControlClient.MetadataEditor editor = rcClient.editMetadata(true);
+					editor.putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, state.getTrackArtist());
+					editor.putString(MediaMetadataRetriever.METADATA_KEY_TITLE, state.getTrackTitle());
+					editor.apply();
+				}
 			}
 			break;
 		case Stopped:
 			trackList.notifyPlayStopped();
 			break;
 		}
+
+		// TODO notify rcClient
 	}
 
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	@Override
 	public void onDestroy() {
 		Log.d("shingrus", "Destroy: MusicPlayerService");
@@ -246,6 +279,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 		unregisterReceiver(audioReceiver);
 		unregisterReceiver(intentReceiver);
+		if (Build.VERSION.SDK_INT >= 14) {
+			am.unregisterRemoteControlClient(rcClient);
+			rcClient = null;
+		}
 		am.unregisterMediaButtonEventReceiver(mediaButtonReciever);
 		super.onDestroy();
 	}
@@ -369,17 +406,17 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	private void setVolume(boolean up) {
 		int maxVol = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		int  current = am.getStreamVolume(AudioManager.STREAM_MUSIC);
-		int  step = Math.round(maxVol / 12);
+		int current = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		int step = Math.round(maxVol / 12);
 		if (up) {
 			current += step;
-			if (current > maxVol) 
+			if (current > maxVol)
 				current = maxVol;
-			
-		}
-		else {
+
+		} else {
 			current -= step;
-			if (current < 0) current =0;
+			if (current < 0)
+				current = 0;
 		}
 		am.setStreamVolume(AudioManager.STREAM_MUSIC, Math.round(current), AudioManager.FLAG_SHOW_UI);
 	}
