@@ -67,8 +67,9 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
 	private class CurrentState {
 		private MusicTrack currentTrack = null;
-		public int playedProgress = 0;
-		public int duration;
+		private int playedProgress = 0;
+		private int duration;
+		
 		public PlayingStatus currentStatus = PlayingStatus.Stopped;
 
 		public final void setNewTrack(MusicTrack mt) {
@@ -90,6 +91,14 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 				return currentTrack.getArtist();
 			return "";
 		}
+		public final int getPlayedProgress() {
+			return playedProgress;
+		}
+
+		public final int getDuration() {
+			return duration;
+		}
+
 
 	}
 
@@ -485,6 +494,13 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		}
 		return result;
 
+	}
+	public final int getDuration() {
+		return state.getDuration();
+	}
+	
+	public final int getProgressInMs() {
+		return state.getPlayedProgress();
 	}
 
 	public final CurrentState getState() {

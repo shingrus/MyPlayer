@@ -1,5 +1,7 @@
 package com.shingrus.myplayer;
 
+import javax.xml.datatype.Duration;
+
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 import com.shingrus.myplayer.UpdateService.UpdatesHandler;
@@ -42,6 +45,7 @@ public class MyPlayerActivity extends Activity {
 	private ProgressBar rCornerProgressBar = null;
 	private ImageView alarmImage = null;
 	SeekBar progressBar = null;
+	TextView trackProgressText, trackDurationText;
 	ImageButton playButton = null;
 	boolean isPlaying = false;
 	boolean touchingProgress = false;
@@ -71,15 +75,29 @@ public class MyPlayerActivity extends Activity {
 		}
 	};
 
+	private final String getMsAsTime(int ms) {
+		
+		int minutes = 0;
+		int sec = 0;
+		if (ms > 0) {
+			ms /= 1000;
+			minutes = ms / 60;
+			sec = ms - (minutes * 60);
+		}
+		return "" + minutes + (sec < 10 ? ":0" : ":") + sec;
+	}
 	final Runnable progressUpdateJob = new Runnable() {
 		@Override
 		public void run() {
-			if (playerService != null && progressBar != null) {
+			if (playerService != null && progressBar != null && trackDurationText != null && trackProgressText != null) {
 				if (!touchingProgress) {
 					int playedProgress = playerService.getCurrentPosition();
+					
+					int progress = playerService.getProgressInMs();
+					if (progress > 0) {
+						trackProgressText.setText(getMsAsTime(progress));
+					}
 					progressBar.setProgress(playedProgress);
-					// Log.d("shingrus", "Got postion update: " +
-					// playedProgress);
 				}
 				if (isPlaying)
 					handleProgressUpdate.postDelayed(progressUpdateJob, MyPlayerPreferences.UPDATE_PLAYING_STATUS_MS);
@@ -125,7 +143,6 @@ public class MyPlayerActivity extends Activity {
 					@Override
 					public void onStop() {
 						isPlaying = false;
-//						playButton.setBackgroundResource(R.drawable.playbutton_stopped_states);
 						changePlayButton();
 						progressUpdate();
 					}
@@ -133,14 +150,12 @@ public class MyPlayerActivity extends Activity {
 					@Override
 					public void onPlay() {
 						isPlaying = true;
-//						playButton.setBackgroundResource(R.drawable.playbutton_playing_states);
 						changePlayButton();
 						progressUpdate();
 					}
 
 					@Override
 					public void onPause() {
-						//playButton.setBackgroundResource(R.drawable.playbutton_stopped_states);
 						isPlaying = false;
 						changePlayButton();
 					}
@@ -236,6 +251,10 @@ public class MyPlayerActivity extends Activity {
 
 		Intent service = new Intent(this, UpdateService.class);
 		bindService(service, updateServiceConnection, Context.BIND_AUTO_CREATE);
+		
+		trackProgressText = (TextView) findViewById(R.id.track_progressid);
+		trackDurationText = (TextView) findViewById(R.id.track_durationid);
+		
 		progressBar = (SeekBar) findViewById(R.id.playingSeek);
 		progressBar.setClickable(false);
 		progressBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -318,6 +337,8 @@ public class MyPlayerActivity extends Activity {
 		rCornerProgressBar = null;
 		playButton = null;
 		progressBar = null;
+		trackDurationText = null;
+		trackProgressText = null;
 		
 		super.onDestroy();
 	}
@@ -342,7 +363,6 @@ public class MyPlayerActivity extends Activity {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
 	    switch (item.getItemId()) {
 	        case R.id.PlaylistContextMenuSetAsRingtone:
-	        	//TODO: to add set as ringtone method
 				trackList.setAsRingtone(this, info.position);
 	            return true;
 	        default:
@@ -382,11 +402,17 @@ public class MyPlayerActivity extends Activity {
 		int left = playButton.getPaddingLeft();
 		int right = playButton.getPaddingRight();
 		int bottom = playButton.getPaddingBottom();
-		if (isPlaying) 
+		if (isPlaying) { 
 			playButton.setBackgroundResource(R.drawable.playbutton_playing_states);
+			int duration  = playerService.getDuration();
+			trackDurationText.setText(getMsAsTime(duration));
+		}
 		else
 			playButton.setBackgroundResource(R.drawable.playbutton_stopped_states);
 		playButton.setPadding(left, top, right, bottom);
+		
+		//Seems like good place to put code changing trackduration
+		 
 		
 	}
 	// Click Listeners

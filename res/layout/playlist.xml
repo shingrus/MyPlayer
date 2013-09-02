@@ -17,21 +17,51 @@
         android:fadingEdge="none" >
     </ListView>
 
-        <View android:background="@drawable/playlist_divider_background"
-            android:layout_width="fill_parent"
-            android:layout_height="8dp"/>
-        <View android:background="#000"
-            android:layout_width="fill_parent"
-            android:layout_height="1dp"/>
-        
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="8dp"
+        android:background="@drawable/playlist_divider_background" />
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="#000" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/track_progressid"
+            style="@style/TrackDurationStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:gravity="left"
+            android:text="--:--"
+            android:layout_weight="1"
+            android:visibility="visible" />
+
+        <TextView
+            android:id="@+id/track_durationid"
+            style="@style/TrackDurationStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_gravity="right"
+            android:gravity="right"
+            android:text="--:--"
+            android:layout_weight="1"
+            android:visibility="visible" />
+    </LinearLayout>
+
     <SeekBar
         android:id="@+id/playingSeek"
+        style="@style/ProgressSeekBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:enabled="false" 
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
-        style="@style/ProgressSeekBarStyle"/>
+        android:enabled="false" />
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -44,9 +74,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:onClick="onClickRewind"
             android:background="@drawable/leftbuttonstates"
-			android:contentDescription="@string/rewindButtonText"
+            android:contentDescription="@string/rewindButtonText"
+            android:onClick="onClickRewind"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:src="@drawable/rewind" />
@@ -56,25 +86,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:onClick="onClickPlayPause"
+            android:layout_marginLeft="4dp"
             android:background="@drawable/playbutton_stopped_states"
             android:contentDescription="@string/playButtonText"
+            android:onClick="onClickPlayPause"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:layout_marginLeft="4dp"
-            android:src="@drawable/play"/>
-        
+            android:src="@drawable/play" />
+
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="4dp"
+            android:background="@drawable/rightbuttonstates"
+            android:contentDescription="@string/forwardButtonText"
             android:onClick="onClickForward"
-            android:background="@drawable/rightbuttonstates"  
-            android:contentDescription="@string/forwardButtonText"          
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:layout_marginLeft="4dp"
-            android:src="@drawable/forward"/>
+            android:src="@drawable/forward" />
     </LinearLayout>
 
 </LinearLayout>
