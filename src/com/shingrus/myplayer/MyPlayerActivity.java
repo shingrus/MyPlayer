@@ -392,7 +392,7 @@ public class MyPlayerActivity extends Activity {
 
 	private void startUpdate() {
 		Intent service = new Intent(this, UpdateService.class);
-		service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_UPDATE);
+		service.putExtra(UpdateService.START_UPDATE_COMMAND, UpdateService.START_UPDATE_COMMAND_IMMEDIATE_UPDATE);
 		startService(service);
 	}
 

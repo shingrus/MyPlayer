@@ -151,6 +151,16 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 		return mBinder;
 	}
 
+	
+	
+	@Override
+	public boolean onUnbind(Intent intent) {
+		// TODO Auto-generated method stub
+		return super.onUnbind(intent);
+	}
+
+
+
 	@Override
 	@TargetApi(14)
 	public void onCreate() {
@@ -224,23 +234,37 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	private final void updateNotification(NotificationStatus nStatus) {
 		CharSequence nTitle = "";
+		int status = 0;
 		switch (nStatus) {
 		case Paused:
 			nTitle = getText(R.string.NotificationTitle_Paused);
 			if (eventsListener != null)
 				eventsListener.onPause();
+			if (rcClient != null && Build.VERSION.SDK_INT >= 14) {
+				rcClient.setPlaybackState(RemoteControlClient.PLAYSTATE_PAUSED);
+			}
 			break;
 		case Playing:
 			nTitle = getText(R.string.NotificationTitle_Playing);
 			trackList.notifyPlayStarted();
 			if (eventsListener != null)
 				eventsListener.onPlay();
+			if (rcClient != null && Build.VERSION.SDK_INT >= 14) {
+				RemoteControlClient.MetadataEditor editor = rcClient.editMetadata(true);
+				editor.putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, state.getTrackArtist());
+				editor.putString(MediaMetadataRetriever.METADATA_KEY_TITLE, state.getTrackTitle());
+				editor.apply();
+				rcClient.setPlaybackState(RemoteControlClient.PLAYSTATE_PLAYING);
+			}
 			break;
 		case Stopped:
 			nTitle = getText(R.string.NotificationTitle_Stopped);
 			trackList.notifyPlayStopped();
 			if (eventsListener != null)
 				eventsListener.onStop();
+			if (rcClient != null && Build.VERSION.SDK_INT >= 14) {
+				rcClient.setPlaybackState(RemoteControlClient.PLAYSTATE_STOPPED);
+			}
 			break;
 		}
 
@@ -256,12 +280,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 			trackList.notifyPlayStarted();
 			if (this.eventsListener != null) {
 				eventsListener.onChangePlayingItem(trackList.getIteratePosition());
-				if (rcClient != null && Build.VERSION.SDK_INT >= 14) {
-					RemoteControlClient.MetadataEditor editor = rcClient.editMetadata(true);
-					editor.putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, state.getTrackArtist());
-					editor.putString(MediaMetadataRetriever.METADATA_KEY_TITLE, state.getTrackTitle());
-					editor.apply();
-				}
 			}
 			break;
 		case Stopped:

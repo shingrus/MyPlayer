@@ -23,10 +23,12 @@ import com.shingrus.myplayer.MyPlayerAccountProfile.TrackListFetchingStatus;
 public class UpdateService extends Service {
 
 	public static final String START_UPDATE_COMMAND = "START_UPDATE";
-	public static final int START_UPDATE_COMMAND_UPDATE = 1;
-	public static final int START_UPDATE_COMMAND_TIMER = 15;
+	public static final int START_UPDATE_COMMAND_IMMEDIATE_UPDATE = 1024; // starts immediate
+																// update
+	public static final int START_UPDATE_COMMAND_TIMER = 1015; // starts timed
+																// immediate
 	public static final int DOWNLOAD_SLEEP_MS = 60 * 1000;
-	public static final int UPDATE_PERIOD_MS = 30 * 1000;//1 hr
+	public static final int UPDATE_DEBUG_PERIOD_MS = 10 * 1000;// 1 hr
 
 	Thread downloadThread, updateThread;
 	boolean continueWorking = true;
@@ -40,8 +42,8 @@ public class UpdateService extends Service {
 	public static final int DOWNLOAD_CONNECTION_TIMEOUT = 15 * 1000;
 
 	private AlarmManager alarmManager;
-	PendingIntent operation = null;
-	private Intent service = null;
+	// PendingIntent operation = null;
+	// private Intent service = null;
 
 	/**
 	 * i use this list to store activities handlers, that will handle update
@@ -59,6 +61,7 @@ public class UpdateService extends Service {
 
 	public interface UpdatesHandler {
 		public void onBeforeUpdate();
+
 		public void onAfterUpdate(TrackListFetchingStatus updateStatus);
 	}
 
@@ -151,12 +154,13 @@ public class UpdateService extends Service {
 	class UpdateThread extends Thread {
 		public void run() {
 
+			Log.d("shingrus", "Start update thread");
 			try {
 				MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
 				TrackListFetchingStatus updateStatus = mpf.getProfile().getTrackListFromInternet();
 				if (updateStatus == TrackListFetchingStatus.SUCCESS) {
-					//TODO to wake up DownloadThread
-					
+					// TODO to wake up DownloadThread
+
 				}
 				for (UpdatesHandler h : updatesHandlers) {
 					h.onAfterUpdate(updateStatus);
@@ -164,6 +168,7 @@ public class UpdateService extends Service {
 			} finally {
 				UpdateService.this.updateThreadAlreadyRunning = false;
 			}
+			Log.d("shingrus", "finish update thread");
 		}
 	}
 
@@ -184,13 +189,19 @@ public class UpdateService extends Service {
 		super.onLowMemory();
 	}
 
+	private PendingIntent getMyPendingIntent(int command) {
+		Intent service = new Intent(this, UpdateService.class);
+		service.putExtra(START_UPDATE_COMMAND, command);
+		return PendingIntent.getService(this, 0, service, 0);
+	}
+
 	@Override
 	public void onCreate() {
 		alarmManager = (AlarmManager) this.getSystemService(ALARM_SERVICE);
-		service = new Intent(this, UpdateService.class);
-		service.putExtra(START_UPDATE_COMMAND, START_UPDATE_COMMAND_UPDATE);
-		operation = PendingIntent.getService(this, 0, service, 0);
-//		startUpdateTimer();
+		// service = new Intent(this, UpdateService.class);
+		// service.putExtra(START_UPDATE_COMMAND, START_UPDATE_COMMAND_UPDATE);
+		// operation = PendingIntent.getService(this, 0, service, 0);
+		startUpdateTimer();
 		// Start download thread
 		// TODO: start only once
 		downloadThread.start();
@@ -198,35 +209,53 @@ public class UpdateService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.i("shingrus", "Strart updateService");
+		Log.i("shingrus", "Start updateService");
 
 		if (intent != null) {
 			int i = intent.getIntExtra(START_UPDATE_COMMAND, 0);
-			if (i == START_UPDATE_COMMAND_UPDATE) {
-				startUpdate();
-			}
-			else if (i == START_UPDATE_COMMAND_TIMER) {
-				startUpdateTimer();
+			
+			switch (i) {
+			case START_UPDATE_COMMAND_IMMEDIATE_UPDATE:
+			case START_UPDATE_COMMAND_TIMER:
+				if (i == START_UPDATE_COMMAND_IMMEDIATE_UPDATE ) {
+					Log.i("shingrus", "Start updateService: immidiate start");
+
+				} else if (i == START_UPDATE_COMMAND_TIMER) {
+					Log.i("shingrus", "Start updateService: timer");
+				}
+				performUpdate();
+				break;
 			}
 		}
 
 		return START_NOT_STICKY;
 	}
 
-	void startUpdateTimer() {		
+	void startUpdateTimer() {
 		MyPlayerPreferences mpf = MyPlayerPreferences.getInstance(null);
-		if (mpf.getUpdatePeriodInMS() >0) {
-			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime()+mpf.getUpdatePeriodInMS(), mpf.getUpdatePeriodInMS(), operation);
-		}
-		else if (mpf.getUpdatePeriodInMS() == 0 && operation != null){
-			alarmManager.cancel(operation);
+		if (mpf.getUpdatePeriodInMS() > 0) {
+			
+			//cancel previously started timer
+			alarmManager.cancel(getMyPendingIntent(START_UPDATE_COMMAND_TIMER));
+			
+			//TODO: change this to the real values
+//			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + mpf.getUpdatePeriodInMS(),
+//					mpf.getUpdatePeriodInMS(), getMyPendingIntent(START_UPDATE_COMMAND_TIMER));
+			Log.d("shingrus", "Gonna start timer");
+			alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + UPDATE_DEBUG_PERIOD_MS,
+					UPDATE_DEBUG_PERIOD_MS, getMyPendingIntent(START_UPDATE_COMMAND_TIMER));
+
+			
+		} else if (mpf.getUpdatePeriodInMS() == 0) {
+			alarmManager.cancel(getMyPendingIntent(START_UPDATE_COMMAND_TIMER));
 		}
 	}
-	
-	synchronized void startUpdate() {
+
+	synchronized void performUpdate() {
 		if (!updateThreadAlreadyRunning) {
 			updateThreadAlreadyRunning = true;
-			for(UpdatesHandler h: updatesHandlers){
+
+			for (UpdatesHandler h : updatesHandlers) {
 				h.onBeforeUpdate();
 			}
 			updateThread = new UpdateThread();
@@ -236,8 +265,10 @@ public class UpdateService extends Service {
 
 	@Override
 	public void onDestroy() {
-		
-		//TODO: reemove alarm
+
+		// TODO: remove alarm
+		alarmManager.cancel(getMyPendingIntent(START_UPDATE_COMMAND_TIMER));
+
 		downloadThread.interrupt();
 		if (updateThread != null)
 			updateThread.interrupt();

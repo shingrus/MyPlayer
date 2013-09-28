@@ -24,7 +24,7 @@
 			android:title="@string/preferences_update_period_title"
 			android:entries="@array/preferences_update_period_names"
 			android:entryValues="@array/preferences_update_period_values"
-			android:defaultValue="24"></ListPreference>
+			android:defaultValue="12"></ListPreference>
 		<CheckBoxPreference
 			android:title="@string/use_wifi_only_preferences_title"
 			android:defaultValue="true"
