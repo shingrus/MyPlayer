@@ -218,24 +218,26 @@ public class MyPlayerActivity extends Activity {
 		handleProgressUpdate = new Handler();
 		isPlaying = false;
 		touchingProgress = false;
-		boolean isCustomTitileSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
 		Log.d("shingrus", "Creating Player Activity");
 		Intent i = new Intent(getApplicationContext(), MusicPlayerService.class);
 		this.bindService(i, musicPlayerConnection, Context.BIND_AUTO_CREATE);
+//		boolean isCustomTitileSupported = requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
+//		if (isCustomTitileSupported) {
+//			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.activetitle);
+//		}
+		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
 		setContentView(R.layout.playlist);
 
-		if (isCustomTitileSupported) {
-			getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.activetitle);
-		}
-
+		
+		
 		rCornerProgressBar = (ProgressBar) findViewById(R.id.playerTitleProgressId);
-		alarmImage = (ImageView) findViewById(R.id.playerTitleImageId);
-		alarmImage.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Log.d("shigrus", "click on alarm image");
-			}
-		});
+//		alarmImage = (ImageView) findViewById(R.id.playerTitleImageId);
+//		alarmImage.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				Log.d("shigrus", "click on alarm image");
+//			}
+//		});
 
 		lv = (ListView) findViewById(R.id.playListView);
 		lv.setAdapter(trackList.getAdapter(this));
